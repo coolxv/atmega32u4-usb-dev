@@ -22,3 +22,9 @@ https://github.com/arduino/Arduino/wiki/PluggableUSB-and-PluggableHID-howto
 
 arduino playground
 https://playground.arduino.cc/
+
+AVR109
+https://wenku.baidu.com/view/143d234fb52acfc788ebc94f.html
+
+community
+https://community.atmel.com/
