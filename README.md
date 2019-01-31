@@ -14,5 +14,11 @@ https://github.com/signal11/hidapi
 hid-device
 https://github.com/NicoHood/HID
 
+Mouse abs
+https://github.com/per1234/MouseTo
+
 PluggableUSB and PluggableHID howto
 https://github.com/arduino/Arduino/wiki/PluggableUSB-and-PluggableHID-howto
+
+arduino playground
+https://playground.arduino.cc/
