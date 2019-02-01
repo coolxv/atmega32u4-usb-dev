@@ -28,3 +28,9 @@ https://wenku.baidu.com/view/143d234fb52acfc788ebc94f.html
 
 community
 https://community.atmel.com/
+
+avr gcc book
+https://wenku.baidu.com/view/d0b0f655c850ad02de804134.html
+
+winavr-avrgcc 
+https://sourceforge.net/projects/winavr/
