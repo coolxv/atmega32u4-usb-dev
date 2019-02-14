@@ -18,9 +18,30 @@
     <ClCompile Include="hid.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ghost.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="map.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="keymap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\hidapi\hidapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hidapi\packdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hidapi\ghostapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="keymap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
