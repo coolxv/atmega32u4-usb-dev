@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "keymap.h"
 #include "hidapi.h"
 #include "ghostapi.h"
+#include "packdef.h"
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -132,42 +134,286 @@ GHOST_API_EXPORT char* GetProductionDate()
 // 键按下
 int GHOST_API_EXPORT  KeyDown(char *key)
 {
-	return 0;
+	if (NULL == key || 0 == strlen(key))
+	{
+		return 1;
+	}
+
+	unsigned char keycode = keymap_map(key);
+	if (!keycode)
+	{
+		return 2;
+	}
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_DOWN;
+	pkg.k[0] = keycode;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
+
 }
 // 键弹起
 int GHOST_API_EXPORT  KeyUp(char *key)
 {
-	return 0;
+	if (NULL == key || 0 == strlen(key))
+	{
+		return 1;
+	}
+	unsigned char keycode = keymap_map(key);
+	if (!keycode)
+	{
+		return 2;
+	}
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_UP;
+	pkg.k[0] = keycode;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 }
 // 一次按键
 int GHOST_API_EXPORT  KeyPress(char *key, int count)
 {
-	return 0;
+	if (NULL == key || 0 == strlen(key))
+	{
+		return 1;
+	}
+	unsigned char keycode = keymap_map(key);
+	if (!keycode)
+	{
+		return 2;
+	}
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_PRESS;
+	pkg.k[0] = keycode;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 }
 // 组合键按下
 int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
+	unsigned count = 0;
+	unsigned char keycode = 0;
+	char * key[6] = { key1, key2, key3, key4, key5, key6 };
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (NULL != key[i] && 0 != strlen(key[i]))
+		{
+			keycode = keymap_map(key[i]);
+			if (keycode)
+			{
+				pkg.k[0] = keycode;
+				count++;
+			}
+		}
+	}
+	if (0 == count)
+	{
+		return 1;
+	}
+	//package
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_COMB_DOWN;
+	pkg.count = count;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 2;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 	return 0;
 }
 // 组合键弹起
 int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
+	unsigned count = 0;
+	unsigned char keycode = 0;
+	char * key[6] = { key1, key2, key3, key4, key5, key6 };
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (NULL != key[i] && 0 != strlen(key[i]))
+		{
+			keycode = keymap_map(key[i]);
+			if (keycode)
+			{
+				pkg.k[0] = keycode;
+				count++;
+			}
+		}
+	}
+	if (0 == count)
+	{
+		return 1;
+	}
+	//package
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_COMB_UP;
+	pkg.count = count;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 2;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 	return 0;
 }
 // 组合按键
 int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
 {
+	unsigned int cnt = 0;
+	unsigned char keycode = 0;
+	char * key[6] = { key1, key2, key3, key4, key5, key6 };
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (NULL != key[i] && 0 != strlen(key[i]))
+		{
+			keycode = keymap_map(key[i]);
+			if (keycode)
+			{
+				pkg.k[0] = keycode;
+				cnt++;
+			}
+		}
+	}
+	if (0 == cnt)
+	{
+		return 1;
+	}
+	//package
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_COMB_PRESS;
+	pkg.count = cnt;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 2;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 	return 0;
 }
 // 释放所有按键
 int GHOST_API_EXPORT  KeyUpAll()
 {
-	return 0;
+	//package
+	MSG_KM_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
+	pkg.kb_type = MSG_KM_KB_TYPE_UP_ALL;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 }
 // 模拟按键输入
 int GHOST_API_EXPORT  Say(char *keys)
 {
-	return 0;
+	if (NULL == keys || 0 == strlen(keys))
+	{
+		return 1;
+	}
+	int ret = 0;
+	int len = strlen(keys);
+	for (int i = 0; i < len; i++)
+	{
+		ret |= KeyPress(&keys[i], 1);
+	}
+	return ret;
 }
 
 // 获取大写灯状态

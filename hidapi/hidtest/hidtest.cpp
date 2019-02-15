@@ -112,9 +112,9 @@ int main(int argc, char* argv[])
 	// data here, but execution should not block.
 	res = hid_read(handle, buf, 17);
 
-	printf("pack size:%d\n",sizeof(MSG_KEY_MOUSE_DATA_T));
+	printf("pack size:%d\n",sizeof(MSG_KM_DATA_T));
 
-	MSG_KEY_MOUSE_DATA_T pack;
+	MSG_KM_DATA_T pack;
 	memset(&pack, 0, sizeof(pack));
 	pack.type[0] = 0x1;
 	pack.type[1] = 1;
