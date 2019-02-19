@@ -7,13 +7,18 @@
 #define  MSG_TYPE_MOUSE 2
 #define  MSG_TYPE_LOG 3
 //keyboard cmd
-#define  MSG_KB_TYPE_DOWN 1
-#define  MSG_KB_TYPE_UP 2
-#define  MSG_KB_TYPE_PRESS 3
-#define  MSG_KB_TYPE_UP_ALL 4
-#define  MSG_KB_TYPE_COMB_DOWN 5
-#define  MSG_KB_TYPE_COMB_UP 6
-#define  MSG_KB_TYPE_COMB_PRESS 7
+#define  MSG_CMD_KB_DOWN 1
+#define  MSG_CMD_KB_UP 2
+#define  MSG_CMD_KB_PRESS 3
+#define  MSG_CMD_KB_UP_ALL 4
+#define  MSG_CMD_KB_COMB_DOWN 5
+#define  MSG_CMD_KB_COMB_UP 6
+#define  MSG_CMD_KB_COMB_PRESS 7
+#define  MSG_CMD_KB_GET_CAPS_LOCK 8
+#define  MSG_CMD_KB_GET_NUM_LOCK 9
+#define  MSG_CMD_KB_SET_CAPS_LOCK 10
+#define  MSG_CMD_KB_SET_NUM_LOCK 11
+
 
 typedef union {
   unsigned char type;
@@ -44,13 +49,23 @@ typedef union {
 } MSG_DATA_T;
 
 
-
+typedef union {
+  unsigned char type;
+  //keyboard
+  struct {
+    unsigned char kb_type;
+    //use
+    unsigned char kb_cmd;
+    unsigned char kb_ret;
+  };
+  unsigned char buf[64];
+} MSG_DATA_RESULT_T;
 
 
 //global data
 const int pinLed = LED_BUILTIN;
 MSG_DATA_T rawhidData;
-
+MSG_DATA_RESULT_T rawhidwriteData;
 
 
 
@@ -60,7 +75,7 @@ void setup() {
   while (!Serial && !Serial.available()) {}
   Log.begin(LOG_LEVEL_SILENT, &Serial);
   //
-  Keyboard.begin();
+  BootKeyboard.begin();
   Mouse.begin();
 
   //
@@ -73,12 +88,10 @@ void setup() {
 
 int readData()
 {
-  // Simple debounce
-  // Check if there is new data from the RawHID device
+
   auto bytesAvailable = RawHID.available();
-  if (bytesAvailable)
+  if (bytesAvailable > 0 && bytesAvailable <= sizeof(rawhidData))
   {
-    // Mirror data via Serial
     for (int i = 0; i < bytesAvailable; i++)
     {
       rawhidData.buf[i] = (unsigned char)RawHID.read();
@@ -86,78 +99,82 @@ int readData()
   }
   return bytesAvailable;
 }
+int writeData()
+{
+  return RawHID.write((unsigned char*)&rawhidwriteData, sizeof(rawhidwriteData));
+}
 void keyboardProcess()
 {
   switch (rawhidData.kb_cmd)
   {
-    case MSG_KB_TYPE_DOWN:
+    case MSG_CMD_KB_DOWN:
       {
-        Keyboard.release(KeyboardKeycode(rawhidData.kb_key[0]));
+        BootKeyboard.release(KeyboardKeycode(rawhidData.kb_key[0]));
         break;
       }
-    case MSG_KB_TYPE_UP:
+    case MSG_CMD_KB_UP:
       {
-        Keyboard.press(KeyboardKeycode(rawhidData.kb_key[0]));
+        BootKeyboard.press(KeyboardKeycode(rawhidData.kb_key[0]));
         break;
       }
-    case MSG_KB_TYPE_PRESS:
+    case MSG_CMD_KB_PRESS:
       {
-        Keyboard.write(KeyboardKeycode(rawhidData.kb_key[0]));
-      }
-    case MSG_KB_TYPE_UP_ALL:
-      {
-        Keyboard.releaseAll();
+        BootKeyboard.write(KeyboardKeycode(rawhidData.kb_key[0]));
         break;
-
       }
-    case MSG_KB_TYPE_COMB_DOWN:
+    case MSG_CMD_KB_UP_ALL:
+      {
+        BootKeyboard.releaseAll();
+        break;
+      }
+    case MSG_CMD_KB_COMB_DOWN:
       {
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
           if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
           {
-            Keyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
           }
         }
         if (j > 0)
         {
-          Keyboard.send();
+          BootKeyboard.send();
         }
         break;
       }
-    case MSG_KB_TYPE_COMB_UP:
+    case MSG_CMD_KB_COMB_UP:
       {
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
           if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
           {
-            Keyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
           }
         }
         if (j > 0)
         {
-          Keyboard.send();
+          BootKeyboard.send();
         }
         break;
       }
-    case MSG_KB_TYPE_COMB_PRESS:
+    case MSG_CMD_KB_COMB_PRESS:
       {
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
           if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
           {
-            Keyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
           }
         }
         if (j > 0)
         {
-          Keyboard.send();
+          BootKeyboard.send();
         }
         //
         j = 0;
@@ -165,19 +182,65 @@ void keyboardProcess()
         {
           if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
           {
-            Keyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
           }
         }
         if (j > 0)
         {
-          Keyboard.send();
+          BootKeyboard.send();
         }
+        break;
+      }
+    case MSG_CMD_KB_GET_CAPS_LOCK:
+      {
+        if (BootKeyboard.getLeds() & LED_CAPS_LOCK)
+        {
+          rawhidwriteData.type = MSG_TYPE_KEYBOARD;
+          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.kb_ret = 1;
+          writeData();
+        }
+        else
+        {
+          rawhidwriteData.type = MSG_TYPE_KEYBOARD;
+          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.kb_ret = 0;
+          writeData();
+        }
+        break;
+      }
+    case MSG_CMD_KB_GET_NUM_LOCK:
+      {
+        if (BootKeyboard.getLeds() & LED_NUM_LOCK)
+        {
+          rawhidwriteData.type = MSG_TYPE_KEYBOARD;
+          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.kb_ret = 1;
+          writeData();
+        }
+        else
+        {
+          rawhidwriteData.type = MSG_TYPE_KEYBOARD;
+          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.kb_ret = 0;
+          writeData();
+        }
+        break;
+      }
+    case MSG_CMD_KB_SET_CAPS_LOCK:
+      {
+        BootKeyboard.write(KEY_CAPS_LOCK);
+        break;
+      }
+    case MSG_CMD_KB_SET_NUM_LOCK:
+      {
+        BootKeyboard.write(KEY_NUM_LOCK);
         break;
       }
     default:
       {
-        Log.error("msg keyboard cmd error, cmd is %d", rawhidData.kb_cmd);
+        Log.error("msg keyboard cmd error, cmd is %d\n", rawhidData.kb_cmd);
         break;
       }
   }
@@ -209,7 +272,7 @@ void loop()
           keyboardProcess();
           break;
         }
-      case MSG_KB_TYPE_UP:
+      case MSG_TYPE_MOUSE:
         {
           MouseProcess();
           break;
@@ -221,17 +284,17 @@ void loop()
         }
       default:
         {
-          Log.error("msg type error, type is %d", rawhidData.type);
+          Log.error("msg type error, type is %d\n", rawhidData.type);
           break;
         }
     }
-    Log.trace("read data sucessful");
+    Log.trace("read data sucessful\n");
 
   }
   else
   {
-    Log.error("read data error");
+    Log.trace("read data error\n");
   }
 
-  Log.verbose("read data size %d", bytesAvailable);
+  Log.verbose("read data size %d\n", bytesAvailable);
 }

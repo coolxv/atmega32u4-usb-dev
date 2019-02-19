@@ -39,13 +39,17 @@ int main(int argc, char* argv[])
 #if 1
 
 	OpenDevice();
-	Sleep(5000);
-	KeyPress("s", 1);
-	SetLogLevel(0);
-	Sleep(3000);
-	KeyPress("a", 1);
-	Sleep(1000);
-	SetLogLevel(0);
+	//Sleep(5000);
+	//KeyPress("s", 1);
+	SetLogLevel(3);
+	Sleep(500);
+	//KeyPress("a", 1);
+	//Sleep(1000);
+	//SetLogLevel(0);
+	SetCapsLock();
+	Sleep(500);
+	int ret = GetCapsLock();
+	printf("ret=%d\n",ret);
 	CloseDevice();
 
 

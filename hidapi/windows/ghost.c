@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <windows.h>
 #include "keymap.h"
 #include "hidapi.h"
 #include "ghostapi.h"
@@ -149,7 +149,7 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_DOWN;
+	pkg.kb_cmd = MSG_CMD_KB_DOWN;
 	pkg.kb_key[0] = keycode;
 	//send
 	int res;
@@ -184,7 +184,7 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_UP;
+	pkg.kb_cmd = MSG_CMD_KB_UP;
 	pkg.kb_key[0] = keycode;
 	//send
 	int res;
@@ -218,7 +218,7 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_PRESS;
+	pkg.kb_cmd = MSG_CMD_KB_PRESS;
 	pkg.kb_key[0] = keycode;
 	//send
 	int res;
@@ -264,7 +264,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	//package
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_COMB_DOWN;
+	pkg.kb_cmd = MSG_CMD_KB_COMB_DOWN;
 	pkg.kb_count = count;
 	//send
 	int res;
@@ -311,7 +311,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	//package
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_COMB_UP;
+	pkg.kb_cmd = MSG_CMD_KB_COMB_UP;
 	pkg.kb_count = count;
 	//send
 	int res;
@@ -358,7 +358,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	//package
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_COMB_PRESS;
+	pkg.kb_cmd = MSG_CMD_KB_COMB_PRESS;
 	pkg.kb_count = cnt;
 	//send
 	int res;
@@ -384,7 +384,7 @@ int GHOST_API_EXPORT  KeyUpAll()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_KB_TYPE_UP_ALL;
+	pkg.kb_cmd = MSG_CMD_KB_UP_ALL;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -419,14 +419,142 @@ int GHOST_API_EXPORT  Say(char *keys)
 // 获取大写灯状态
 int GHOST_API_EXPORT  GetCapsLock()
 {
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+	}
+	//
+	MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0) 
+	{
+		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		if (res == 0)
+		{
+			printf("waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			printf("Unable to read()\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.kb_ret;
+	}
 	return 0;
 }
 // 获取NumLock灯状态
 int GHOST_API_EXPORT  GetNumLock()
 {
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_CMD_KB_GET_NUM_LOCK;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+	}
+	//
+	MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0)
+	{
+		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		if (res == 0)
+		{
+			printf("waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			printf("Unable to read()\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.kb_ret;
+	}
 	return 0;
 }
+// 获取大写灯状态
+int GHOST_API_EXPORT  SetCapsLock()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
+}
+// 获取NumLock灯状态
+int GHOST_API_EXPORT  SetNumLock()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
 
+}
 //////////////////////////////////////////////
 ////////////     鼠标管理接口      ///////////
 //////////////////////////////////////////////
