@@ -41,7 +41,7 @@ extern "C" {
 	// 获取设备型号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetModel();
 	// 获取固件版本号
-	GHOST_API_EXPORT char* GHOST_API_CALL GetVersion();
+	GHOST_API_EXPORT char* GHOST_API_CALL GetVer();
 	// 获取生产日期
 	GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate();
 
@@ -122,7 +122,8 @@ extern "C" {
 	//////////////////////////////////////////////
 	////////////     辅助管理接口      ///////////
 	//////////////////////////////////////////////
-
+	// 设置日志级别0=关闭，1-6级别
+	int GHOST_API_EXPORT GHOST_API_CALL SetLogLevel(int level);
 
 #ifdef __cplusplus
 }

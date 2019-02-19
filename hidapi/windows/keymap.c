@@ -209,7 +209,7 @@ unsigned char keymap_map(const char *key)
 	int *val = map_get(&m, tmp);
 	if (val)
 	{
-		return (unsigned char)(*val && 0xff);
+		return (unsigned char)(*val);
 	}
 	else
 	{

@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include "hidapi.h"
 #include "packdef.h"
-
+#include "ghostapi.h"
 // Headers needed for sleeping.
 #ifdef _WIN32
 	#include <windows.h>
@@ -36,6 +36,24 @@
 
 int main(int argc, char* argv[])
 {
+#if 1
+
+	OpenDevice();
+	Sleep(5000);
+	KeyPress("s", 1);
+	SetLogLevel(0);
+	Sleep(3000);
+	KeyPress("a", 1);
+	Sleep(1000);
+	SetLogLevel(0);
+	CloseDevice();
+
+
+
+
+
+#else
+
 	int res;
 	unsigned char buf[256];
 	#define MAX_STR 255
@@ -139,5 +157,8 @@ int main(int argc, char* argv[])
 	system("pause");
 #endif
 
+
+
+#endif
 	return 0;
 }

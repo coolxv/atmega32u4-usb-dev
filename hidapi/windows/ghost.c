@@ -118,7 +118,7 @@ GHOST_API_EXPORT char* GetModel()
 	return NULL;
 }
 // 获取固件版本号
-GHOST_API_EXPORT char* GetVersion()
+GHOST_API_EXPORT char* GetVer()
 {
 	return NULL;
 }
@@ -145,12 +145,12 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 		return 2;
 	}
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_DOWN;
-	pkg.k[0] = keycode;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_DOWN;
+	pkg.kb_key[0] = keycode;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -180,12 +180,12 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 		return 2;
 	}
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_UP;
-	pkg.k[0] = keycode;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_UP;
+	pkg.kb_key[0] = keycode;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -214,12 +214,12 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 		return 2;
 	}
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_PRESS;
-	pkg.k[0] = keycode;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_PRESS;
+	pkg.kb_key[0] = keycode;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -242,7 +242,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	unsigned char keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 
 	for (int i = 0; i < 6; i++)
@@ -252,7 +252,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 			keycode = keymap_map(key[i]);
 			if (keycode)
 			{
-				pkg.k[0] = keycode;
+				pkg.kb_key[0] = keycode;
 				count++;
 			}
 		}
@@ -263,9 +263,9 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	}
 	//package
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_COMB_DOWN;
-	pkg.count = count;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_COMB_DOWN;
+	pkg.kb_count = count;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -289,7 +289,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	unsigned char keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 
 	for (int i = 0; i < 6; i++)
@@ -299,7 +299,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 			keycode = keymap_map(key[i]);
 			if (keycode)
 			{
-				pkg.k[0] = keycode;
+				pkg.kb_key[0] = keycode;
 				count++;
 			}
 		}
@@ -310,9 +310,9 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	}
 	//package
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_COMB_UP;
-	pkg.count = count;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_COMB_UP;
+	pkg.kb_count = count;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -336,7 +336,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	unsigned char keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 
 	for (int i = 0; i < 6; i++)
@@ -346,7 +346,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 			keycode = keymap_map(key[i]);
 			if (keycode)
 			{
-				pkg.k[0] = keycode;
+				pkg.kb_key[0] = keycode;
 				cnt++;
 			}
 		}
@@ -357,9 +357,9 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	}
 	//package
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_COMB_PRESS;
-	pkg.count = cnt;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_COMB_PRESS;
+	pkg.kb_count = cnt;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -380,11 +380,11 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 int GHOST_API_EXPORT  KeyUpAll()
 {
 	//package
-	MSG_KM_DATA_T pkg;
+	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_KM_TYPE_KEYBOARD;
-	pkg.kb_type = MSG_KM_KB_TYPE_UP_ALL;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_KB_TYPE_UP_ALL;
 	//send
 	int res;
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -526,7 +526,30 @@ int GHOST_API_EXPORT  SetMoveSpeed(int speed)
 {
 	return 0;
 }
-
+// 设置日志级别
+int GHOST_API_EXPORT SetLogLevel(int level)
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_LOG;
+	pkg.lg_level = (unsigned char)level;
+	//send
+	int res;
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	if (res < 0)
+	{
+		printf("Unable to write()\n");
+		printf("Error: %ls\n", hid_error(handle));
+		return 3;
+	}
+	else
+	{
+		printf("sucess to write()\n");
+		return 0;
+	}
+}
 //////////////////////////////////////////////
 ////////////     存储管理接口      ///////////
 //////////////////////////////////////////////	   
