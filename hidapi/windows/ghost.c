@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
+#include <locale.h>
 #include <windows.h>
 #include "keymap.h"
 #include "hidapi.h"
@@ -18,15 +20,16 @@
 static hid_device *handle = NULL;
 static int initialized = 0;
 
-
+static CRITICAL_SECTION mutex;
 
 //////////////////////////////////////////////
-////////////     Éè±¸¹ÜÀí½Ó¿Ú      ///////////
+////////////     è®¾å¤‡ç®¡ç†æ¥å£      ///////////
 //////////////////////////////////////////////
 int GHOST_API_EXPORT OpenDevice()
 {
 	if (!initialized)
 	{
+		setlocale(LC_ALL, "");//æ·»åŠ è¿™è¡Œ write ä¸ä¼šå¤±è´¥ï¼Œä¸çŸ¥å•¥åŸå› ï¼Œâ€œè¿åˆ°ç³»ç»Ÿä¸Šçš„è®¾å¤‡æ²¡æœ‰å‘æŒ¥ä½œç”¨â€
 		keymap_init();
 
 		if (hid_init() < 0)
@@ -85,53 +88,53 @@ int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 	}
 	return 0;
 }
-// ¼ì²éÉè±¸ÊÇ·ñÓĞĞ§
+// æ£€æŸ¥è®¾å¤‡æ˜¯å¦æœ‰æ•ˆ
 int GHOST_API_EXPORT  CheckDevice()
 {
 	return 0;
 }
-// ¶Ï¿ªÉè±¸Á¬½Ó
+// æ–­å¼€è®¾å¤‡è¿æ¥
 int GHOST_API_EXPORT  Disconnect(int second)
 {
 	return 0;
 }
-// ÉèÖÃ×Ô¶¨ÒåÉè±¸ID£¨³§ÉÌID+²úÆ·ID£©
+// è®¾ç½®è‡ªå®šä¹‰è®¾å¤‡IDï¼ˆå‚å•†ID+äº§å“IDï¼‰
 int GHOST_API_EXPORT  SetDeviceID(int vid, int pid)
 {
 	return 0;
 }
-// »Ö¸´Éè±¸Ä¬ÈÏID
+// æ¢å¤è®¾å¤‡é»˜è®¤ID
 int GHOST_API_EXPORT  RestoreDeviceID()
 {
 	return 0;
 }
 
 
-// »ñÈ¡ĞòÁĞºÅ
+// è·å–åºåˆ—å·
 GHOST_API_EXPORT char* GetSN()
 {
 	return NULL;
 }
-// »ñÈ¡Éè±¸ĞÍºÅ
+// è·å–è®¾å¤‡å‹å·
 GHOST_API_EXPORT char* GetModel()
 {
 	return NULL;
 }
-// »ñÈ¡¹Ì¼ş°æ±¾ºÅ
+// è·å–å›ºä»¶ç‰ˆæœ¬å·
 GHOST_API_EXPORT char* GetVer()
 {
 	return NULL;
 }
-// »ñÈ¡Éú²úÈÕÆÚ
+// è·å–ç”Ÿäº§æ—¥æœŸ
 GHOST_API_EXPORT char* GetProductionDate()
 {
 	return NULL;
 }
 
 //////////////////////////////////////////////
-////////////     ¼üÅÌ¹ÜÀí½Ó¿Ú      ///////////
+////////////     é”®ç›˜ç®¡ç†æ¥å£      ///////////
 //////////////////////////////////////////////
-// ¼ü°´ÏÂ
+// é”®æŒ‰ä¸‹
 int GHOST_API_EXPORT  KeyDown(char *key)
 {
 	if (NULL == key || 0 == strlen(key))
@@ -167,7 +170,7 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	}
 
 }
-// ¼üµ¯Æğ
+// é”®å¼¹èµ·
 int GHOST_API_EXPORT  KeyUp(char *key)
 {
 	if (NULL == key || 0 == strlen(key))
@@ -201,7 +204,7 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 		return 0;
 	}
 }
-// Ò»´Î°´¼ü
+// ä¸€æ¬¡æŒ‰é”®
 int GHOST_API_EXPORT  KeyPress(char *key, int count)
 {
 	if (NULL == key || 0 == strlen(key))
@@ -235,7 +238,7 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 		return 0;
 	}
 }
-// ×éºÏ¼ü°´ÏÂ
+// ç»„åˆé”®æŒ‰ä¸‹
 int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
 	unsigned count = 0;
@@ -282,7 +285,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	}
 	return 0;
 }
-// ×éºÏ¼üµ¯Æğ
+// ç»„åˆé”®å¼¹èµ·
 int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
 	unsigned count = 0;
@@ -329,7 +332,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	}
 	return 0;
 }
-// ×éºÏ°´¼ü
+// ç»„åˆæŒ‰é”®
 int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
 {
 	unsigned int cnt = 0;
@@ -376,7 +379,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	}
 	return 0;
 }
-// ÊÍ·ÅËùÓĞ°´¼ü
+// é‡Šæ”¾æ‰€æœ‰æŒ‰é”®
 int GHOST_API_EXPORT  KeyUpAll()
 {
 	//package
@@ -400,7 +403,7 @@ int GHOST_API_EXPORT  KeyUpAll()
 		return 0;
 	}
 }
-// Ä£Äâ°´¼üÊäÈë
+// æ¨¡æ‹ŸæŒ‰é”®è¾“å…¥
 int GHOST_API_EXPORT  Say(char *keys)
 {
 	if (NULL == keys || 0 == strlen(keys))
@@ -409,14 +412,16 @@ int GHOST_API_EXPORT  Say(char *keys)
 	}
 	int ret = 0;
 	int len = strlen(keys);
+	char tmp[2] = { 0 };
 	for (int i = 0; i < len; i++)
 	{
-		ret |= KeyPress(&keys[i], 1);
+		tmp[0] = keys[i];
+		ret |= KeyPress(tmp, 1);
 	}
 	return ret;
 }
 
-// »ñÈ¡´óĞ´µÆ×´Ì¬
+// è·å–å¤§å†™ç¯çŠ¶æ€
 int GHOST_API_EXPORT  GetCapsLock()
 {
 	//package
@@ -461,7 +466,7 @@ int GHOST_API_EXPORT  GetCapsLock()
 	}
 	return 0;
 }
-// »ñÈ¡NumLockµÆ×´Ì¬
+// è·å–NumLockç¯çŠ¶æ€
 int GHOST_API_EXPORT  GetNumLock()
 {
 	//package
@@ -506,7 +511,7 @@ int GHOST_API_EXPORT  GetNumLock()
 	}
 	return 0;
 }
-// »ñÈ¡´óĞ´µÆ×´Ì¬
+// è·å–å¤§å†™ç¯çŠ¶æ€
 int GHOST_API_EXPORT  SetCapsLock()
 {
 	//package
@@ -530,7 +535,7 @@ int GHOST_API_EXPORT  SetCapsLock()
 		return 0;
 	}
 }
-// »ñÈ¡NumLockµÆ×´Ì¬
+// è·å–NumLockç¯çŠ¶æ€
 int GHOST_API_EXPORT  SetNumLock()
 {
 	//package
@@ -556,105 +561,105 @@ int GHOST_API_EXPORT  SetNumLock()
 
 }
 //////////////////////////////////////////////
-////////////     Êó±ê¹ÜÀí½Ó¿Ú      ///////////
+////////////     é¼ æ ‡ç®¡ç†æ¥å£      ///////////
 //////////////////////////////////////////////
-// Êó±ê×ó¼ü°´ÏÂ
+// é¼ æ ‡å·¦é”®æŒ‰ä¸‹
 int GHOST_API_EXPORT  LeftDown()
 {
 	return 0;
 }
-// Êó±ê×ó¼üµ¯Æğ
+// é¼ æ ‡å·¦é”®å¼¹èµ·
 int GHOST_API_EXPORT  LeftUp()
 {
 	return 0;
 }
-// Êó±ê×ó¼üµ¥»÷
+// é¼ æ ‡å·¦é”®å•å‡»
 int GHOST_API_EXPORT  LeftClick(int count)
 {
 	return 0;
 }
-// Êó±ê×ó¼üË«»÷
+// é¼ æ ‡å·¦é”®åŒå‡»
 int GHOST_API_EXPORT  LeftDoubleClick(int count)
 {
 	return 0;
 }
-// Êó±êÓÒ¼ü°´ÏÂ
+// é¼ æ ‡å³é”®æŒ‰ä¸‹
 int GHOST_API_EXPORT  RightDown()
 {
 	return 0;
 }
-// Êó±êÓÒ¼üµ¯Æğ
+// é¼ æ ‡å³é”®å¼¹èµ·
 int GHOST_API_EXPORT  RightUp()
 {
 	return 0;
 }
-// Êó±êÓÒ¼üµ¥»÷
+// é¼ æ ‡å³é”®å•å‡»
 int GHOST_API_EXPORT  RightClick(int count)
 {
 	return 0;
 }
-// Êó±êÓÒ¼üË«»÷
+// é¼ æ ‡å³é”®åŒå‡»
 int GHOST_API_EXPORT  RightDoubleClick(int count)
 {
 	return 0;
 }
-// Êó±êÖĞ¼ü°´ÏÂ
+// é¼ æ ‡ä¸­é”®æŒ‰ä¸‹
 int GHOST_API_EXPORT  MiddleDown()
 {
 	return 0;
 }
-// Êó±êÖĞ¼üµ¯Æğ
+// é¼ æ ‡ä¸­é”®å¼¹èµ·
 int GHOST_API_EXPORT  MiddleUp()
 {
 	return 0;
 }
-// Êó±êÖĞ¼üµ¥»÷
+// é¼ æ ‡ä¸­é”®å•å‡»
 int GHOST_API_EXPORT  MiddleClick(int count)
 {
 	return 0;
 }
-// Êó±êÖĞ¼üË«»÷
+// é¼ æ ‡ä¸­é”®åŒå‡»
 int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 {
 	return 0;
 }
-// ÊÍ·ÅËùÓĞÊó±ê°´¼ü
+// é‡Šæ”¾æ‰€æœ‰é¼ æ ‡æŒ‰é”®
 int GHOST_API_EXPORT  MouseUpAll()
 {
 	return 0;
 }
-// Ä£ÄâÊó±êÒÆ¶¯
+// æ¨¡æ‹Ÿé¼ æ ‡ç§»åŠ¨
 int GHOST_API_EXPORT  MoveTo(int x, int y)
 {
 	return 0;
 }
-// Ïà¶ÔÒÆ¶¯Êó±ê(X£¬Y²»ÄÜ´óÓÚ255)
+// ç›¸å¯¹ç§»åŠ¨é¼ æ ‡(Xï¼ŒYä¸èƒ½å¤§äº255)
 int GHOST_API_EXPORT  MoveToR(int x, int y)
 {
 	return 0;
 }
-// Êó±ê¹öÂÖ¹ö¶¯
+// é¼ æ ‡æ»šè½®æ»šåŠ¨
 int GHOST_API_EXPORT  WheelsMove(int y)
 {
 	return 0;
 }
 
-// ´ÓÖ¸¶¨Î»ÖÃÒÆ¶¯Êó±ê
+// ä»æŒ‡å®šä½ç½®ç§»åŠ¨é¼ æ ‡
 int GHOST_API_EXPORT  MoveToFrom(int fx, int fy, int tx, int ty)
 {
 	return 0;
 }
-// ¸´Î»ÒÆ¶¯Êó±ê
+// å¤ä½ç§»åŠ¨é¼ æ ‡
 int GHOST_API_EXPORT  ReMoveTo(int x, int y)
 {
 	return 0;
 }
-// ÉèÖÃÊó±êÒÆ¶¯ËÙ¶È
+// è®¾ç½®é¼ æ ‡ç§»åŠ¨é€Ÿåº¦
 int GHOST_API_EXPORT  SetMoveSpeed(int speed)
 {
 	return 0;
 }
-// ÉèÖÃÈÕÖ¾¼¶±ğ
+// è®¾ç½®æ—¥å¿—çº§åˆ«
 int GHOST_API_EXPORT SetLogLevel(int level)
 {
 	//package
@@ -679,13 +684,13 @@ int GHOST_API_EXPORT SetLogLevel(int level)
 	}
 }
 //////////////////////////////////////////////
-////////////     ´æ´¢¹ÜÀí½Ó¿Ú      ///////////
+////////////     å­˜å‚¨ç®¡ç†æ¥å£      ///////////
 //////////////////////////////////////////////	   
 
 
 
 //////////////////////////////////////////////
-////////////     ¸¨Öú¹ÜÀí½Ó¿Ú      ///////////
+////////////     è¾…åŠ©ç®¡ç†æ¥å£      ///////////
 //////////////////////////////////////////////
 
 

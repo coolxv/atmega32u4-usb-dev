@@ -155,7 +155,7 @@ static hid_device *new_hid_device()
 	dev->read_pending = FALSE;
 	dev->read_buf = NULL;
 	memset(&dev->ol, 0, sizeof(dev->ol));
-	dev->ol.hEvent = CreateEvent(NULL, FALSE, FALSE /*initial state f=nonsignaled*/, NULL);
+	dev->ol.hEvent = CreateEvent(NULL,  TRUE, FALSE /*initial state f=nonsignaled*/, NULL);
 
 	return dev;
 }
@@ -613,10 +613,8 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 	DWORD bytes_written;
 	BOOL res;
 
-	OVERLAPPED ol;
 	unsigned char *buf;
-	memset(&ol, 0, sizeof(ol));
-
+	HANDLE ev = dev->ol.hEvent;
 	/* Make sure the right number of bytes are passed to WriteFile. Windows
 	   expects the number of bytes which are in the _longest_ report (plus
 	   one for the report number) bytes even if the data is a report
@@ -634,8 +632,8 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 		memset(buf + length, 0, dev->output_report_length - length);
 		length = dev->output_report_length;
 	}
-
-	res = WriteFile(dev->device_handle, buf, length, NULL, &ol);
+	ResetEvent(ev);
+	res = WriteFile(dev->device_handle, buf, length, NULL, &dev->ol);
 	
 	if (!res) {
 		if (GetLastError() != ERROR_IO_PENDING) {
@@ -648,7 +646,7 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 
 	/* Wait here until the write is done. This makes
 	   hid_write() synchronous. */
-	res = GetOverlappedResult(dev->device_handle, &ol, &bytes_written, TRUE/*wait*/);
+	res = GetOverlappedResult(dev->device_handle, &dev->ol, &bytes_written, TRUE/*wait*/);
 	if (!res) {
 		/* The Write operation failed. */
 		register_error(dev, "WriteFile");
@@ -737,7 +735,7 @@ end_of_function:
 
 int HID_API_EXPORT HID_API_CALL hid_read(hid_device *dev, unsigned char *data, size_t length)
 {
-	return hid_read_timeout(dev, data, length, (dev->blocking)? -1: 0);
+	return hid_read_timeout(dev, data, length, (dev->blocking)? INFINITE : 0);
 }
 
 int HID_API_EXPORT HID_API_CALL hid_set_nonblocking(hid_device *dev, int nonblock)

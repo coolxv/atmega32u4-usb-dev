@@ -18,114 +18,114 @@ extern "C" {
 
 
 	//////////////////////////////////////////////
-	////////////     Éè±¸¹ÜÀí½Ó¿Ú      ///////////
+	////////////     è®¾å¤‡ç®¡ç†æŽ¥å£      ///////////
 	//////////////////////////////////////////////
-	// ´ò¿ªÉè±¸
+	// æ‰“å¼€è®¾å¤‡
 	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();
-	// ´ò¿ªÉè±¸£¨¸ù¾ÝÉè±¸VIDºÍPID£©
+	// æ‰“å¼€è®¾å¤‡ï¼ˆæ ¹æ®è®¾å¤‡VIDå’ŒPIDï¼‰
 	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceEx(int vid, int pid);
-	// ¹Ø±ÕÉè±¸
+	// å…³é—­è®¾å¤‡
 	int GHOST_API_EXPORT GHOST_API_CALL CloseDevice();
-	// ¼ì²éÉè±¸ÊÇ·ñÓÐÐ§
+	// æ£€æŸ¥è®¾å¤‡æ˜¯å¦æœ‰æ•ˆ
 	int GHOST_API_EXPORT GHOST_API_CALL CheckDevice();
-	// ¶Ï¿ªÉè±¸Á¬½Ó
+	// æ–­å¼€è®¾å¤‡è¿žæŽ¥
 	int GHOST_API_EXPORT GHOST_API_CALL Disconnect(int second);
-	// ÉèÖÃ×Ô¶¨ÒåÉè±¸ID£¨³§ÉÌID+²úÆ·ID£©
+	// è®¾ç½®è‡ªå®šä¹‰è®¾å¤‡IDï¼ˆåŽ‚å•†ID+äº§å“IDï¼‰
 	int GHOST_API_EXPORT GHOST_API_CALL SetDeviceID(int vid, int pid);
-	// »Ö¸´Éè±¸Ä¬ÈÏID
+	// æ¢å¤è®¾å¤‡é»˜è®¤ID
 	int GHOST_API_EXPORT GHOST_API_CALL RestoreDeviceID();
 
 
-	// »ñÈ¡ÐòÁÐºÅ
+	// èŽ·å–åºåˆ—å·
 	GHOST_API_EXPORT char* GHOST_API_CALL GetSN();
-	// »ñÈ¡Éè±¸ÐÍºÅ
+	// èŽ·å–è®¾å¤‡åž‹å·
 	GHOST_API_EXPORT char* GHOST_API_CALL GetModel();
-	// »ñÈ¡¹Ì¼þ°æ±¾ºÅ
+	// èŽ·å–å›ºä»¶ç‰ˆæœ¬å·
 	GHOST_API_EXPORT char* GHOST_API_CALL GetVer();
-	// »ñÈ¡Éú²úÈÕÆÚ
+	// èŽ·å–ç”Ÿäº§æ—¥æœŸ
 	GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate();
 
 	//////////////////////////////////////////////
-	////////////     ¼üÅÌ¹ÜÀí½Ó¿Ú      ///////////
+	////////////     é”®ç›˜ç®¡ç†æŽ¥å£      ///////////
 	//////////////////////////////////////////////
-	// ¼ü°´ÏÂ
+	// é”®æŒ‰ä¸‹
 	int GHOST_API_EXPORT GHOST_API_CALL KeyDown(char *key);
-	// ¼üµ¯Æð
+	// é”®å¼¹èµ·
 	int GHOST_API_EXPORT GHOST_API_CALL KeyUp(char *key);
-	// Ò»´Î°´¼ü
+	// ä¸€æ¬¡æŒ‰é”®
 	int GHOST_API_EXPORT GHOST_API_CALL KeyPress(char *key, int count);
-	// ×éºÏ¼ü°´ÏÂ
+	// ç»„åˆé”®æŒ‰ä¸‹
 	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
-	// ×éºÏ¼üµ¯Æð
+	// ç»„åˆé”®å¼¹èµ·
 	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
-	// ×éºÏ°´¼ü
+	// ç»„åˆæŒ‰é”®
 	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
-	// ÊÍ·ÅËùÓÐ°´¼ü
+	// é‡Šæ”¾æ‰€æœ‰æŒ‰é”®
 	int GHOST_API_EXPORT GHOST_API_CALL KeyUpAll();
-	// Ä£Äâ°´¼üÊäÈë
+	// æ¨¡æ‹ŸæŒ‰é”®è¾“å…¥
 	int GHOST_API_EXPORT GHOST_API_CALL Say(char *keys);
 
-	// »ñÈ¡´óÐ´µÆ×´Ì¬
+	// èŽ·å–å¤§å†™ç¯çŠ¶æ€
 	int GHOST_API_EXPORT GHOST_API_CALL GetCapsLock();
-	// »ñÈ¡NumLockµÆ×´Ì¬
+	// èŽ·å–NumLockç¯çŠ¶æ€
 	int GHOST_API_EXPORT GHOST_API_CALL GetNumLock();
-	// ÉèÖÃ´óÐ´µÆ×´Ì¬
+	// è®¾ç½®å¤§å†™ç¯çŠ¶æ€
 	int GHOST_API_EXPORT GHOST_API_CALL SetCapsLock();
-	// ÉèÖÃNumLockµÆ×´Ì¬
+	// è®¾ç½®NumLockç¯çŠ¶æ€
 	int GHOST_API_EXPORT GHOST_API_CALL SetNumLock();
 	//////////////////////////////////////////////
-	////////////     Êó±ê¹ÜÀí½Ó¿Ú      ///////////
+	////////////     é¼ æ ‡ç®¡ç†æŽ¥å£      ///////////
 	//////////////////////////////////////////////
-	// Êó±ê×ó¼ü°´ÏÂ
+	// é¼ æ ‡å·¦é”®æŒ‰ä¸‹
 	int GHOST_API_EXPORT GHOST_API_CALL LeftDown();
-	// Êó±ê×ó¼üµ¯Æð
+	// é¼ æ ‡å·¦é”®å¼¹èµ·
 	int GHOST_API_EXPORT GHOST_API_CALL LeftUp();
-	// Êó±ê×ó¼üµ¥»÷
+	// é¼ æ ‡å·¦é”®å•å‡»
 	int GHOST_API_EXPORT GHOST_API_CALL LeftClick(int count);
-	// Êó±ê×ó¼üË«»÷
+	// é¼ æ ‡å·¦é”®åŒå‡»
 	int GHOST_API_EXPORT GHOST_API_CALL LeftDoubleClick(int count);
-	// Êó±êÓÒ¼ü°´ÏÂ
+	// é¼ æ ‡å³é”®æŒ‰ä¸‹
 	int GHOST_API_EXPORT GHOST_API_CALL RightDown();
-	// Êó±êÓÒ¼üµ¯Æð
+	// é¼ æ ‡å³é”®å¼¹èµ·
 	int GHOST_API_EXPORT GHOST_API_CALL RightUp();
-	// Êó±êÓÒ¼üµ¥»÷
+	// é¼ æ ‡å³é”®å•å‡»
 	int GHOST_API_EXPORT GHOST_API_CALL RightClick(int count);
-	// Êó±êÓÒ¼üË«»÷
+	// é¼ æ ‡å³é”®åŒå‡»
 	int GHOST_API_EXPORT GHOST_API_CALL RightDoubleClick(int count);
-	// Êó±êÖÐ¼ü°´ÏÂ
+	// é¼ æ ‡ä¸­é”®æŒ‰ä¸‹
 	int GHOST_API_EXPORT GHOST_API_CALL MiddleDown();
-	// Êó±êÖÐ¼üµ¯Æð
+	// é¼ æ ‡ä¸­é”®å¼¹èµ·
 	int GHOST_API_EXPORT GHOST_API_CALL MiddleUp();
-	// Êó±êÖÐ¼üµ¥»÷
+	// é¼ æ ‡ä¸­é”®å•å‡»
 	int GHOST_API_EXPORT GHOST_API_CALL MiddleClick(int count);
-	// Êó±êÖÐ¼üË«»÷
+	// é¼ æ ‡ä¸­é”®åŒå‡»
 	int GHOST_API_EXPORT GHOST_API_CALL MiddleDoubleClick(int count);
-	// ÊÍ·ÅËùÓÐÊó±ê°´¼ü
+	// é‡Šæ”¾æ‰€æœ‰é¼ æ ‡æŒ‰é”®
 	int GHOST_API_EXPORT GHOST_API_CALL MouseUpAll();
-	// Ä£ÄâÊó±êÒÆ¶¯
+	// æ¨¡æ‹Ÿé¼ æ ‡ç§»åŠ¨
 	int GHOST_API_EXPORT GHOST_API_CALL MoveTo(int x, int y);
-	// Ïà¶ÔÒÆ¶¯Êó±ê(X£¬Y²»ÄÜ´óÓÚ255)
+	// ç›¸å¯¹ç§»åŠ¨é¼ æ ‡(Xï¼ŒYä¸èƒ½å¤§äºŽ255)
 	int GHOST_API_EXPORT GHOST_API_CALL MoveToR(int x, int y);
-	// Êó±ê¹öÂÖ¹ö¶¯
+	// é¼ æ ‡æ»šè½®æ»šåŠ¨
 	int GHOST_API_EXPORT GHOST_API_CALL WheelsMove(int y);
 
-	// ´ÓÖ¸¶¨Î»ÖÃÒÆ¶¯Êó±ê
+	// ä»ŽæŒ‡å®šä½ç½®ç§»åŠ¨é¼ æ ‡
 	int GHOST_API_EXPORT GHOST_API_CALL MoveToFrom(int fx, int fy, int tx, int ty);
-	// ¸´Î»ÒÆ¶¯Êó±ê
+	// å¤ä½ç§»åŠ¨é¼ æ ‡
 	int GHOST_API_EXPORT GHOST_API_CALL ReMoveTo(int x, int y);
-	// ÉèÖÃÊó±êÒÆ¶¯ËÙ¶È
+	// è®¾ç½®é¼ æ ‡ç§»åŠ¨é€Ÿåº¦
 	int GHOST_API_EXPORT GHOST_API_CALL SetMoveSpeed(int speed);
 
 	//////////////////////////////////////////////
-	////////////     ´æ´¢¹ÜÀí½Ó¿Ú      ///////////
+	////////////     å­˜å‚¨ç®¡ç†æŽ¥å£      ///////////
 	//////////////////////////////////////////////	   
 
 
 
 	//////////////////////////////////////////////
-	////////////     ¸¨Öú¹ÜÀí½Ó¿Ú      ///////////
+	////////////     è¾…åŠ©ç®¡ç†æŽ¥å£      ///////////
 	//////////////////////////////////////////////
-	// ÉèÖÃÈÕÖ¾¼¶±ð0=¹Ø±Õ£¬1-6¼¶±ð
+	// è®¾ç½®æ—¥å¿—çº§åˆ«0=å…³é—­ï¼Œ1-6çº§åˆ«
 	int GHOST_API_EXPORT GHOST_API_CALL SetLogLevel(int level);
 
 #ifdef __cplusplus
