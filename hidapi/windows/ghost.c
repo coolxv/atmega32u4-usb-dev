@@ -8,6 +8,7 @@
 #include "hidapi.h"
 #include "ghostapi.h"
 #include "packdef.h"
+#include "log.h"
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -20,13 +21,14 @@
 static hid_device *handle = NULL;
 static int initialized = 0;
 
-static CRITICAL_SECTION mutex;
+CRITICAL_SECTION ghost_mutex;
 
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
 //////////////////////////////////////////////
 int GHOST_API_EXPORT OpenDevice()
 {
+	EnterCriticalSection(&ghost_mutex);
 	if (!initialized)
 	{
 		setlocale(LC_ALL, "");//添加这行 write 不会失败，不知啥原因，“连到系统上的设备没有发挥作用”
@@ -34,23 +36,28 @@ int GHOST_API_EXPORT OpenDevice()
 
 		if (hid_init() < 0)
 		{
-			printf("unable to init device\n");
-			CloseDevice();
+			log_trace("unable to init device\n");
+			keymap_fini();
+			LeaveCriticalSection(&ghost_mutex);
 			return -1;
 		}
 		handle = hid_open(GHOST_VID, GHOST_PID, NULL);
 		if (!handle) {
-			printf("unable to open device\n");
-			CloseDevice();
-			return -1;
+			log_trace("unable to open device\n");
+			keymap_fini();
+			hid_exit();
+			LeaveCriticalSection(&ghost_mutex);
+			return -2;
 		}
 		initialized = 1;
 	}
+	LeaveCriticalSection(&ghost_mutex);
 	return 0;
 }
 
 int HID_API_EXPORT CloseDevice()
 {
+	EnterCriticalSection(&ghost_mutex);
 	if (initialized)
 	{
 		if (handle)
@@ -63,6 +70,7 @@ int HID_API_EXPORT CloseDevice()
 		handle = NULL;
 		initialized = 0;
 	}
+	LeaveCriticalSection(&ghost_mutex);
 	return 0;
 }
 
@@ -70,22 +78,28 @@ int HID_API_EXPORT CloseDevice()
 
 int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 {
+	EnterCriticalSection(&ghost_mutex);
 	if (!initialized)
 	{
 		if (hid_init() < 0)
 		{
-			printf("unable to init device\n");
-			CloseDevice();
+			log_trace("unable to init device\n");
+			keymap_fini();
+			LeaveCriticalSection(&ghost_mutex);
 			return -1;
 		}
 		handle = hid_open(vid, pid, NULL);
 		if (!handle) {
-			printf("unable to open device\n");
-			CloseDevice();
-			return -1;
+			log_trace("unable to open device\n");
+			keymap_fini();
+			hid_exit();
+			LeaveCriticalSection(&ghost_mutex);
+			return -2;
 		}
 		initialized = 1;
 	}
+	LeaveCriticalSection(&ghost_mutex);
+
 	return 0;
 }
 // 检查设备是否有效
@@ -139,13 +153,13 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 {
 	if (NULL == key || 0 == strlen(key))
 	{
-		return 1;
+		return -1;
 	}
 
 	unsigned char keycode = keymap_map(key);
 	if (!keycode)
 	{
-		return 2;
+		return -2;
 	}
 	//package
 	MSG_DATA_T pkg;
@@ -159,13 +173,13 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -3;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 
@@ -175,12 +189,12 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 {
 	if (NULL == key || 0 == strlen(key))
 	{
-		return 1;
+		return -1;
 	}
 	unsigned char keycode = keymap_map(key);
 	if (!keycode)
 	{
-		return 2;
+		return -2;
 	}
 	//package
 	MSG_DATA_T pkg;
@@ -194,13 +208,13 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -3;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 }
@@ -209,12 +223,12 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 {
 	if (NULL == key || 0 == strlen(key))
 	{
-		return 1;
+		return -1;
 	}
 	unsigned char keycode = keymap_map(key);
 	if (!keycode)
 	{
-		return 2;
+		return -2;
 	}
 	//package
 	MSG_DATA_T pkg;
@@ -228,13 +242,13 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -3;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 }
@@ -262,7 +276,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	}
 	if (0 == count)
 	{
-		return 1;
+		return -1;
 	}
 	//package
 	pkg.type[0] = 0x1;
@@ -274,16 +288,15 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 2;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -2;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
-	return 0;
 }
 // 组合键弹起
 int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
@@ -309,7 +322,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	}
 	if (0 == count)
 	{
-		return 1;
+		return -1;
 	}
 	//package
 	pkg.type[0] = 0x1;
@@ -321,16 +334,15 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 2;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -2;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
-	return 0;
 }
 // 组合按键
 int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
@@ -356,7 +368,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	}
 	if (0 == cnt)
 	{
-		return 1;
+		return -1;
 	}
 	//package
 	pkg.type[0] = 0x1;
@@ -368,16 +380,15 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 2;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -2;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
-	return 0;
 }
 // 释放所有按键
 int GHOST_API_EXPORT  KeyUpAll()
@@ -393,13 +404,13 @@ int GHOST_API_EXPORT  KeyUpAll()
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 }
@@ -435,13 +446,13 @@ int GHOST_API_EXPORT  GetCapsLock()
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 	}
 	//
 	MSG_DATA_RESULT_T result;
@@ -451,13 +462,13 @@ int GHOST_API_EXPORT  GetCapsLock()
 		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
 		if (res == 0)
 		{
-			printf("waiting...\n");
+			log_trace("waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			printf("Unable to read()\n");
+			log_trace("Unable to read()\n");
 		}
 	}
 	if (0 < res)
@@ -480,13 +491,13 @@ int GHOST_API_EXPORT  GetNumLock()
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 	}
 	//
 	MSG_DATA_RESULT_T result;
@@ -496,13 +507,13 @@ int GHOST_API_EXPORT  GetNumLock()
 		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
 		if (res == 0)
 		{
-			printf("waiting...\n");
+			log_trace("waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			printf("Unable to read()\n");
+			log_trace("Unable to read()\n");
 		}
 	}
 	if (0 < res)
@@ -525,13 +536,13 @@ int GHOST_API_EXPORT  SetCapsLock()
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 }
@@ -549,13 +560,13 @@ int GHOST_API_EXPORT  SetNumLock()
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-		return 3;
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 
@@ -673,13 +684,13 @@ int GHOST_API_EXPORT SetLogLevel(int level)
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
 		return 3;
 	}
 	else
 	{
-		printf("sucess to write()\n");
+		log_trace("sucess to write()\n");
 		return 0;
 	}
 }

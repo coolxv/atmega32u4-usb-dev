@@ -92,9 +92,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dllmain.c" />
     <ClCompile Include="ghost.c" />
     <ClCompile Include="hid.c" />
     <ClCompile Include="keymap.c" />
+    <ClCompile Include="log.c" />
     <ClCompile Include="map.c" />
   </ItemGroup>
   <ItemGroup>
@@ -102,6 +104,7 @@
     <ClInclude Include="..\hidapi\hidapi.h" />
     <ClInclude Include="..\hidapi\packdef.h" />
     <ClInclude Include="keymap.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
