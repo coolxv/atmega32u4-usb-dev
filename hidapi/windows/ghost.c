@@ -169,8 +169,12 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	pkg.kb_cmd = MSG_CMD_KB_DOWN;
 	pkg.kb_key[0] = keycode;
 	//send
+
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -205,7 +209,9 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	pkg.kb_key[0] = keycode;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -239,7 +245,9 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 	pkg.kb_key[0] = keycode;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -285,7 +293,9 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	pkg.kb_count = count;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -331,7 +341,9 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	pkg.kb_count = count;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -377,7 +389,9 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	pkg.kb_count = cnt;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -401,7 +415,9 @@ int GHOST_API_EXPORT  KeyUpAll()
 	pkg.kb_cmd = MSG_CMD_KB_UP_ALL;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -443,7 +459,9 @@ int GHOST_API_EXPORT  GetCapsLock()
 	pkg.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -459,7 +477,9 @@ int GHOST_API_EXPORT  GetCapsLock()
 	res = 0;
 	while (res == 0) 
 	{
+		EnterCriticalSection(&ghost_mutex);
 		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&ghost_mutex);
 		if (res == 0)
 		{
 			log_trace("waiting...\n");
@@ -488,7 +508,9 @@ int GHOST_API_EXPORT  GetNumLock()
 	pkg.kb_cmd = MSG_CMD_KB_GET_NUM_LOCK;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -504,7 +526,9 @@ int GHOST_API_EXPORT  GetNumLock()
 	res = 0;
 	while (res == 0)
 	{
+		EnterCriticalSection(&ghost_mutex);
 		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&ghost_mutex);
 		if (res == 0)
 		{
 			log_trace("waiting...\n");
@@ -533,7 +557,9 @@ int GHOST_API_EXPORT  SetCapsLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -557,7 +583,9 @@ int GHOST_API_EXPORT  SetNumLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
 	//send
 	int res;
+	EnterCriticalSection(&ghost_mutex);
 	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
 	if (res < 0)
 	{
 		log_trace("Unable to write()\n");
@@ -577,67 +605,340 @@ int GHOST_API_EXPORT  SetNumLock()
 // 鼠标左键按下
 int GHOST_API_EXPORT  LeftDown()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_LEFT_DOWN;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标左键弹起
 int GHOST_API_EXPORT  LeftUp()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_LEFT_UP;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标左键单击
 int GHOST_API_EXPORT  LeftClick(int count)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_LEFT_CLICK;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标左键双击
 int GHOST_API_EXPORT  LeftDoubleClick(int count)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_LEFT_DCLICK;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标右键按下
 int GHOST_API_EXPORT  RightDown()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_RIGHT_DOWN;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标右键弹起
 int GHOST_API_EXPORT  RightUp()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_RIGHT_UP;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标右键单击
 int GHOST_API_EXPORT  RightClick(int count)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_RIGHT_CLICK;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标右键双击
 int GHOST_API_EXPORT  RightDoubleClick(int count)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_RIGHT_DCLICK;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标中键按下
 int GHOST_API_EXPORT  MiddleDown()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_DOWN;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标中键弹起
 int GHOST_API_EXPORT  MiddleUp()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_UP;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标中键单击
 int GHOST_API_EXPORT  MiddleClick(int count)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_CLICK;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标中键双击
 int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_DCLICK;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 释放所有鼠标按键
 int GHOST_API_EXPORT  MouseUpAll()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.kb_cmd = MSG_CMD_MS_UP_ALL;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 模拟鼠标移动
 int GHOST_API_EXPORT  MoveTo(int x, int y)

@@ -26,7 +26,10 @@ typedef union {
   struct {
     unsigned char ms_type;
     //use
-    unsigned char ms_button;
+    unsigned char ms_cmd;//right,left...
+    unsigned char ms_left;
+    unsigned char ms_middle;
+    unsigned char ms_right;
     char ms_x;
     char ms_y;
     char ms_wheel;

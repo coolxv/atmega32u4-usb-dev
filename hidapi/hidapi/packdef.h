@@ -15,6 +15,27 @@
 #define  MSG_CMD_KB_GET_NUM_LOCK 9
 #define  MSG_CMD_KB_SET_CAPS_LOCK 10
 #define  MSG_CMD_KB_SET_NUM_LOCK 11
+//mouse cmd
+#define  MSG_CMD_MS_LEFT_DOWN 1
+#define  MSG_CMD_MS_LEFT_UP 2
+#define  MSG_CMD_MS_LEFT_CLICK 3
+#define  MSG_CMD_MS_LEFT_DCLICK 4
+#define  MSG_CMD_MS_RIGHT_DOWN 5
+#define  MSG_CMD_MS_RIGHT_UP 6
+#define  MSG_CMD_MS_RIGHT_CLICK 7
+#define  MSG_CMD_MS_RIGHT_DCLICK 8
+#define  MSG_CMD_MS_MIDDLE_DOWN 9
+#define  MSG_CMD_MS_MIDDLE_UP 10
+#define  MSG_CMD_MS_MIDDLE_CLICK 11
+#define  MSG_CMD_MS_MIDDLE_DCLICK 12
+#define  MSG_CMD_MS_UP_ALL 13
+#define  MSG_CMD_MS_MOVE_TO 14
+#define  MSG_CMD_MS_MOVE_TO_R 15
+#define  MSG_CMD_MS_WHEEL_MOVE 16
+
+
+
+
 
 typedef union {
 	unsigned char type[2];
@@ -23,7 +44,10 @@ typedef union {
 		unsigned char tmp1;
 		unsigned char ms_type;
 		//use
-		unsigned char ms_button;
+		unsigned char ms_cmd;//right,left...
+		unsigned char ms_left;
+		unsigned char ms_middle;
+		unsigned char ms_right;
 		char ms_x;
 		char ms_y;
 		char ms_wheel;
@@ -33,7 +57,7 @@ typedef union {
 		unsigned char tmp2;
 		unsigned char kb_type;
 		//use
-		unsigned char kb_cmd;//keyboard:down,up,press...
+		unsigned char kb_cmd;//down,up,press...
 		unsigned char kb_count;
 		unsigned char kb_key[6];
 	};
