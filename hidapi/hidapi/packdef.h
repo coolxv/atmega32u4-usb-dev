@@ -48,8 +48,8 @@ typedef union {
 		unsigned char ms_left;
 		unsigned char ms_middle;
 		unsigned char ms_right;
-		char ms_x;
-		char ms_y;
+		short ms_x;
+		short ms_y;
 		char ms_wheel;
 	};
 	//keyboard

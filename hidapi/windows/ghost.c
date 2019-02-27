@@ -14,7 +14,17 @@
 } /* extern "C" */
 #endif
 
-
+///------------
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define GHOST_MOUSE_X_MAX 32767
+#define GHOST_MOUSE_X_MIN -32768
+#define GHOST_MOUSE_Y_MAX 32767
+#define GHOST_MOUSE_Y_MIN -32768
+#define GHOST_MOUSE_R_X_MAX 127
+#define GHOST_MOUSE_R_X_MIN -127
+#define GHOST_MOUSE_R_Y_MAX 127
+#define GHOST_MOUSE_R_Y_MIN -127
+///------------
 #define GHOST_VID 0x16C0
 #define GHOST_PID 0x0480
 
@@ -610,7 +620,7 @@ int GHOST_API_EXPORT  LeftDown()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_LEFT_DOWN;
+	pkg.ms_cmd = MSG_CMD_MS_LEFT_DOWN;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -636,7 +646,7 @@ int GHOST_API_EXPORT  LeftUp()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_LEFT_UP;
+	pkg.ms_cmd = MSG_CMD_MS_LEFT_UP;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -662,7 +672,7 @@ int GHOST_API_EXPORT  LeftClick(int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_LEFT_CLICK;
+	pkg.ms_cmd = MSG_CMD_MS_LEFT_CLICK;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -688,7 +698,7 @@ int GHOST_API_EXPORT  LeftDoubleClick(int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_LEFT_DCLICK;
+	pkg.ms_cmd = MSG_CMD_MS_LEFT_DCLICK;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -714,7 +724,7 @@ int GHOST_API_EXPORT  RightDown()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_RIGHT_DOWN;
+	pkg.ms_cmd = MSG_CMD_MS_RIGHT_DOWN;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -740,7 +750,7 @@ int GHOST_API_EXPORT  RightUp()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_RIGHT_UP;
+	pkg.ms_cmd = MSG_CMD_MS_RIGHT_UP;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -766,7 +776,7 @@ int GHOST_API_EXPORT  RightClick(int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_RIGHT_CLICK;
+	pkg.ms_cmd = MSG_CMD_MS_RIGHT_CLICK;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -792,7 +802,7 @@ int GHOST_API_EXPORT  RightDoubleClick(int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_RIGHT_DCLICK;
+	pkg.ms_cmd = MSG_CMD_MS_RIGHT_DCLICK;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -818,7 +828,7 @@ int GHOST_API_EXPORT  MiddleDown()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_DOWN;
+	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_DOWN;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -844,7 +854,7 @@ int GHOST_API_EXPORT  MiddleUp()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_UP;
+	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_UP;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -870,7 +880,7 @@ int GHOST_API_EXPORT  MiddleClick(int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_CLICK;
+	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_CLICK;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -896,7 +906,7 @@ int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_MIDDLE_DCLICK;
+	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_DCLICK;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -922,7 +932,7 @@ int GHOST_API_EXPORT  MouseUpAll()
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_MOUSE;
-	pkg.kb_cmd = MSG_CMD_MS_UP_ALL;
+	pkg.ms_cmd = MSG_CMD_MS_UP_ALL;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);
@@ -943,17 +953,95 @@ int GHOST_API_EXPORT  MouseUpAll()
 // 模拟鼠标移动
 int GHOST_API_EXPORT  MoveTo(int x, int y)
 {
-	return 0;
+	double rx = GHOST_MOUSE_X_MAX / GetSystemMetrics(SM_CXSCREEN);
+	double ry = GHOST_MOUSE_Y_MAX / GetSystemMetrics(SM_CYSCREEN);
+	short ix = constrain(x*rx, 0, GHOST_MOUSE_X_MAX);
+	short iy = constrain(y*ry, 0, GHOST_MOUSE_Y_MAX);
+
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.ms_cmd = MSG_CMD_MS_MOVE_TO;
+	pkg.ms_x = ix;
+	pkg.ms_y = iy;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 相对移动鼠标(X，Y不能大于255)
 int GHOST_API_EXPORT  MoveToR(int x, int y)
 {
-	return 0;
+	short ix = constrain(x, GHOST_MOUSE_R_X_MIN, GHOST_MOUSE_R_X_MAX);
+	short iy = constrain(y, GHOST_MOUSE_R_Y_MIN, GHOST_MOUSE_R_Y_MAX);
+
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.ms_cmd = MSG_CMD_MS_MOVE_TO_R;
+	pkg.ms_x = ix;
+	pkg.ms_y = iy;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 鼠标滚轮滚动
 int GHOST_API_EXPORT  WheelsMove(int y)
 {
-	return 0;
+	short iy = constrain(y, GHOST_MOUSE_R_Y_MIN, GHOST_MOUSE_R_Y_MAX);
+
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_MOUSE;
+	pkg.ms_cmd = MSG_CMD_MS_WHEEL_MOVE;
+	pkg.ms_wheel = iy;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 
 // 从指定位置移动鼠标
