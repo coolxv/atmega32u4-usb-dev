@@ -41,20 +41,18 @@ typedef union {
 	unsigned char type[2];
 	//mouse
 	struct {
-		unsigned char tmp1;
+		unsigned char ms_pad0;
 		unsigned char ms_type;
 		//use
 		unsigned char ms_cmd;//right,left...
-		unsigned char ms_left;
-		unsigned char ms_middle;
-		unsigned char ms_right;
+		unsigned char ms_count;
 		short ms_x;
 		short ms_y;
 		char ms_wheel;
 	};
 	//keyboard
 	struct {
-		unsigned char tmp2;
+		unsigned char kb_pad0;
 		unsigned char kb_type;
 		//use
 		unsigned char kb_cmd;//down,up,press...
@@ -63,7 +61,7 @@ typedef union {
 	};
 	//log
 	struct {
-		unsigned char tmp3;
+		unsigned char lg_pad0;
 		unsigned char lg_type;
 		//use
 		unsigned char lg_level;

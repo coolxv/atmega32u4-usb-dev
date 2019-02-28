@@ -6,6 +6,7 @@
 #define  MSG_TYPE_KEYBOARD 1
 #define  MSG_TYPE_MOUSE 2
 #define  MSG_TYPE_LOG 3
+
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
 #define  MSG_CMD_KB_UP 2
@@ -19,6 +20,25 @@
 #define  MSG_CMD_KB_SET_CAPS_LOCK 10
 #define  MSG_CMD_KB_SET_NUM_LOCK 11
 
+//mouse cmd
+#define  MSG_CMD_MS_LEFT_DOWN 1
+#define  MSG_CMD_MS_LEFT_UP 2
+#define  MSG_CMD_MS_LEFT_CLICK 3
+#define  MSG_CMD_MS_LEFT_DCLICK 4
+#define  MSG_CMD_MS_RIGHT_DOWN 5
+#define  MSG_CMD_MS_RIGHT_UP 6
+#define  MSG_CMD_MS_RIGHT_CLICK 7
+#define  MSG_CMD_MS_RIGHT_DCLICK 8
+#define  MSG_CMD_MS_MIDDLE_DOWN 9
+#define  MSG_CMD_MS_MIDDLE_UP 10
+#define  MSG_CMD_MS_MIDDLE_CLICK 11
+#define  MSG_CMD_MS_MIDDLE_DCLICK 12
+#define  MSG_CMD_MS_UP_ALL 13
+#define  MSG_CMD_MS_MOVE_TO 14
+#define  MSG_CMD_MS_MOVE_TO_R 15
+#define  MSG_CMD_MS_WHEEL_MOVE 16
+
+
 
 typedef union {
   unsigned char type;
@@ -27,11 +47,9 @@ typedef union {
     unsigned char ms_type;
     //use
     unsigned char ms_cmd;//right,left...
-    unsigned char ms_left;
-    unsigned char ms_middle;
-    unsigned char ms_right;
-    char ms_x;
-    char ms_y;
+    unsigned char ms_count;
+    short ms_x;
+    short ms_y;
     char ms_wheel;
   };
   //keyboard
@@ -74,17 +92,19 @@ MSG_DATA_RESULT_T rawhidwriteData;
 
 void setup() {
   pinMode(pinLed, OUTPUT);
+  digitalWrite(pinLed, HIGH);
+  //serial
   Serial.begin(9600);
   while (!Serial && !Serial.available()) {}
   Log.begin(LOG_LEVEL_SILENT, &Serial);
-  //
+  //keyboard
   BootKeyboard.begin();
+  //mouse
   Mouse.begin();
-
-  //
+  AbsoluteMouse.begin();
+  //rawhid
   RawHID.begin((uint8_t *)&rawhidData, sizeof(rawhidData));
-  //
-  digitalWrite(pinLed, HIGH);
+  //led
   delay(500);
   digitalWrite(pinLed, LOW);
 }
@@ -108,6 +128,7 @@ int writeData()
 }
 void keyboardProcess()
 {
+  Log.trace("keyboard command %d\n", rawhidData.kb_cmd);
   switch (rawhidData.kb_cmd)
   {
     case MSG_CMD_KB_DOWN:
@@ -250,7 +271,102 @@ void keyboardProcess()
 }
 void MouseProcess()
 {
-
+  Log.trace("mouse command %d\n", rawhidData.ms_cmd);
+  switch (rawhidData.ms_cmd)
+  {
+    case MSG_CMD_MS_LEFT_DOWN:
+      {
+        AbsoluteMouse.press(MOUSE_LEFT);
+        break;
+      }
+    case MSG_CMD_MS_LEFT_UP:
+      {
+        AbsoluteMouse.release(MOUSE_LEFT);
+        break;
+      }
+    case MSG_CMD_MS_LEFT_CLICK:
+      {
+        AbsoluteMouse.click(MOUSE_LEFT);
+        break;
+      }
+    case MSG_CMD_MS_LEFT_DCLICK:
+      {
+        AbsoluteMouse.click(MOUSE_LEFT);
+        delay(500);
+        AbsoluteMouse.click(MOUSE_LEFT);
+        break;
+      }
+    case MSG_CMD_MS_RIGHT_DOWN:
+      {
+        AbsoluteMouse.press(MOUSE_RIGHT);
+        break;
+      }
+    case MSG_CMD_MS_RIGHT_UP:
+      {
+        AbsoluteMouse.release(MOUSE_RIGHT);
+        break;
+      }
+    case MSG_CMD_MS_RIGHT_CLICK:
+      {
+        AbsoluteMouse.click(MOUSE_RIGHT);
+        break;
+      }
+    case MSG_CMD_MS_RIGHT_DCLICK:
+      {
+        AbsoluteMouse.click(MOUSE_RIGHT);
+        delay(500);
+        AbsoluteMouse.click(MOUSE_RIGHT);
+        break;
+      }
+    case MSG_CMD_MS_MIDDLE_DOWN:
+      {
+        AbsoluteMouse.press(MOUSE_MIDDLE);
+        break;
+      }
+    case MSG_CMD_MS_MIDDLE_UP:
+      {
+        AbsoluteMouse.release(MOUSE_MIDDLE);
+        break;
+      }
+    case MSG_CMD_MS_MIDDLE_CLICK:
+      {
+        AbsoluteMouse.click(MOUSE_MIDDLE);
+        break;
+      }
+    case MSG_CMD_MS_MIDDLE_DCLICK:
+      {
+        AbsoluteMouse.click(MOUSE_MIDDLE);
+        delay(500);
+        AbsoluteMouse.click(MOUSE_MIDDLE);
+        break;
+      }
+    case MSG_CMD_MS_UP_ALL:
+      {
+        AbsoluteMouse.releaseAll();
+        break;
+      }
+    case MSG_CMD_MS_MOVE_TO:
+      {
+        Log.trace("mouse absolute move %d, %d\n", rawhidData.ms_x, rawhidData.ms_y);
+        AbsoluteMouse.moveTo(rawhidData.ms_x, rawhidData.ms_y);
+        break;
+      }
+    case MSG_CMD_MS_MOVE_TO_R:
+      {
+        Mouse.move(rawhidData.ms_x, rawhidData.ms_y);
+        break;
+      }
+    case MSG_CMD_MS_WHEEL_MOVE:
+      {
+        AbsoluteMouse.move(0, 0, rawhidData.ms_wheel);
+        break;
+      }
+    default:
+      {
+        Log.error("msg keyboard cmd error, cmd is %d\n", rawhidData.kb_cmd);
+        break;
+      }
+  }
 }
 
 void LogProcess()
@@ -259,7 +375,7 @@ void LogProcess()
   {
     Log.begin(rawhidData.lg_level, &Serial);
   }
-
+  Log.trace("log level %d\n", rawhidData.lg_level);
 }
 void loop()
 {
@@ -291,12 +407,12 @@ void loop()
           break;
         }
     }
-    Log.trace("read data sucessful\n");
+    Log.verbose("read data sucessful\n");
 
   }
   else
   {
-    Log.trace("read data error\n");
+    Log.verbose("read data error\n");
   }
 
   Log.verbose("read data size %d\n", bytesAvailable);

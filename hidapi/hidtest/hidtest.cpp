@@ -42,9 +42,16 @@ int main(int argc, char* argv[])
 	OpenDevice();
 	//Sleep(5000);
 	//KeyPress("s", 1);
-	SetLogLevel(3);
+	SetLogLevel(5);
 	Sleep(5000);
-	Say("hello world adfdsfsdf");
+	MoveTo(800, 600);
+	POINT pt;
+	BOOL bReturn = GetCursorPos(&pt); //获取鼠标指针位置到pt
+
+	printf("x=%ld,y=%ld\n", pt.x, pt.y);
+	Sleep(3000);
+	MoveToR(100, 100);
+	//Say("hello world adfdsfsdf");
 	//KeyPress("a", 1);
 	//Sleep(1000);
 	//SetLogLevel(0);
