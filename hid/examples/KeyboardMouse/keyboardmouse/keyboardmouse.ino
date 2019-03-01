@@ -95,7 +95,7 @@ void setup() {
   digitalWrite(pinLed, HIGH);
   //serial
   Serial.begin(9600);
-  while (!Serial && !Serial.available()) {}
+  //while (!Serial && !Serial.available()) {}
   Log.begin(LOG_LEVEL_SILENT, &Serial);
   //keyboard
   BootKeyboard.begin();

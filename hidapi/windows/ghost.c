@@ -953,10 +953,10 @@ int GHOST_API_EXPORT  MouseUpAll()
 // 模拟鼠标移动
 int GHOST_API_EXPORT  MoveTo(int x, int y)
 {
-	double rx = GHOST_MOUSE_X_MAX / GetSystemMetrics(SM_CXSCREEN);
-	double ry = GHOST_MOUSE_Y_MAX / GetSystemMetrics(SM_CYSCREEN);
-	short ix = constrain(x*rx, 0, GHOST_MOUSE_X_MAX);
-	short iy = constrain(y*ry, 0, GHOST_MOUSE_Y_MAX);
+	double rx = (GHOST_MOUSE_X_MAX - GHOST_MOUSE_X_MIN) / GetSystemMetrics(SM_CXSCREEN);
+	double ry = (GHOST_MOUSE_Y_MAX - GHOST_MOUSE_Y_MIN) / GetSystemMetrics(SM_CYSCREEN);
+	short ix = (x == 0?1:constrain(x*rx, 0, GHOST_MOUSE_X_MAX));
+	short iy = (y == 0?1:constrain(y*ry, 0, GHOST_MOUSE_Y_MAX));
 
 	//package
 	MSG_DATA_T pkg;
@@ -966,6 +966,8 @@ int GHOST_API_EXPORT  MoveTo(int x, int y)
 	pkg.ms_cmd = MSG_CMD_MS_MOVE_TO;
 	pkg.ms_x = ix;
 	pkg.ms_y = iy;
+	//pkg.ms_x = x;
+	//pkg.ms_y = y;
 	//send
 	int res;
 	EnterCriticalSection(&ghost_mutex);

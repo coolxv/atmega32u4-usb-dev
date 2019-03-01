@@ -1,0 +1,161 @@
+SystemParametersInfo()      SPI_GETMOUSESPEED|SPI_SETMOUSESPEED
+Speed and Relative、 Sensitivity
+
+https://superuser.com/questions/769955/relationship-between-mouse-dpi-screen-resolution-and-screen-size
+https://docs.microsoft.com/en-us/windows/desktop/dxtecharts/taking-advantage-of-high-dpi-mouse-movement#retrieving-mouse-movement-data
+https://github.com/Lexikos/AutoHotkey_L/blob/master/source/keyboard_mouse.cpp
+
+void MouseMove(int &aX, int &aY, DWORD &aEventFlags, int aSpeed, bool aMoveOffset)
+// This function also does DoMouseDelay() for the caller.
+// This function converts aX and aY for the caller into MOUSEEVENTF_ABSOLUTE coordinates.
+// The exception is when the playback mode is in effect, in which case such a conversion would be undesirable
+// both here and by the caller.
+// It also puts appropriate bit-flags into aEventFlags.
+{
+	// Most callers have already validated this, but some haven't.  Since it doesn't take too long to check,
+	// do it here rather than requiring all callers to do (helps maintainability).
+	if (aX == COORD_UNSPECIFIED || aY == COORD_UNSPECIFIED)
+		return;
+
+	if (sSendMode == SM_PLAY) // Journal playback mode.
+	{
+		// Mouse speed (aSpeed) is ignored for SendInput/Play mode: the mouse always moves instantaneously
+		// (though in the case of playback-mode, MouseDelay still applies between each movement and click).
+		// Playback-mode ignores mouse speed because the cases where the user would want to move the mouse more
+		// slowly (such as a demo) seem too rare to justify the code size and complexity, especially since the
+		// incremental-move code would have to be implemented in the hook itself to ensure reliability.  This is
+		// because calling GetCursorPos() before playback begins could cause the mouse to wind up at the wrong
+		// destination, especially if our thread is preempted while building the array (which would give the user
+		// a chance to physically move the mouse before uninterruptibility begins).
+		// For creating demonstrations that user slower mouse movement, the older MouseMove command can be used
+		// in conjunction with BlockInput. This also applies to SendInput because it's conceivable that mouse
+		// speed could be supported there (though it seems useless both visually and to improve reliability
+		// because no mouse delays are possible within SendInput).
+		//
+		// MSG_OFFSET_MOUSE_MOVE is used to have the playback hook apply the offset (rather than doing it here
+		// like is done for SendInput mode).  This adds flexibility in cases where a new window becomes active
+		// during playback, or the active window changes position -- if that were to happen, the offset would
+		// otherwise be wrong while CoordMode is Relative because the changes can only be observed and
+		// compensated for during playback.
+		PutMouseEventIntoArray(MOUSEEVENTF_MOVE | (aMoveOffset ? MSG_OFFSET_MOUSE_MOVE : 0)
+			, 0, aX, aY); // The playback hook uses normal vs. MOUSEEVENTF_ABSOLUTE coordinates.
+		DoMouseDelay();
+		if (aMoveOffset)
+		{
+			// Now that we're done using the old values of aX and aY above, reset them to COORD_UNSPECIFIED
+			// for the caller so that any subsequent clicks it does will be marked as "at current coordinates".
+			aX = COORD_UNSPECIFIED;
+			aY = COORD_UNSPECIFIED;
+		}
+		return; // Other parts below rely on this returning early to avoid converting aX/aY into MOUSEEVENTF_ABSOLUTE.
+	}
+
+	// The playback mode returned from above doesn't need these flags added because they're ignored for clicks:
+	aEventFlags |= MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE; // Done here for caller, for easier maintenance.
+
+	POINT cursor_pos;
+	if (aMoveOffset)  // We're moving the mouse cursor relative to its current position.
+	{
+		if (sSendMode == SM_INPUT)
+		{
+			// Since GetCursorPos() can't be called to find out a future cursor position, use the position
+			// tracked for SendInput (facilitates MouseClickDrag's R-option as well as Send{Click}'s).
+			if (sSendInputCursorPos.x == COORD_UNSPECIFIED) // Initial/starting value hasn't yet been set.
+				GetCursorPos(&sSendInputCursorPos); // Start it off where the cursor is now.
+			aX += sSendInputCursorPos.x;
+			aY += sSendInputCursorPos.y;
+		}
+		else
+		{
+			GetCursorPos(&cursor_pos); // None of this is done for playback mode since that mode already returned higher above.
+			aX += cursor_pos.x;
+			aY += cursor_pos.y;
+		}
+	}
+	else
+	{
+		// Convert relative coords to screen coords if necessary (depends on CoordMode).
+		// None of this is done for playback mode since that mode already returned higher above.
+		CoordToScreen(aX, aY, COORD_MODE_MOUSE);
+	}
+
+	if (sSendMode == SM_INPUT) // Track predicted cursor position for use by subsequent events put into the array.
+	{
+		sSendInputCursorPos.x = aX; // Always stores normal coords (non-MOUSEEVENTF_ABSOLUTE).
+		sSendInputCursorPos.y = aY; // 
+	}
+
+	// Find dimensions of primary monitor.
+	// Without the MOUSEEVENTF_VIRTUALDESK flag (supported only by SendInput, and then only on
+	// Windows 2000/XP or later), MOUSEEVENTF_ABSOLUTE coordinates are relative to the primary monitor.
+	int screen_width = GetSystemMetrics(SM_CXSCREEN);
+	int screen_height = GetSystemMetrics(SM_CYSCREEN);
+
+	// Convert the specified screen coordinates to mouse event coordinates (MOUSEEVENTF_ABSOLUTE).
+	// MSDN: "In a multimonitor system, [MOUSEEVENTF_ABSOLUTE] coordinates map to the primary monitor."
+	// The above implies that values greater than 65535 or less than 0 are appropriate, but only on
+	// multi-monitor systems.  For simplicity, performance, and backward compatibility, no check for
+	// multi-monitor is done here. Instead, the system's default handling for out-of-bounds coordinates
+	// is used; for example, mouse_event() stops the cursor at the edge of the screen.
+	// UPDATE: In v1.0.43, the following formula was fixed (actually broken, see below) to always yield an
+	// in-range value. The previous formula had a +1 at the end:
+	// aX|Y = ((65535 * aX|Y) / (screen_width|height - 1)) + 1;
+	// The extra +1 would produce 65536 (an out-of-range value for a single-monitor system) if the maximum
+	// X or Y coordinate was input (e.g. x-position 1023 on a 1024x768 screen).  Although this correction
+	// seems inconsequential on single-monitor systems, it may fix certain misbehaviors that have been reported
+	// on multi-monitor systems. Update: according to someone I asked to test it, it didn't fix anything on
+	// multimonitor systems, at least those whose monitors vary in size to each other.  In such cases, he said
+	// that only SendPlay or DllCall("SetCursorPos") make mouse movement work properly.
+	// FIX for v1.0.44: Although there's no explanation yet, the v1.0.43 formula is wrong and the one prior
+	// to it was correct; i.e. unless +1 is present below, a mouse movement to coords near the upper-left corner of
+	// the screen is typically off by one pixel (only the y-coordinate is affected in 1024x768 resolution, but
+	// in other resolutions both might be affected).
+	// v1.0.44.07: The following old formula has been replaced:
+	// (((65535 * coord) / (width_or_height - 1)) + 1)
+	// ... with the new one below.  This is based on numEric's research, which indicates that mouse_event()
+	// uses the following inverse formula internally:
+	// x_or_y_coord = (x_or_y_abs_coord * screen_width_or_height) / 65536
+	#define MOUSE_COORD_TO_ABS(coord, width_or_height) (((65536 * coord) / width_or_height) + (coord < 0 ? -1 : 1))
+	aX = MOUSE_COORD_TO_ABS(aX, screen_width);
+	aY = MOUSE_COORD_TO_ABS(aY, screen_height);
+	// aX and aY MUST BE SET UNCONDITIONALLY because the output parameters must be updated for caller.
+	// The incremental-move section further below also needs it.
+
+	if (aSpeed < 0)  // This can happen during script's runtime due to something like: MouseMove, X, Y, %VarContainingNegative%
+		aSpeed = 0;  // 0 is the fastest.
+	else
+		if (aSpeed > MAX_MOUSE_SPEED)
+			aSpeed = MAX_MOUSE_SPEED;
+	if (aSpeed == 0 || sSendMode == SM_INPUT) // Instantaneous move to destination coordinates with no incremental positions in between.
+	{
+		// See the comments in the playback-mode section at the top of this function for why SM_INPUT ignores aSpeed.
+		MouseEvent(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, 0, aX, aY);
+		DoMouseDelay(); // Inserts delay for all modes except SendInput, for which it does nothing.
+		return;
+	}
+
+	// Since above didn't return, use the incremental mouse move to gradually move the cursor until
+	// it arrives at the destination coordinates.
+	// Convert the cursor's current position to mouse event coordinates (MOUSEEVENTF_ABSOLUTE).
+	GetCursorPos(&cursor_pos);
+	DoIncrementalMouseMove(
+		  MOUSE_COORD_TO_ABS(cursor_pos.x, screen_width)  // Source/starting coords.
+		, MOUSE_COORD_TO_ABS(cursor_pos.y, screen_height) //
+		, aX, aY, aSpeed);                                // Destination/ending coords.
+}
+
+
+
+void MouseEvent(DWORD aEventFlags, DWORD aData, DWORD aX, DWORD aY)
+// Having this part outsourced to a function helps remember to use KEY_IGNORE so that our own mouse
+// events won't be falsely detected as hotkeys by the hooks (if they are installed).
+{
+	if (sSendMode)
+		PutMouseEventIntoArray(aEventFlags, aData, aX, aY);
+	else
+		mouse_event(aEventFlags
+			, aX == COORD_UNSPECIFIED ? 0 : aX // v1.0.43.01: Must be zero if no change in position is desired
+			, aY == COORD_UNSPECIFIED ? 0 : aY // (fixes compatibility with certain apps/games).
+			, aData, KEY_IGNORE_LEVEL(g->SendLevel));
+}
+
