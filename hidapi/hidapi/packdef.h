@@ -3,6 +3,7 @@
 #define  MSG_TYPE_KEYBOARD 1
 #define  MSG_TYPE_MOUSE 2
 #define  MSG_TYPE_LOG 3
+#define  MSG_TYPE_FUNC 4
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
 #define  MSG_CMD_KB_UP 2
@@ -32,8 +33,9 @@
 #define  MSG_CMD_MS_MOVE_TO 14
 #define  MSG_CMD_MS_MOVE_TO_R 15
 #define  MSG_CMD_MS_WHEEL_MOVE 16
-
-
+//function cmd
+#define  MSG_CMD_FUNC_RESTART 1
+#define  MSG_CMD_FUNC_DISCONNECT 2
 
 
 
@@ -65,6 +67,14 @@ typedef union {
 		unsigned char lg_type;
 		//use
 		unsigned char lg_level;
+	};
+	//func
+	struct {
+		unsigned char fc_pad0;
+		unsigned char fc_type;
+		//use
+		unsigned char fc_cmd;
+		unsigned char fc_value[4];
 	};
 	unsigned char buf[65];
 } MSG_DATA_T;

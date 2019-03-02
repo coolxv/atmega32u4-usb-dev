@@ -113,22 +113,70 @@ int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 	return 0;
 }
 // 检查设备是否有效
-int GHOST_API_EXPORT  CheckDevice()
+int GHOST_API_EXPORT CheckDevice()
 {
 	return 0;
+}
+// 检查设备是否有效
+int GHOST_API_EXPORT Restart()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_RESTART;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 断开设备连接
-int GHOST_API_EXPORT  Disconnect(int second)
+int GHOST_API_EXPORT Disconnect(int second)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_DISCONNECT;
+	pkg.fc_value[0] = constrain(second, 0, 255);
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+		return 0;
+	}
 }
 // 设置自定义设备ID（厂商ID+产品ID）
-int GHOST_API_EXPORT  SetDeviceID(int vid, int pid)
+int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
 {
 	return 0;
 }
 // 恢复设备默认ID
-int GHOST_API_EXPORT  RestoreDeviceID()
+int GHOST_API_EXPORT RestoreDeviceID()
 {
 	return 0;
 }
@@ -953,10 +1001,12 @@ int GHOST_API_EXPORT  MouseUpAll()
 // 模拟鼠标移动
 int GHOST_API_EXPORT  MoveTo(int x, int y)
 {
-	double rx = (GHOST_MOUSE_X_MAX - GHOST_MOUSE_X_MIN) / GetSystemMetrics(SM_CXSCREEN);
-	double ry = (GHOST_MOUSE_Y_MAX - GHOST_MOUSE_Y_MIN) / GetSystemMetrics(SM_CYSCREEN);
-	short ix = (x == 0?1:constrain(x*rx, 0, GHOST_MOUSE_X_MAX));
-	short iy = (y == 0?1:constrain(y*ry, 0, GHOST_MOUSE_Y_MAX));
+	double ex = GetSystemMetrics(SM_CXSCREEN);
+	double ey = GetSystemMetrics(SM_CYSCREEN);
+	double rx = ((double)GHOST_MOUSE_X_MAX / ex)*x + 1;
+	double ry = ((double)GHOST_MOUSE_Y_MAX / ey)*y + 2;
+	short ix = constrain((short)rx, 0, GHOST_MOUSE_X_MAX);
+	short iy = constrain((short)ry, 0, GHOST_MOUSE_Y_MAX);
 
 	//package
 	MSG_DATA_T pkg;

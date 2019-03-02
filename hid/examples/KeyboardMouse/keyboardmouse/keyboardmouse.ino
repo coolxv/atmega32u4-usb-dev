@@ -1,3 +1,5 @@
+#include <EEPROM.h>
+
 #include "HID-Project.h"
 //#define DISABLE_LOGGING
 #include "ArduinoLog.h"
@@ -6,6 +8,7 @@
 #define  MSG_TYPE_KEYBOARD 1
 #define  MSG_TYPE_MOUSE 2
 #define  MSG_TYPE_LOG 3
+#define  MSG_TYPE_FUNC 4
 
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
@@ -38,6 +41,9 @@
 #define  MSG_CMD_MS_MOVE_TO_R 15
 #define  MSG_CMD_MS_WHEEL_MOVE 16
 
+//function cmd
+#define  MSG_CMD_FUNC_RESTART 1
+#define  MSG_CMD_FUNC_DISCONNECT 2
 
 
 typedef union {
@@ -66,6 +72,13 @@ typedef union {
     //use
     unsigned char lg_level;
   };
+  //func
+  struct {
+    unsigned char fc_type;
+    //use
+    unsigned char fc_cmd;
+    unsigned char fc_value[4];
+  };
   unsigned char buf[64];
 } MSG_DATA_T;
 
@@ -88,14 +101,22 @@ const int pinLed = LED_BUILTIN;
 MSG_DATA_T rawhidData;
 MSG_DATA_RESULT_T rawhidwriteData;
 
-
+int delay_time = 0;
+bool delay_restart = false;
+void(* resetFunc) (void) = 0;
 
 void setup() {
+  //led init
   pinMode(pinLed, OUTPUT);
   digitalWrite(pinLed, HIGH);
+  if (true == delay_restart && delay_time > 0) {
+    delay_time = 0;
+    delay_restart = false;
+    delay(delay_time);
+  }
   //serial
   Serial.begin(9600);
-  //while (!Serial && !Serial.available()) {}
+  //log
   Log.begin(LOG_LEVEL_SILENT, &Serial);
   //keyboard
   BootKeyboard.begin();
@@ -104,9 +125,10 @@ void setup() {
   AbsoluteMouse.begin();
   //rawhid
   RawHID.begin((uint8_t *)&rawhidData, sizeof(rawhidData));
-  //led
+  //led show
   delay(500);
   digitalWrite(pinLed, LOW);
+  Log.trace("device initial successful\n");
 }
 
 int readData()
@@ -377,6 +399,34 @@ void LogProcess()
   }
   Log.trace("log level %d\n", rawhidData.lg_level);
 }
+
+void FuncProcess()
+{
+  Log.trace("func command %d\n", rawhidData.fc_cmd);
+  switch (rawhidData.fc_cmd)
+  {
+    case MSG_CMD_FUNC_RESTART:
+      {
+        delay_time = 0;
+        delay_restart = false;
+        resetFunc();
+        break;
+      }
+    case MSG_CMD_FUNC_DISCONNECT:
+      {
+        delay_time = rawhidData.fc_value[0] * 1000;
+        delay_restart = true;
+        resetFunc();
+        break;
+      }
+    default:
+      {
+        Log.error("msg func cmd error, cmd is %d\n", rawhidData.fc_cmd);
+        break;
+      }
+  }
+
+}
 void loop()
 {
   // Check if there is new data from the RawHID device
@@ -399,6 +449,11 @@ void loop()
       case MSG_TYPE_LOG:
         {
           LogProcess();
+          break;
+        }
+      case MSG_TYPE_FUNC:
+        {
+          FuncProcess();
           break;
         }
       default:
