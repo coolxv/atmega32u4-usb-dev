@@ -185,21 +185,197 @@ int GHOST_API_EXPORT RestoreDeviceID()
 // 获取序列号
 GHOST_API_EXPORT char* GetSN()
 {
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_SN;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+	}
+	//
+	static MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0)
+	{
+		EnterCriticalSection(&ghost_mutex);
+		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&ghost_mutex);
+		if (res == 0)
+		{
+			log_trace("waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			log_trace("Unable to read()\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.if_value;
+	}
 	return NULL;
 }
 // 获取设备型号
 GHOST_API_EXPORT char* GetModel()
 {
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_MODEL;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+	}
+	//
+	static MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0)
+	{
+		EnterCriticalSection(&ghost_mutex);
+		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&ghost_mutex);
+		if (res == 0)
+		{
+			log_trace("waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			log_trace("Unable to read()\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.if_value;
+	}
 	return NULL;
 }
 // 获取固件版本号
 GHOST_API_EXPORT char* GetVer()
 {
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_VERSION;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+	}
+	//
+	static MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0)
+	{
+		EnterCriticalSection(&ghost_mutex);
+		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&ghost_mutex);
+		if (res == 0)
+		{
+			log_trace("waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			log_trace("Unable to read()\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.if_value;
+	}
 	return NULL;
 }
 // 获取生产日期
 GHOST_API_EXPORT char* GetProductionDate()
 {
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_PROD_DATE;
+	//send
+	int res;
+	EnterCriticalSection(&ghost_mutex);
+	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&ghost_mutex);
+	if (res < 0)
+	{
+		log_trace("Unable to write()\n");
+		log_trace("Error: %ls\n", hid_error(handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write()\n");
+	}
+	//
+	static MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0)
+	{
+		EnterCriticalSection(&ghost_mutex);
+		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&ghost_mutex);
+		if (res == 0)
+		{
+			log_trace("waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			log_trace("Unable to read()\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.if_value;
+	}
 	return NULL;
 }
 

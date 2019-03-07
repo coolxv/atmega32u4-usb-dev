@@ -4,6 +4,7 @@
 #define  MSG_TYPE_MOUSE 2
 #define  MSG_TYPE_LOG 3
 #define  MSG_TYPE_FUNC 4
+#define  MSG_TYPE_INFO 5
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
 #define  MSG_CMD_KB_UP 2
@@ -36,6 +37,11 @@
 //function cmd
 #define  MSG_CMD_FUNC_RESTART 1
 #define  MSG_CMD_FUNC_DISCONNECT 2
+//info cmd
+#define  MSG_CMD_INFO_SN 1
+#define  MSG_CMD_INFO_MODEL 2
+#define  MSG_CMD_INFO_VERSION 3
+#define  MSG_CMD_INFO_PROD_DATE 4
 
 
 
@@ -76,6 +82,13 @@ typedef union {
 		unsigned char fc_cmd;
 		unsigned char fc_value[4];
 	};
+	//info
+	struct {
+		unsigned char if_pad0;
+		unsigned char if_type;
+		//use
+		unsigned char if_cmd;
+	};
 	unsigned char buf[65];
 } MSG_DATA_T;
 
@@ -87,6 +100,13 @@ typedef union {
 		//use
 		unsigned char kb_cmd;
 		unsigned char kb_ret;
+	};
+	//info
+	struct {
+		unsigned char if_type;
+		//use
+		unsigned char if_cmd;
+		unsigned char if_value[48];
 	};
 	unsigned char buf[64];
 } MSG_DATA_RESULT_T;
