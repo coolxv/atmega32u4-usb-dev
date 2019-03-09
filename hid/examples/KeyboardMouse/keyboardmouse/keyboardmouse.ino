@@ -115,6 +115,14 @@ typedef union {
 } MSG_DATA_RESULT_T;
 
 
+//
+
+
+#define  MSG_CMD_INFO_SN 1
+#define  MSG_CMD_INFO_MODEL 2
+#define  MSG_CMD_INFO_VERSION 3
+#define  MSG_CMD_INFO_PROD_DATE 4
+
 //global data
 const int pinLed = LED_BUILTIN;
 MSG_DATA_T rawhidData;
@@ -123,6 +131,14 @@ MSG_DATA_RESULT_T rawhidwriteData;
 int delay_time = 0;
 bool delay_restart = false;
 void(* resetFunc) (void) = 0;
+
+// save some chars
+const char sn_info[] PROGMEM  = {"010387bc4b7e49b59c3381dd5a982be1"};
+const char model_info[] PROGMEM  = {"base"};
+const char version_info[] PROGMEM  = {"1.0.0"};
+const char production_date_info[] PROGMEM  = {"20190315"};
+
+
 
 void setup() {
   //led init
@@ -451,26 +467,45 @@ void FuncProcess()
 void InfoProcess()
 {
   Log.trace("info command %d\n", rawhidData.if_cmd);
+  char one_char;
+  int k;  // counter variable
   switch (rawhidData.if_cmd)
   {
     case MSG_CMD_INFO_SN:
       {
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_SN;
+        // read info
+        strcpy_P(rawhidwriteData.if_value, sn_info);
+        writeData();
 
         break;
       }
     case MSG_CMD_INFO_MODEL:
       {
-
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_MODEL;
+        // read info
+        strcpy_P(rawhidwriteData.if_value, model_info);
+        writeData();
         break;
       }
     case MSG_CMD_INFO_VERSION:
       {
-
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_VERSION;
+        // read info
+        strcpy_P(rawhidwriteData.if_value, version_info);
+        writeData();
         break;
       }
     case MSG_CMD_INFO_PROD_DATE:
       {
-
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_PROD_DATE;
+        // read info
+        strcpy_P(rawhidwriteData.if_value, production_date_info);
+        writeData();
         break;
       }
     default:
