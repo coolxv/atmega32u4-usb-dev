@@ -44,3 +44,6 @@ https://github.com/qmk/qmk_firmware
 
 crypto
 https://github.com/cantora/avr-crypto-lib
+
+json
+https://github.com/bblanchon/ArduinoJson
