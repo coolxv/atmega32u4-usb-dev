@@ -115,6 +115,10 @@ int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 // 检查设备是否有效
 int GHOST_API_EXPORT CheckDevice()
 {
+	if (initialized)
+	{
+		return 1;
+	}
 	return 0;
 }
 // 检查设备是否有效
@@ -255,7 +259,7 @@ GHOST_API_EXPORT char* GetModel()
 	{
 		log_trace("sucess to write()\n");
 	}
-	//
+	//recv
 	static MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0)
@@ -1211,7 +1215,7 @@ int GHOST_API_EXPORT  MoveTo(int x, int y)
 		return 0;
 	}
 }
-// 相对移动鼠标(X，Y不能大于255)
+// 相对移动鼠标
 int GHOST_API_EXPORT  MoveToR(int x, int y)
 {
 	short ix = constrain(x, GHOST_MOUSE_R_X_MIN, GHOST_MOUSE_R_X_MAX);
@@ -1272,21 +1276,148 @@ int GHOST_API_EXPORT  WheelsMove(int y)
 	}
 }
 
-// 从指定位置移动鼠标
-int GHOST_API_EXPORT  MoveToFrom(int fx, int fy, int tx, int ty)
-{
-	return 0;
-}
-// 复位移动鼠标
-int GHOST_API_EXPORT  ReMoveTo(int x, int y)
-{
-	return 0;
-}
+
 // 设置鼠标移动速度
-int GHOST_API_EXPORT  SetMoveSpeed(int speed)
+int GHOST_API_EXPORT  GetMouseMoveSpeed()
 {
-	return 0;
+	int mouseSpeed = -1;
+	BOOL bResult = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &mouseSpeed, 0);
+	if (bResult)
+	{
+		log_trace("get mouse move speed successful\n");
+		return mouseSpeed;
+	}
+	log_trace("get mouse move speed failed\n");
+	return -1;
 }
+
+// 设置鼠标移动速度
+int GHOST_API_EXPORT  SetMouseMoveSpeed(int speed)
+{
+	int mouseSpeed = constrain(speed, 1, 20);
+	;
+	BOOL bResult = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	if (bResult)
+	{
+		log_trace("set mouse move speed successful\n");
+		return 0;
+	}
+	log_trace("set mouse move speed failed\n");
+	return -1;
+}
+// 重置鼠标移动速度
+int GHOST_API_EXPORT  ResetMouseMoveSpeed()
+{
+	//Sets the current mouse speed. The pvParam parameter is an integer between 1 (slowest) and 20 (fastest).
+	//A value of 10 is the default. 
+	//This value is typically set using the mouse control panel application.
+	return SetMouseMoveSpeed(10);
+}
+
+// 设置鼠标滚轮速度
+int GHOST_API_EXPORT  GetMouseWheelLines()
+{
+	int mouseSpeed = -1;
+	BOOL bResult = SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &mouseSpeed, 0);
+	if (bResult)
+	{
+		log_trace("get mouse wheel lines speed successful\n");
+		return mouseSpeed;
+	}
+	log_trace("get mouse wheel lines speed failed\n");
+	return -1;
+}
+
+// 设置鼠标滚轮速度
+int GHOST_API_EXPORT  SetMouseWheelLines(int speed)
+{
+	unsigned int mouseSpeed = constrain(speed, 1, 20);
+	;
+	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLLINES, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	if (bResult)
+	{
+		log_trace("set mouse wheel lines speed successful\n");
+		return 0;
+	}
+	log_trace("set mouse wheel lines speed failed\n");
+	return -1;
+}
+// 重置鼠标滚轮速度
+int GHOST_API_EXPORT  ResetMouseWheelLines()
+{
+	//Retrieves the number of lines to scroll when the vertical mouse wheel is moved.
+	//The pvParam parameter must point to a UINT variable that receives the number of lines.
+	//The default value is 3.
+	return SetMouseMoveSpeed(3);
+}
+// 设置鼠标滚轮速度
+int GHOST_API_EXPORT  GetMouseWheelChars()
+{
+	int mouseSpeed = -1;
+	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLCHARS, 0, &mouseSpeed, 0);
+	if (bResult)
+	{
+		log_trace("get mouse wheel chars speed successful\n");
+		return mouseSpeed;
+	}
+	log_trace("get mouse wheel chars speed failed\n");
+	return -1;
+}
+
+// 设置鼠标滚轮速度
+int GHOST_API_EXPORT  SetMouseWheelChars(int speed)
+{
+	unsigned int mouseSpeed = constrain(speed, 1, 20);
+	;
+	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLCHARS, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	if (bResult)
+	{
+		log_trace("set mouse wheel chars speed successful\n");
+		return 0;
+	}
+	log_trace("set mouse wheel chars speed failed\n");
+	return -1;
+}
+// 重置鼠标滚轮速度
+int GHOST_API_EXPORT  ResetMouseWheelChars()
+{
+	//Retrieves the number of characters to scroll when the horizontal mouse wheel is moved. 
+	//The pvParam parameter must point to a UINT variable that receives the number of lines.
+	//The default value is 3.
+	return SetMouseMoveSpeed(3);
+}
+
+// 设置鼠标双击速度
+int GHOST_API_EXPORT  GetMouseDoubleClickSpeed()
+{
+	unsigned int mouseSpeed = -1;
+	mouseSpeed = GetDoubleClickTime();
+	log_trace("get mouse double click speed failed\n");
+	return (int)mouseSpeed;
+}
+
+// 设置鼠标双击速度
+int GHOST_API_EXPORT  SetMouseDoubleClickSpeed(int speed)
+{
+	unsigned int mouseSpeed = constrain(speed, 1, 5000);
+	BOOL bResult =  SetDoubleClickTime(mouseSpeed);
+	if (bResult)
+	{
+		log_trace("set mouse double click speed successful\n");
+		return 0;
+	}
+	log_trace("set mouse double click speed failed\n");
+	return -1;
+}
+// 重置鼠标双击速度
+int GHOST_API_EXPORT  ResetMouseDoubleClickSpeed()
+{
+	//The number of milliseconds that may occur between the first and second clicks of a double-click.
+	//If this parameter is set to 0, the system uses the default double-click time of 500 milliseconds.
+	//If this parameter value is greater than 5000 milliseconds,the system sets the value to 5000 milliseconds.
+	return SetMouseDoubleClickSpeed(500);
+}
+
 // 设置日志级别
 int GHOST_API_EXPORT SetLogLevel(int level)
 {

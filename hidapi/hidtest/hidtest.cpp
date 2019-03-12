@@ -43,18 +43,35 @@ int main(int argc, char* argv[])
 	//Sleep(5000);
 	//KeyPress("s", 1);
 	SetLogLevel(5);
-	Sleep(5000);
+	Sleep(3000);
 	//Disconnect(10);
-	//MoveTo(0, 0);
-	//Sleep(1000);
-	//POINT pt;
-	//GetCursorPos(&pt); //获取鼠标指针位置到pt
-	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
-	MoveTo(800, 600);
-	//GetCursorPos(&pt); //获取鼠标指针位置到pt
-	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
+	MoveTo(0, 0);
+	Sleep(1000);
+	POINT pt;
+	GetCursorPos(&pt); //获取鼠标指针位置到pt
+	printf("px=%ld,py=%ld\n", pt.x, pt.y);
+	//MoveTo(800, 600);
+
+	int mouseSpeed = 10;
+	BOOL bResult = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &mouseSpeed, 0);
+	if (bResult)
+	{
+		printf("speed:%d\n", mouseSpeed);
+		mouseSpeed = 10;
+		bResult = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	}
+	printf("speed:%d\n", mouseSpeed);
+	MoveToR(255, 255);
+	//printf("sn:%s\n",GetSN());
+	//printf("ml:%s\n", GetModel());
+	//printf("ver:%s\n", GetVer());
+	//printf("pd:%s\n", GetProductionDate());
+	GetCursorPos(&pt); //获取鼠标指针位置到pt
+	printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Sleep(3000);
-	//MoveToR(100, 100);
+	MoveToR(-255, -255);
+	GetCursorPos(&pt); //获取鼠标指针位置到pt
+	printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Say("hello world adfdsfsdf");
 	//KeyPress("a", 1);
 	//Sleep(1000);

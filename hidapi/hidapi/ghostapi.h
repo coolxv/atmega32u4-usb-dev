@@ -106,18 +106,38 @@ extern "C" {
 	int GHOST_API_EXPORT GHOST_API_CALL MouseUpAll();
 	// 模拟鼠标移动
 	int GHOST_API_EXPORT GHOST_API_CALL MoveTo(int x, int y);
-	// 相对移动鼠标(X，Y不能大于255)
+	// 相对移动鼠标
 	int GHOST_API_EXPORT GHOST_API_CALL MoveToR(int x, int y);
 	// 鼠标滚轮滚动
 	int GHOST_API_EXPORT GHOST_API_CALL WheelsMove(int y);
 
-	// 从指定位置移动鼠标
-	int GHOST_API_EXPORT GHOST_API_CALL MoveToFrom(int fx, int fy, int tx, int ty);
-	// 复位移动鼠标
-	int GHOST_API_EXPORT GHOST_API_CALL ReMoveTo(int x, int y);
+	// 获取鼠标移动速度
+	int GHOST_API_EXPORT GHOST_API_CALL GetMouseMoveSpeed();
 	// 设置鼠标移动速度
-	int GHOST_API_EXPORT GHOST_API_CALL SetMoveSpeed(int speed);
+	int GHOST_API_EXPORT GHOST_API_CALL SetMouseMoveSpeed(int speed);
+	// 重置鼠标移动速度,默认10
+	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseMoveSpeed();
 
+	// 获取鼠标滚轮速度-行数
+	int GHOST_API_EXPORT GHOST_API_CALL GetMouseWheelLines();
+	// 设置鼠标滚轮速度-行数
+	int GHOST_API_EXPORT GHOST_API_CALL SetMouseWheelLines(int speed);
+	// 重置鼠标滚轮速度-行数,默认3
+	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseWheelLines();
+
+	// 获取鼠标滚轮速度-字符
+	int GHOST_API_EXPORT GHOST_API_CALL GetMouseWheelChars();
+	// 设置鼠标滚轮速度-字符
+	int GHOST_API_EXPORT GHOST_API_CALL SetMouseWheelChars(int speed);
+	// 重置鼠标滚轮速度-字符,默认3
+	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseWheelChars();
+
+	// 获取鼠标双击速度-毫秒
+	int GHOST_API_EXPORT GHOST_API_CALL GetMouseDoubleClickSpeed();
+	// 设置鼠标双击速度-毫秒
+	int GHOST_API_EXPORT GHOST_API_CALL SetMouseDoubleClickSpeed(int speed);
+	// 重置鼠标双击速度-毫秒,默认500
+	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseDoubleClickSpeed();
 	//////////////////////////////////////////////
 	////////////     存储管理接口      ///////////
 	//////////////////////////////////////////////	   
