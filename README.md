@@ -47,3 +47,6 @@ https://github.com/cantora/avr-crypto-lib
 
 json
 https://github.com/bblanchon/ArduinoJson
+
+encrypt
+https://github.com/rweather/arduinolibs
