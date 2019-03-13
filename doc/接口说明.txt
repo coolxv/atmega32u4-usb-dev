@@ -8,3 +8,5 @@ https://github.com/Lexikos/AutoHotkey_L/blob/master/source/keyboard_mouse.cpp
 why GetSystemMetrics(SM_CXSCREEN) returns 1280 on surface pro instead of 1920?
 https://social.msdn.microsoft.com/Forums/en-US/0a83bb55-31f3-4298-acbb-7ac1f48e3cad/why-getsystemmetricssmcxscreen-returns-1280-on-surface-pro-instead-of-1920?forum=winappswithnativecode
 
+GetSystemMetricsForDPI
+ 
