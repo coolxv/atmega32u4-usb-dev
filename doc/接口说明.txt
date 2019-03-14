@@ -10,3 +10,7 @@ https://social.msdn.microsoft.com/Forums/en-US/0a83bb55-31f3-4298-acbb-7ac1f48e3
 
 GetSystemMetricsForDPI
  
+if (GetKeyState(VK_RMENU) & 0x8000))
+{
+    // Right ALT key is down.
+}
