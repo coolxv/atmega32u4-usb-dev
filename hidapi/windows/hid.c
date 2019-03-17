@@ -633,6 +633,9 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 		memset(buf + length, 0, dev->output_report_length - length);
 		length = dev->output_report_length;
 	}
+	int err = 0;
+	int count = 0;
+repeat:
 	ResetEvent(ev);
 	res = WriteFile(dev->device_handle, buf, length, NULL, &dev->ol);
 	
@@ -641,6 +644,8 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 			/* WriteFile() failed. Return error. */
 			register_error(dev, "WriteFile");
 			bytes_written = -1;
+			err++;
+			count++;
 			goto end_of_function;
 		}
 	}
@@ -652,10 +657,17 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 		/* The Write operation failed. */
 		register_error(dev, "WriteFile");
 		bytes_written = -1;
+		err++;
+		count++;
 		goto end_of_function;
 	}
-
+	err = 0;
 end_of_function:
+	if (err > 0 && count < 3)
+	{
+		Sleep(1);
+		goto repeat;
+	}
 	if (buf != data)
 		free(buf);
 
