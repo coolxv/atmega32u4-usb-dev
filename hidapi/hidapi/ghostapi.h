@@ -15,15 +15,17 @@
 extern "C" {
 #endif
 	
-
+	//返回值说明：
+	//0一般成功，非0失败
+	//如果是真假，0是假，1是真
 
 	//////////////////////////////////////////////
 	////////////     设备管理接口      ///////////
 	//////////////////////////////////////////////
-	// 打开设备
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();
 	// 打开设备（根据设备VID和PID）
 	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceEx(int vid, int pid);
+	// 打开设备
+	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();
 	// 关闭设备
 	int GHOST_API_EXPORT GHOST_API_CALL CloseDevice();
 	// 检查设备是否有效

@@ -526,7 +526,8 @@ HID_API_EXPORT hid_device * HID_API_CALL hid_open(unsigned short vendor_id, unsi
 	cur_dev = devs;
 	while (cur_dev) {
 		if (cur_dev->vendor_id == vendor_id &&
-		    cur_dev->product_id == product_id) {
+		    cur_dev->product_id == product_id &&
+			cur_dev->interface_number == 2) {
 			if (serial_number) {
 				if (wcscmp(serial_number, cur_dev->serial_number) == 0) {
 					path_to_open = cur_dev->path;

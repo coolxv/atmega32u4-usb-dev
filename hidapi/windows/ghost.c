@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include <locale.h>
 #include <windows.h>
 #include "keymap.h"
 #include "hidapi.h"
@@ -14,8 +13,11 @@
 } /* extern "C" */
 #endif
 
-///------------
+///--------------------------------------
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+
+///--------------------------------------
+///--------------------------------------
 #define GHOST_MOUSE_X_MAX 32767
 #define GHOST_MOUSE_X_MIN -32768
 #define GHOST_MOUSE_Y_MAX 32767
@@ -24,98 +26,82 @@
 #define GHOST_MOUSE_R_X_MIN -127
 #define GHOST_MOUSE_R_Y_MAX 127
 #define GHOST_MOUSE_R_Y_MIN -127
-///------------
-#define GHOST_VID 0x16C0
-#define GHOST_PID 0x0480
-
-static hid_device *handle = NULL;
-static int initialized = 0;
-
-CRITICAL_SECTION ghost_mutex;
+///--------------------------------------
+#define GHOST_VID 0x2341
+#define GHOST_PID 0x8036
+///--------------------------------------
+static hid_device *g_handle = NULL;
+static int g_initialized = 0;
+///--------------------------------------
+CRITICAL_SECTION g_mutex;
 
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
 //////////////////////////////////////////////
-int GHOST_API_EXPORT OpenDevice()
+int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 {
-	EnterCriticalSection(&ghost_mutex);
-	if (!initialized)
+	EnterCriticalSection(&g_mutex);
+	if (!g_initialized)
 	{
-		setlocale(LC_ALL, "");//添加这行 write 不会失败，不知啥原因，“连到系统上的设备没有发挥作用”
+		//init key map
 		keymap_init();
-
+		//init device
 		if (hid_init() < 0)
 		{
-			log_trace("unable to init device\n");
+			log_trace("init device failed\n");
 			keymap_fini();
-			LeaveCriticalSection(&ghost_mutex);
+			LeaveCriticalSection(&g_mutex);
 			return -1;
 		}
-		handle = hid_open(GHOST_VID, GHOST_PID, NULL);
-		if (!handle) {
-			log_trace("unable to open device\n");
+		log_trace("init device successful\n");
+		g_handle = hid_open(vid, pid, NULL);
+		if (!g_handle) {
+			log_trace("open device failed\n");
 			keymap_fini();
 			hid_exit();
-			LeaveCriticalSection(&ghost_mutex);
+			LeaveCriticalSection(&g_mutex);
 			return -2;
 		}
-		initialized = 1;
+		log_trace("open device successful\n");
+		g_initialized = 1;
 	}
-	LeaveCriticalSection(&ghost_mutex);
+	LeaveCriticalSection(&g_mutex);
 	return 0;
+}
+
+int GHOST_API_EXPORT OpenDevice()
+{
+	return OpenDeviceEx(GHOST_VID, GHOST_PID);
 }
 
 int HID_API_EXPORT CloseDevice()
 {
-	EnterCriticalSection(&ghost_mutex);
-	if (initialized)
+	EnterCriticalSection(&g_mutex);
+	if (g_initialized)
 	{
-		if (handle)
+		//fini device
+		if (g_handle)
 		{
-			hid_close(handle);
+			hid_close(g_handle);
+			log_trace("close device successful\n");
 		}
 		hid_exit();
+		log_trace("fini device successful\n");
+		//fini key map
 		keymap_fini();
+
 		//reset 
-		handle = NULL;
-		initialized = 0;
+		g_handle = NULL;
+		g_initialized = 0;
 	}
-	LeaveCriticalSection(&ghost_mutex);
+	LeaveCriticalSection(&g_mutex);
 	return 0;
 }
 
-
-
-int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
-{
-	EnterCriticalSection(&ghost_mutex);
-	if (!initialized)
-	{
-		if (hid_init() < 0)
-		{
-			log_trace("unable to init device\n");
-			keymap_fini();
-			LeaveCriticalSection(&ghost_mutex);
-			return -1;
-		}
-		handle = hid_open(vid, pid, NULL);
-		if (!handle) {
-			log_trace("unable to open device\n");
-			keymap_fini();
-			hid_exit();
-			LeaveCriticalSection(&ghost_mutex);
-			return -2;
-		}
-		initialized = 1;
-	}
-	LeaveCriticalSection(&ghost_mutex);
-
-	return 0;
-}
 // 检查设备是否有效
 int GHOST_API_EXPORT CheckDevice()
 {
-	if (initialized)
+	if (g_initialized)
 	{
 		return 1;
 	}
@@ -132,18 +118,17 @@ int GHOST_API_EXPORT Restart()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTART;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -159,18 +144,17 @@ int GHOST_API_EXPORT Disconnect(int second)
 	pkg.fc_value[0] = constrain(second, 0, 255);
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -197,40 +181,40 @@ GHOST_API_EXPORT char* GetSN()
 	pkg.kb_cmd = MSG_CMD_INFO_SN;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 	}
-	//
+	//recv
 	static MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0)
 	{
-		EnterCriticalSection(&ghost_mutex);
-		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&ghost_mutex);
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
 		if (res == 0)
 		{
-			log_trace("waiting...\n");
+			log_trace("read for waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			log_trace("Unable to read()\n");
+			log_trace("failed to read\n");
 		}
 	}
 	if (0 < res)
 	{
+		log_trace("sucess to read\n");
 		return result.if_value;
 	}
 	return NULL;
@@ -246,40 +230,40 @@ GHOST_API_EXPORT char* GetModel()
 	pkg.kb_cmd = MSG_CMD_INFO_MODEL;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 	}
 	//recv
 	static MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0)
 	{
-		EnterCriticalSection(&ghost_mutex);
-		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&ghost_mutex);
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
 		if (res == 0)
 		{
-			log_trace("waiting...\n");
+			log_trace("read for waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			log_trace("Unable to read()\n");
+			log_trace("failed to read\n");
 		}
 	}
 	if (0 < res)
 	{
+		log_trace("sucess to read\n");
 		return result.if_value;
 	}
 	return NULL;
@@ -295,40 +279,40 @@ GHOST_API_EXPORT char* GetVer()
 	pkg.kb_cmd = MSG_CMD_INFO_VERSION;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 	}
-	//
+	//recv
 	static MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0)
 	{
-		EnterCriticalSection(&ghost_mutex);
-		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&ghost_mutex);
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
 		if (res == 0)
 		{
-			log_trace("waiting...\n");
+			log_trace("read for waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			log_trace("Unable to read()\n");
+			log_trace("failed to read\n");
 		}
 	}
 	if (0 < res)
 	{
+		log_trace("sucess to read\n");
 		return result.if_value;
 	}
 	return NULL;
@@ -344,40 +328,40 @@ GHOST_API_EXPORT char* GetProductionDate()
 	pkg.kb_cmd = MSG_CMD_INFO_PROD_DATE;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 	}
-	//
+	//recv
 	static MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0)
 	{
-		EnterCriticalSection(&ghost_mutex);
-		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&ghost_mutex);
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
 		if (res == 0)
 		{
-			log_trace("waiting...\n");
+			log_trace("read for waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			log_trace("Unable to read()\n");
+			log_trace("failed to read\n");
 		}
 	}
 	if (0 < res)
 	{
+		log_trace("sucess to read\n");
 		return result.if_value;
 	}
 	return NULL;
@@ -407,21 +391,18 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	pkg.kb_cmd = MSG_CMD_KB_DOWN;
 	pkg.kb_key[0] = keycode;
 	//send
-
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
-
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -3;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 
@@ -447,18 +428,17 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	pkg.kb_key[0] = keycode;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -3;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -482,19 +462,22 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 	pkg.kb_cmd = MSG_CMD_KB_PRESS;
 	pkg.kb_key[0] = keycode;
 	//send
-	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int res = 0;
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -3;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -531,18 +514,17 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	pkg.kb_count = count;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -2;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -579,18 +561,17 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	pkg.kb_count = count;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -2;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -627,18 +608,21 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	pkg.kb_count = cnt;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -2;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -653,18 +637,17 @@ int GHOST_API_EXPORT  KeyUpAll()
 	pkg.kb_cmd = MSG_CMD_KB_UP_ALL;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -697,36 +680,35 @@ int GHOST_API_EXPORT  GetCapsLock()
 	pkg.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 	}
 	//
 	MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0) 
 	{
-		EnterCriticalSection(&ghost_mutex);
-		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&ghost_mutex);
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
 		if (res == 0)
 		{
-			log_trace("waiting...\n");
+			log_trace("read for waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			log_trace("Unable to read()\n");
+			log_trace("failed to read\n");
 		}
 	}
 	if (0 < res)
@@ -746,36 +728,35 @@ int GHOST_API_EXPORT  GetNumLock()
 	pkg.kb_cmd = MSG_CMD_KB_GET_NUM_LOCK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 	}
 	//
 	MSG_DATA_RESULT_T result;
 	res = 0;
 	while (res == 0)
 	{
-		EnterCriticalSection(&ghost_mutex);
-		res = hid_read(handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&ghost_mutex);
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
 		if (res == 0)
 		{
-			log_trace("waiting...\n");
+			log_trace("read for waiting...\n");
 			Sleep(500);
 		}
 
 		if (res < 0)
 		{
-			log_trace("Unable to read()\n");
+			log_trace("failed to read\n");
 		}
 	}
 	if (0 < res)
@@ -795,18 +776,17 @@ int GHOST_API_EXPORT  SetCapsLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -821,18 +801,17 @@ int GHOST_API_EXPORT  SetNumLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 
@@ -851,18 +830,17 @@ int GHOST_API_EXPORT  LeftDown()
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_DOWN;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -877,18 +855,17 @@ int GHOST_API_EXPORT  LeftUp()
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_UP;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -903,18 +880,21 @@ int GHOST_API_EXPORT  LeftClick(int count)
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_CLICK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -929,18 +909,21 @@ int GHOST_API_EXPORT  LeftDoubleClick(int count)
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_DCLICK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -955,18 +938,17 @@ int GHOST_API_EXPORT  RightDown()
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_DOWN;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -981,18 +963,17 @@ int GHOST_API_EXPORT  RightUp()
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_UP;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1007,18 +988,21 @@ int GHOST_API_EXPORT  RightClick(int count)
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_CLICK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1033,18 +1017,21 @@ int GHOST_API_EXPORT  RightDoubleClick(int count)
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_DCLICK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1059,18 +1046,17 @@ int GHOST_API_EXPORT  MiddleDown()
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_DOWN;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1085,18 +1071,17 @@ int GHOST_API_EXPORT  MiddleUp()
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_UP;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1111,18 +1096,21 @@ int GHOST_API_EXPORT  MiddleClick(int count)
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_CLICK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1137,18 +1125,21 @@ int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_DCLICK;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+		LeaveCriticalSection(&g_mutex);
+	}
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1163,18 +1154,17 @@ int GHOST_API_EXPORT  MouseUpAll()
 	pkg.ms_cmd = MSG_CMD_MS_UP_ALL;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1200,18 +1190,17 @@ int GHOST_API_EXPORT  MoveTo(int x, int y)
 	//pkg.ms_y = y;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1231,18 +1220,17 @@ int GHOST_API_EXPORT  MoveToR(int x, int y)
 	pkg.ms_y = iy;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1260,18 +1248,17 @@ int GHOST_API_EXPORT  WheelsMove(int y)
 	pkg.ms_wheel = iy;
 	//send
 	int res;
-	EnterCriticalSection(&ghost_mutex);
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&ghost_mutex);
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1426,19 +1413,18 @@ int GHOST_API_EXPORT SetLogLevel(int level)
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_LOG;
-	pkg.lg_level = (unsigned char)level;
+	pkg.lg_level = (unsigned char)constrain(level, 0, 6);;
 	//send
 	int res;
-	res = hid_write(handle, (unsigned char*)&pkg, sizeof(pkg));
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 	if (res < 0)
 	{
-		log_trace("Unable to write()\n");
-		log_trace("Error: %ls\n", hid_error(handle));
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return 3;
 	}
 	else
 	{
-		log_trace("sucess to write()\n");
+		log_trace("sucess to write\n");
 		return 0;
 	}
 }

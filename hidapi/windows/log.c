@@ -25,7 +25,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-
 #include "log.h"
 
 static struct {
@@ -99,6 +98,9 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
   time_t t = time(NULL);
   struct tm *lt = localtime(&t);
 
+  /*Get file name*/
+  char fname[_MAX_FNAME];;
+  _splitpath(file, NULL, NULL, fname, NULL);
   /* Log to stderr */
   if (!L.quiet) {
     va_list args;
@@ -109,7 +111,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
       stderr, "%s %s%-5s\x1b[0m \x1b[90m%s:%d:\x1b[0m ",
       buf, level_colors[level], level_names[level], file, line);
 #else
-    fprintf(stderr, "%s %-5s %s:%d: ", buf, level_names[level], file, line);
+    fprintf(stderr, "%s %-5s %s:%d: ", buf, level_names[level], fname, line);
 #endif
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
@@ -123,7 +125,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
     va_list args;
     char buf[32];
     buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", lt)] = '\0';
-    fprintf(L.fp, "%s %-5s %s:%d: ", buf, level_names[level], file, line);
+    fprintf(L.fp, "%s %-5s %s:%d: ", buf, level_names[level], fname, line);
     va_start(args, fmt);
     vfprintf(L.fp, fmt, args);
     va_end(args);

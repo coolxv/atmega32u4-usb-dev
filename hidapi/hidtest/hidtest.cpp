@@ -32,8 +32,8 @@
 
 
 
-#define GHOST_VID 0x16C0
-#define GHOST_PID 0x0480
+#define GHOST_VID 0x2341
+#define GHOST_PID 0x8036
 
 
 int main(int argc, char* argv[])
@@ -43,36 +43,27 @@ int main(int argc, char* argv[])
 	//Sleep(5000);
 	//KeyPress("s", 1);
 	SetLogLevel(5);
-	Sleep(3000);
+	Sleep(5000);
 	//Disconnect(10);
-	MoveTo(0, 0);
-	Sleep(1000);
-	POINT pt;
-	GetCursorPos(&pt); //获取鼠标指针位置到pt
-	printf("px=%ld,py=%ld\n", pt.x, pt.y);
+	//MoveTo(0, 0);
+	//Sleep(1000);
+	//POINT pt;
+	//GetCursorPos(&pt); //获取鼠标指针位置到pt
+	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
 	//MoveTo(800, 600);
-
-	int mouseSpeed = 10;
-	BOOL bResult = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &mouseSpeed, 0);
-	if (bResult)
-	{
-		printf("speed:%d\n", mouseSpeed);
-		mouseSpeed = 10;
-		bResult = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-	}
-	printf("speed:%d\n", mouseSpeed);
-	MoveToR(255, 255);
+	//KeyPress("a", 10);
+	//MoveToR(255, 255);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
 	//printf("ver:%s\n", GetVer());
 	//printf("pd:%s\n", GetProductionDate());
-	GetCursorPos(&pt); //获取鼠标指针位置到pt
-	printf("x=%ld,y=%ld\n", pt.x, pt.y);
+	//GetCursorPos(&pt); //获取鼠标指针位置到pt
+	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Sleep(3000);
-	MoveToR(-255, -255);
-	GetCursorPos(&pt); //获取鼠标指针位置到pt
-	printf("x=%ld,y=%ld\n", pt.x, pt.y);
-	//Say("hello world adfdsfsdf");
+	//MoveToR(-255, -255);
+	//GetCursorPos(&pt); //获取鼠标指针位置到pt
+	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
+	Say("HEllo world adfdsfsdf");
 	//KeyPress("a", 1);
 	//Sleep(1000);
 	//SetLogLevel(0);
@@ -107,13 +98,15 @@ int main(int argc, char* argv[])
 	devs = hid_enumerate(0x0, 0x0);
 	cur_dev = devs;	
 	while (cur_dev) {
-		printf("Device Found\n  type: %04hx %04hx\n  path: %s\n  serial_number: %ls", cur_dev->vendor_id, cur_dev->product_id, cur_dev->path, cur_dev->serial_number);
-		printf("\n");
-		printf("  Manufacturer: %ls\n", cur_dev->manufacturer_string);
-		printf("  Product:      %ls\n", cur_dev->product_string);
-		printf("  Release:      %hx\n", cur_dev->release_number);
-		printf("  Interface:    %d\n",  cur_dev->interface_number);
-		printf("\n");
+		if (cur_dev->vendor_id == 0x2341) {
+			printf("Device Found\n  type: %04hx %04hx\n  path: %s\n  serial_number: %ls", cur_dev->vendor_id, cur_dev->product_id, cur_dev->path, cur_dev->serial_number);
+			printf("\n");
+			printf("  Manufacturer: %ls\n", cur_dev->manufacturer_string);
+			printf("  Product:      %ls\n", cur_dev->product_string);
+			printf("  Release:      %hx\n", cur_dev->release_number);
+			printf("  Interface:    %d\n", cur_dev->interface_number);
+			printf("\n");
+		}
 		cur_dev = cur_dev->next;
 	}
 	hid_free_enumeration(devs);
@@ -164,24 +157,7 @@ int main(int argc, char* argv[])
 	// data here, but execution should not block.
 	res = hid_read(handle, buf, 17);
 
-	printf("pack size:%d\n",sizeof(MSG_KM_DATA_T));
 
-	MSG_KM_DATA_T pack;
-	memset(&pack, 0, sizeof(pack));
-	pack.type[0] = 0x1;
-	pack.type[1] = 1;
-	//buf[1] = 0x80;
-	res = hid_write(handle, (unsigned char*)&pack, sizeof(pack));
-	if (res < 0)
-	{
-		printf("Unable to write()\n");
-		printf("Error: %ls\n", hid_error(handle));
-	}
-	else
-	{
-		printf("sucess to write()\n");
-	}
-	
 
 	/* Free static HIDAPI objects. */
 	hid_close(handle);
