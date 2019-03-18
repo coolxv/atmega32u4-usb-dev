@@ -38,8 +38,8 @@
 
 int main(int argc, char* argv[])
 {
-#if 0
-	OpenDevice();
+#if 1
+	OpenDeviceEx(0x2341, 0x8036);
 	//Sleep(5000);
 	//KeyPress("s", 1);
 	SetLogLevel(5);
@@ -51,7 +51,9 @@ int main(int argc, char* argv[])
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
 	//MoveTo(800, 600);
-	KeyPress("A", 10);
+	//SetDeviceID(0x2342, 0x8037);
+	RestoreDeviceID();
+	//KeyPress("A", 10);
 	//MoveToR(255, 255);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
@@ -63,7 +65,7 @@ int main(int argc, char* argv[])
 	//MoveToR(-255, -255);
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
-	Say("HEllo world adfdsfsdf");
+	//Say("HEllo world adfdsfsdf");
 	//KeyPress("a", 1);
 	//Sleep(1000);
 	//SetLogLevel(0);

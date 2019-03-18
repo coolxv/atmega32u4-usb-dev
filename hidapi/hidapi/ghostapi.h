@@ -34,6 +34,8 @@ extern "C" {
 	int GHOST_API_EXPORT GHOST_API_CALL Restart();
 	// 断开设备连接
 	int GHOST_API_EXPORT GHOST_API_CALL Disconnect(int second);
+
+
 	// 设置自定义设备ID（厂商ID+产品ID）
 	int GHOST_API_EXPORT GHOST_API_CALL SetDeviceID(int vid, int pid);
 	// 恢复设备默认ID

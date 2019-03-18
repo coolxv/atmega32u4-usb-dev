@@ -526,7 +526,7 @@ bool SendDescriptor(USBSetup& setup)
 	{
         const u16* ee_addr = 0;
         eeconfig = eeprom_read_word(ee_addr);
-        if(eeconfig != 0xeeee)
+        if(eeconfig != 0x7777)
         {
     		desc_addr = (const u8*)&USB_DeviceDescriptorIAD;
         }
@@ -561,7 +561,7 @@ bool SendDescriptor(USBSetup& setup)
 		return false;
 
     u8 desc_length = 0;
-	if (USB_DEVICE_DESCRIPTOR_TYPE == t && eeconfig == 0xeeee)
+	if ((USB_DEVICE_DESCRIPTOR_TYPE == t) && (eeconfig == 0x7777))
 	{
         desc_length = eeprom_read_byte(desc_addr);
         USB_SendControl(TRANSFER_EPM,desc_addr,desc_length);

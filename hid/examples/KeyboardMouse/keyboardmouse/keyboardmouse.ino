@@ -45,6 +45,8 @@
 //function cmd
 #define  MSG_CMD_FUNC_RESTART 1
 #define  MSG_CMD_FUNC_DISCONNECT 2
+#define  MSG_CMD_FUNC_SET_DEVICE_ID 3
+#define  MSG_CMD_FUNC_RESTORE_DEVICE_ID 4
 
 //info cmd
 #define  MSG_CMD_INFO_SN 1
@@ -83,7 +85,10 @@ typedef union {
     unsigned char fc_type;
     //use
     unsigned char fc_cmd;
-    unsigned char fc_value[4];
+    union {
+      unsigned char fc_value[4];
+      unsigned short fc_vidpid[2];
+    };
   };
   //info
   struct {
@@ -117,14 +122,7 @@ typedef union {
 
 
 
-//  DEVICE DESCRIPTOR
-const DeviceDescriptor USB_DeviceDescriptorIAD =
-  D_DEVICE(0xEF,0x02,0x01,64,USB_VID,USB_PID,0x100,IMANUFACTURER,IPRODUCT,ISERIAL,1);
-
-
 //
-
-
 #define  MSG_CMD_INFO_SN 1
 #define  MSG_CMD_INFO_MODEL 2
 #define  MSG_CMD_INFO_VERSION 3
@@ -490,6 +488,25 @@ void FuncProcess()
         resetFunc();
         break;
       }
+    case MSG_CMD_FUNC_SET_DEVICE_ID:
+      {
+        //  DEVICE DESCRIPTOR
+        DeviceDescriptor dd_struct = D_DEVICE(0xEF, 0x02, 0x01, 64, rawhidData.fc_vidpid[0], rawhidData.fc_vidpid[1], 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
+        unsigned short ee_flag = 0x7777;
+        int addr = 0;
+        EEPROM.put(addr, ee_flag);
+        addr += sizeof(unsigned short);
+        EEPROM.put(addr, dd_struct);
+        break;
+      }
+    case MSG_CMD_FUNC_RESTORE_DEVICE_ID:
+      {
+        unsigned short ee_flag = 0;
+        int addr = 0;
+        EEPROM.put(addr, ee_flag);
+        break;
+      }
+
     default:
       {
         Log.error("msg func cmd error, cmd is %d\n", rawhidData.fc_cmd);

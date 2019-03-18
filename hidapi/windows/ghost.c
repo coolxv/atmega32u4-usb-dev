@@ -161,12 +161,54 @@ int GHOST_API_EXPORT Disconnect(int second)
 // 设置自定义设备ID（厂商ID+产品ID）
 int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_SET_DEVICE_ID;
+	pkg.fc_vidpid[0] = constrain(vid, 0, 65535);
+	pkg.fc_vidpid[1] = constrain(pid, 0, 65535);
+	//send
+	int res;
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
 }
 // 恢复设备默认ID
 int GHOST_API_EXPORT RestoreDeviceID()
 {
-	return 0;
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_DEVICE_ID;
+	//send
+	int res;
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
 }
 
 

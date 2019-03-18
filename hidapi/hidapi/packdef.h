@@ -37,6 +37,8 @@
 //function cmd
 #define  MSG_CMD_FUNC_RESTART 1
 #define  MSG_CMD_FUNC_DISCONNECT 2
+#define  MSG_CMD_FUNC_SET_DEVICE_ID 3
+#define  MSG_CMD_FUNC_RESTORE_DEVICE_ID 4
 //info cmd
 #define  MSG_CMD_INFO_SN 1
 #define  MSG_CMD_INFO_MODEL 2
@@ -45,6 +47,7 @@
 
 
 
+#pragma pack(push, 1)
 typedef union {
 	unsigned char type[2];
 	//mouse
@@ -80,7 +83,10 @@ typedef union {
 		unsigned char fc_type;
 		//use
 		unsigned char fc_cmd;
-		unsigned char fc_value[4];
+		union {
+			unsigned char fc_value[4];
+			unsigned short fc_vidpid[2];
+		};
 	};
 	//info
 	struct {
@@ -110,3 +116,4 @@ typedef union {
 	};
 	unsigned char buf[64];
 } MSG_DATA_RESULT_T;
+#pragma pack(pop)
