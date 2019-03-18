@@ -115,6 +115,13 @@ typedef union {
 } MSG_DATA_RESULT_T;
 
 
+
+
+//  DEVICE DESCRIPTOR
+const DeviceDescriptor USB_DeviceDescriptorIAD =
+  D_DEVICE(0xEF,0x02,0x01,64,USB_VID,USB_PID,0x100,IMANUFACTURER,IPRODUCT,ISERIAL,1);
+
+
 //
 
 
