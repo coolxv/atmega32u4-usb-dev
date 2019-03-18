@@ -378,7 +378,7 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 		return -1;
 	}
 
-	unsigned char keycode = keymap_map(key);
+	unsigned short keycode = keymap_map(key);
 	if (!keycode)
 	{
 		return -2;
@@ -414,7 +414,7 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	{
 		return -1;
 	}
-	unsigned char keycode = keymap_map(key);
+	unsigned short keycode = keymap_map(key);
 	if (!keycode)
 	{
 		return -2;
@@ -449,7 +449,7 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 	{
 		return -1;
 	}
-	unsigned char keycode = keymap_map(key);
+	unsigned short keycode = keymap_map(key);
 	if (!keycode)
 	{
 		return -2;
@@ -485,7 +485,7 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
 	unsigned count = 0;
-	unsigned char keycode = 0;
+	unsigned short keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
 	MSG_DATA_T pkg;
@@ -532,7 +532,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
 	unsigned count = 0;
-	unsigned char keycode = 0;
+	unsigned short keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
 	MSG_DATA_T pkg;
@@ -579,7 +579,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
 {
 	unsigned int cnt = 0;
-	unsigned char keycode = 0;
+	unsigned short keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
 	MSG_DATA_T pkg;

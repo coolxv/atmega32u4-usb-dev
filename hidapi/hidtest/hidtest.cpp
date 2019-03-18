@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
 	//MoveTo(800, 600);
-	KeyPress("a", 10);
+	KeyPress("A", 10);
 	//MoveToR(255, 255);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());

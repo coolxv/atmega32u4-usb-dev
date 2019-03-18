@@ -2,7 +2,7 @@
 
 
 void keymap_init();
-unsigned char keymap_map(const char *key);
+unsigned short keymap_map(const char *key);
 void keymap_fini();
 
 

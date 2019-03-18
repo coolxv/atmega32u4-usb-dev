@@ -481,7 +481,10 @@ enum KeyboardLeds {
 	LED_DO_NOT_DISTURB = (1 << 7),
 };
 
-#define SHIFT 0x80
+#define SHIFT 0x8000
+
+
+#if 0
 static const int _asciimap[] =
 {
 	KEY_RESERVED,           // NUL
@@ -614,7 +617,7 @@ static const int _asciimap[] =
 	KEY_TILDE | SHIFT,    	// ~
 	KEY_RESERVED			// DEL
 };
-
+#endif
 
 static int initialized = 0;
 static map_int_t m;
@@ -815,7 +818,7 @@ void keymap_init()
 	return;
 }
 
-unsigned char keymap_map(const char *key)
+unsigned short keymap_map(const char *key)
 {
 	char tmp[17];
 	strcpy_s(tmp,sizeof(tmp), key);
@@ -826,7 +829,7 @@ unsigned char keymap_map(const char *key)
 	int *val = map_get(&m, tmp);
 	if (val)
 	{
-		return (unsigned char)(*val);
+		return (unsigned short)(*val);
 	}
 	else
 	{

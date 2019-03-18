@@ -70,7 +70,7 @@ typedef union {
     //use
     unsigned char kb_cmd;//keyboard:down,up,press...
     unsigned char kb_count;
-    unsigned char kb_key[6];
+    unsigned short kb_key[6];
   };
   //log
   struct {
@@ -190,17 +190,45 @@ void keyboardProcess()
   {
     case MSG_CMD_KB_DOWN:
       {
-        BootKeyboard.release(KeyboardKeycode(rawhidData.kb_key[0]));
+        unsigned char key = (unsigned char)(0xff & rawhidData.kb_key[0]);
+        BootKeyboard.add(KeyboardKeycode(key));
+        if (rawhidData.kb_key[0] & 0x8000)
+        {
+          BootKeyboard.add(KEY_LEFT_SHIFT);
+        }
+        BootKeyboard.send();
         break;
       }
     case MSG_CMD_KB_UP:
       {
-        BootKeyboard.press(KeyboardKeycode(rawhidData.kb_key[0]));
+
+        unsigned char key = (unsigned char)(0xff & rawhidData.kb_key[0]);
+        BootKeyboard.remove(KeyboardKeycode(key));
+        if (rawhidData.kb_key[0] & 0x8000)
+        {
+          BootKeyboard.remove(KEY_LEFT_SHIFT);
+        }
+        BootKeyboard.send();
         break;
       }
     case MSG_CMD_KB_PRESS:
       {
-        BootKeyboard.write(KeyboardKeycode(rawhidData.kb_key[0]));
+        unsigned char key = (unsigned char)(0xff & rawhidData.kb_key[0]);
+        //press
+        BootKeyboard.add(KeyboardKeycode(key));
+        if (rawhidData.kb_key[0] & 0x8000)
+        {
+          BootKeyboard.add(KEY_LEFT_SHIFT);
+        }
+        BootKeyboard.send();
+        //release
+        BootKeyboard.remove(KeyboardKeycode(key));
+        if (rawhidData.kb_key[0] & 0x8000)
+        {
+          BootKeyboard.remove(KEY_LEFT_SHIFT);
+        }
+        BootKeyboard.send();
+
         break;
       }
     case MSG_CMD_KB_UP_ALL:
@@ -213,9 +241,9 @@ void keyboardProcess()
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
+          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
-            BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
           }
         }
@@ -230,9 +258,9 @@ void keyboardProcess()
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
+          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
-            BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
           }
         }
@@ -244,10 +272,11 @@ void keyboardProcess()
       }
     case MSG_CMD_KB_COMB_PRESS:
       {
+        //press
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
+          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
             BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;
@@ -257,11 +286,11 @@ void keyboardProcess()
         {
           BootKeyboard.send();
         }
-        //
+        //release
         j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i] != 0))
+          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
             BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
             j++;

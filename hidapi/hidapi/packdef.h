@@ -65,7 +65,7 @@ typedef union {
 		//use
 		unsigned char kb_cmd;//down,up,press...
 		unsigned char kb_count;
-		unsigned char kb_key[6];
+		unsigned short kb_key[6];
 	};
 	//log
 	struct {
