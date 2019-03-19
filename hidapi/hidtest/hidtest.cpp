@@ -39,7 +39,8 @@
 int main(int argc, char* argv[])
 {
 #if 1
-	OpenDeviceEx(0x2341, 0x8036);
+	//OpenDeviceEx(0x2341, 0x8036);
+	OpenDevice2();
 	//Sleep(5000);
 	//KeyPress("s", 1);
 	SetLogLevel(5);
@@ -52,9 +53,9 @@ int main(int argc, char* argv[])
 	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
 	//MoveTo(800, 600);
 	//SetDeviceID(0x2342, 0x8037);
-	RestoreDeviceID();
+	//RestoreDeviceID();
 	//KeyPress("A", 10);
-	//MoveToR(255, 255);
+	MoveToR(255, 255);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
 	//printf("ver:%s\n", GetVer());

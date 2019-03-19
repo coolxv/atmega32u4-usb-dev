@@ -138,7 +138,7 @@ bool delay_restart = false;
 void(* resetFunc) (void) = 0;
 
 // save some chars
-const char sn_info[] PROGMEM  = {"010387bc4b7e49b59c3381dd5a982be1"};
+const char sn_info[] PROGMEM  = {"05ea0849576a574681741d45ae174d8a"};
 const char model_info[] PROGMEM  = {"base"};
 const char version_info[] PROGMEM  = {"1.0.0"};
 const char production_date_info[] PROGMEM  = {"20190315"};

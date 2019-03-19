@@ -25,8 +25,9 @@ extern "C" {
 	// 打开设备（根据设备VID和PID）
 	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceEx(int vid, int pid);
 	// 打开设备
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();
-	// 关闭设备
+	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();//基于默认vid、pid
+	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice2();//基于默认serial number
+		// 关闭设备
 	int GHOST_API_EXPORT GHOST_API_CALL CloseDevice();
 	// 检查设备是否有效
 	int GHOST_API_EXPORT GHOST_API_CALL CheckDevice();
