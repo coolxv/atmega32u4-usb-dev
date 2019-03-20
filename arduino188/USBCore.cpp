@@ -41,29 +41,25 @@ const u16 STRING_LANGUAGE[2] = {
 	0x0409	// English
 };
 
-#ifndef USB_PRODUCT
-// If no product is provided, use USB IO Board
-#define USB_PRODUCT     "USB IO Board"
+#if defined(USB_PRODUCT)
+    #undef USB_PRODUCT
 #endif
-
+#define USB_PRODUCT     "GHOST KM"
 const u8 STRING_PRODUCT[] PROGMEM = USB_PRODUCT;
 
-#if USB_VID == 0x2341
-#  if defined(USB_MANUFACTURER)
-#    undef USB_MANUFACTURER
-#  endif
-#  define USB_MANUFACTURER "Arduino LLC"
-#elif USB_VID == 0x1b4f
-#  if defined(USB_MANUFACTURER)
-#    undef USB_MANUFACTURER
-#  endif
-#  define USB_MANUFACTURER "SparkFun"
-#elif !defined(USB_MANUFACTURER)
-// Fall through to unknown if no manufacturer name was provided in a macro
-#  define USB_MANUFACTURER "Unknown"
+#if defined(USB_MANUFACTURER)
+    #undef USB_MANUFACTURER
 #endif
-
+#define USB_MANUFACTURER "GHOST LLC"
 const u8 STRING_MANUFACTURER[] PROGMEM = USB_MANUFACTURER;
+
+#if defined(USB_SERIAL)
+    #undef USB_SERIAL
+#endif
+#define USB_SERIAL "GHOST@857WG"
+const u8 STRING_SERIAL[] PROGMEM = USB_SERIAL;
+
+
 
 
 #define DEVICE_CLASS 0x02
@@ -548,9 +544,7 @@ bool SendDescriptor(USBSetup& setup)
 		}
 		else if (setup.wValueL == ISERIAL) {
 #ifdef PLUGGABLE_USB_ENABLED
-			char name[ISERIAL_MAX_LEN];
-			PluggableUSB().getShortName(name);
-			return USB_SendStringDescriptor((uint8_t*)name, strlen(name), 0);
+            return USB_SendStringDescriptor(STRING_SERIAL, strlen(USB_SERIAL), TRANSFER_PGM);
 #endif
 		}
 		else

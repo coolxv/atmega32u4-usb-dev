@@ -54,7 +54,7 @@ int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 			return -1;
 		}
 		log_trace("init device successful\n");
-		g_handle = hid_open(vid, pid, NULL);
+		g_handle = hid_open(vid, pid ,2 ,NULL);
 		if (!g_handle) {
 			log_trace("open device failed\n");
 			keymap_fini();
@@ -72,6 +72,37 @@ int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 int GHOST_API_EXPORT OpenDevice()
 {
 	return OpenDeviceEx(GHOST_VID, GHOST_PID);
+}
+
+int GHOST_API_EXPORT OpenDevice2()
+{
+	EnterCriticalSection(&g_mutex);
+	if (!g_initialized)
+	{
+		//init key map
+		keymap_init();
+		//init device
+		if (hid_init() < 0)
+		{
+			log_trace("init device failed\n");
+			keymap_fini();
+			LeaveCriticalSection(&g_mutex);
+			return -1;
+		}
+		log_trace("init device successful\n");
+		g_handle = hid_open_serial_no(2, L"GHOST@857WG");
+		if (!g_handle) {
+			log_trace("open device failed\n");
+			keymap_fini();
+			hid_exit();
+			LeaveCriticalSection(&g_mutex);
+			return -2;
+		}
+		log_trace("open device successful\n");
+		g_initialized = 1;
+	}
+	LeaveCriticalSection(&g_mutex);
+	return 0;
 }
 
 int HID_API_EXPORT CloseDevice()
