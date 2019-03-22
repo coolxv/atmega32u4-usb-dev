@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	//SetDeviceID(0x2342, 0x8037);
 	//RestoreDeviceID();
 	//KeyPress("A", 10);
-	MoveToR(255, 255);
+	//MoveToR(255, 255);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
 	//printf("ver:%s\n", GetVer());
@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
 	//MoveToR(-255, -255);
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
-	//Say("HEllo world adfdsfsdf");
-	//KeyPress("a", 1);
+	Say("HEllo world adfdsfsdf");
+	//KeyPress("H", 10);
 	//Sleep(1000);
 	//SetLogLevel(0);
 	//SetCapsLock();
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	// Open the device using the VID, PID,
 	// and optionally the Serial number.
 	////handle = hid_open(0x4d8, 0x3f, L"12345");
-	handle = hid_open(GHOST_VID, GHOST_PID, NULL);
+	handle = hid_open(GHOST_VID, GHOST_PID, 2 , NULL);
 	if (!handle) {
 		printf("unable to open device\n");
  		return 1;

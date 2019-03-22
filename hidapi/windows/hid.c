@@ -236,7 +236,7 @@ static HANDLE open_device(const char *path, BOOL enumerate)
 		share_mode,
 		NULL,
 		OPEN_EXISTING,
-		FILE_FLAG_OVERLAPPED,/*FILE_ATTRIBUTE_NORMAL,*/
+		FILE_ATTRIBUTE_NORMAL,/*FILE_ATTRIBUTE_NORMAL,*/
 		0);
 
 	return handle;
@@ -696,9 +696,9 @@ repeat:
 	}
 	err = 0;
 end_of_function:
-	if (err > 0 && count < 3)
+	if (err > 0 && count <= 10)
 	{
-		Sleep(1);
+		Sleep(count*count*count);
 		goto repeat;
 	}
 	if (buf != data)
