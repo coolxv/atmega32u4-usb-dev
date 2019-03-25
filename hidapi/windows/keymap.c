@@ -484,7 +484,7 @@ enum KeyboardLeds {
 #define SHIFT 0x8000
 
 
-#if 0
+
 static const int _asciimap[] =
 {
 	KEY_RESERVED,           // NUL
@@ -617,7 +617,6 @@ static const int _asciimap[] =
 	KEY_TILDE | SHIFT,    	// ~
 	KEY_RESERVED			// DEL
 };
-#endif
 
 static int initialized = 0;
 static map_int_t m;

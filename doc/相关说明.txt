@@ -1,1 +1,5 @@
 keyboard:https://support.microsoft.com/en-us/help/17073/windows-using-keyboard
+
+That said, Leonardo does NOT reset when a serial connection is established, regardless if the DTR line is used or not. This is very good if auto-reset is non desired. But how to reset Leonardo via serial?. The documentation sais you must open the serial port with 1200baud and then close. Here are two python programs, one for reading serial and the other one for reset. 
+
+https://store.arduino.cc/usa/leonardo

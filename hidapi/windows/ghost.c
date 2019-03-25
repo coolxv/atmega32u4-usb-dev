@@ -518,6 +518,36 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 // 一次按键
 int GHOST_API_EXPORT  KeyPress(char *key, int count)
 {
+	//send
+	int res = 0;
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		res = KeyDown(key);
+		if (res >= 0)
+		{
+			Sleep(constrain((rand() % 81), 50, 80));
+			res = KeyUp(key);
+			if (res >= 0 && i < count)
+			{
+				Sleep(constrain((rand() % 601), 150, 600));
+			}
+		}
+
+	}
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -3;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+int GHOST_API_EXPORT  KeyPress2(char *key, int count)
+{
 	if (NULL == key || 0 == strlen(key))
 	{
 		return -1;
@@ -553,6 +583,7 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 		log_trace("sucess to write\n");
 		return 0;
 	}
+
 }
 // 组合键按下
 int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
@@ -571,7 +602,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 			keycode = keymap_map(key[i]);
 			if (keycode)
 			{
-				pkg.kb_key[0] = keycode;
+				pkg.kb_key[i] = keycode;
 				count++;
 			}
 		}
@@ -618,7 +649,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 			keycode = keymap_map(key[i]);
 			if (keycode)
 			{
-				pkg.kb_key[0] = keycode;
+				pkg.kb_key[i] = keycode;
 				count++;
 			}
 		}
@@ -651,6 +682,36 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 // 组合按键
 int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
 {
+	//send
+	int res = 0;
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		res = CombinationKeyDown(key1, key2, key3, key4, key5, key6);
+		if (res >= 0)
+		{
+			Sleep(constrain((rand() % 81), 50, 80));
+			res = CombinationKeyUp(key1, key2, key3, key4, key5, key6);
+			if (res >= 0 && i < count)
+			{
+				Sleep(constrain((rand() % 601), 150, 600));
+			}
+		}
+
+	}
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -3;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+int GHOST_API_EXPORT  CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
+{
 	unsigned int cnt = 0;
 	unsigned short keycode = 0;
 	char * key[6] = { key1, key2, key3, key4, key5, key6 };
@@ -665,7 +726,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 			keycode = keymap_map(key[i]);
 			if (keycode)
 			{
-				pkg.kb_key[0] = keycode;
+				pkg.kb_key[i] = keycode;
 				cnt++;
 			}
 		}
@@ -945,6 +1006,36 @@ int GHOST_API_EXPORT  LeftUp()
 // 鼠标左键单击
 int GHOST_API_EXPORT  LeftClick(int count)
 {
+	//send
+	int res = 0;
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		res = LeftDown();
+		if (res >= 0)
+		{
+			Sleep(constrain((rand() % 81), 50, 80));
+			res = LeftUp();
+			if (res >= 0 && i < count)
+			{
+				Sleep(constrain((rand() % 501), 500, 900));
+			}
+		}
+
+	}
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -3;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+int GHOST_API_EXPORT  LeftClick2(int count)
+{
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -988,6 +1079,10 @@ int GHOST_API_EXPORT  LeftDoubleClick(int count)
 		EnterCriticalSection(&g_mutex);
 		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 		LeaveCriticalSection(&g_mutex);
+		if (res >= 0 && i < count)
+		{
+			Sleep(constrain((rand() % 901), 500, 900));
+		}
 	}
 	if (res < 0)
 	{
@@ -1053,6 +1148,36 @@ int GHOST_API_EXPORT  RightUp()
 // 鼠标右键单击
 int GHOST_API_EXPORT  RightClick(int count)
 {
+	//send
+	int res = 0;
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		res = RightDown();
+		if (res >= 0)
+		{
+			Sleep(constrain((rand() % 81), 50, 80));
+			res = RightUp();
+			if (res >= 0 && i < count)
+			{
+				Sleep(constrain((rand() % 501), 500, 900));
+			}
+		}
+
+	}
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -3;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+int GHOST_API_EXPORT  RightClick2(int count)
+{
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -1067,6 +1192,10 @@ int GHOST_API_EXPORT  RightClick(int count)
 		EnterCriticalSection(&g_mutex);
 		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 		LeaveCriticalSection(&g_mutex);
+		if (res >= 0 && i < count)
+		{
+			Sleep(constrain((rand() % 901), 500, 900));
+		}
 	}
 	if (res < 0)
 	{
@@ -1079,6 +1208,7 @@ int GHOST_API_EXPORT  RightClick(int count)
 		return 0;
 	}
 }
+
 // 鼠标右键双击
 int GHOST_API_EXPORT  RightDoubleClick(int count)
 {
@@ -1096,6 +1226,10 @@ int GHOST_API_EXPORT  RightDoubleClick(int count)
 		EnterCriticalSection(&g_mutex);
 		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 		LeaveCriticalSection(&g_mutex);
+		if (res >= 0 && i < count)
+		{
+			Sleep(constrain((rand() % 901), 500, 900));
+		}
 	}
 	if (res < 0)
 	{
@@ -1161,6 +1295,36 @@ int GHOST_API_EXPORT  MiddleUp()
 // 鼠标中键单击
 int GHOST_API_EXPORT  MiddleClick(int count)
 {
+	//send
+	int res = 0;
+	int i = 0;
+	while (res >= 0 && i++ < count)
+	{
+		res = MiddleDown();
+		if (res >= 0)
+		{
+			Sleep(constrain((rand() % 81), 50, 80));
+			res = MiddleUp();
+			if (res >= 0 && i < count)
+			{
+				Sleep(constrain((rand() % 501), 500, 900));
+			}
+		}
+
+	}
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -3;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+int GHOST_API_EXPORT  MiddleClick2(int count)
+{
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -1175,6 +1339,10 @@ int GHOST_API_EXPORT  MiddleClick(int count)
 		EnterCriticalSection(&g_mutex);
 		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 		LeaveCriticalSection(&g_mutex);
+		if (res >= 0 && i < count)
+		{
+			Sleep(constrain((rand() % 901), 500, 900));
+		}
 	}
 	if (res < 0)
 	{
@@ -1204,6 +1372,10 @@ int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 		EnterCriticalSection(&g_mutex);
 		res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 		LeaveCriticalSection(&g_mutex);
+		if (res >= 0 && i < count)
+		{
+			Sleep(constrain((rand() % 901), 500, 900));
+		}
 	}
 	if (res < 0)
 	{

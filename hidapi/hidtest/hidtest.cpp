@@ -66,8 +66,9 @@ int main(int argc, char* argv[])
 	//MoveToR(-255, -255);
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
-	Say("HEllo world adfdsfsdf");
+	//Say("HEllo world adfdsfsdf");
 	//KeyPress("H", 10);
+	CombinationKeyPress("shift", "a", "b", NULL, NULL, NULL,3);
 	//Sleep(1000);
 	//SetLogLevel(0);
 	//SetCapsLock();

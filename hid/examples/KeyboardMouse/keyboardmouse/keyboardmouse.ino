@@ -248,7 +248,7 @@ void keyboardProcess()
         {
           if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
-            BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
             j++;
           }
         }
@@ -265,7 +265,7 @@ void keyboardProcess()
         {
           if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
-            BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
             j++;
           }
         }
@@ -283,7 +283,7 @@ void keyboardProcess()
         {
           if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
-            BootKeyboard.add(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
             j++;
           }
         }
@@ -297,7 +297,7 @@ void keyboardProcess()
         {
           if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
           {
-            BootKeyboard.remove(KeyboardKeycode(rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
             j++;
           }
         }

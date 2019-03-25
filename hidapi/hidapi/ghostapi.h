@@ -61,12 +61,14 @@ extern "C" {
 	int GHOST_API_EXPORT GHOST_API_CALL KeyUp(char *key);
 	// 一次按键
 	int GHOST_API_EXPORT GHOST_API_CALL KeyPress(char *key, int count);
+	int GHOST_API_EXPORT GHOST_API_CALL KeyPress2(char *key, int count);
 	// 组合键按下
 	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
 	// 组合键弹起
 	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
 	// 组合按键
 	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
+	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
 	// 释放所有按键
 	int GHOST_API_EXPORT GHOST_API_CALL KeyUpAll();
 	// 模拟按键输入
