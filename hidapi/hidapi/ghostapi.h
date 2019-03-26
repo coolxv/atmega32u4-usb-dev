@@ -154,9 +154,25 @@ extern "C" {
 	//////////////////////////////////////////////
 	////////////     辅助管理接口      ///////////
 	//////////////////////////////////////////////
-	// 设置日志级别0=关闭，1-6级别
-	int GHOST_API_EXPORT GHOST_API_CALL SetLogLevel(int level);
-
+	// 设置设备日志级别:0=关闭，1-6级别
+	// LOG_LEVEL_SILENT  0
+	// LOG_LEVEL_FATAL   1
+	// LOG_LEVEL_ERROR   2
+	// LOG_LEVEL_WARNING 3
+	// LOG_LEVEL_NOTICE  4
+	// LOG_LEVEL_TRACE   5
+	// LOG_LEVEL_VERBOSE 6
+	int GHOST_API_EXPORT GHOST_API_CALL SetDevLogLevel(int level);
+	// 设置设备日志级别:0=关闭，1-6级别
+	//LOG_SILENT  0
+	//LOG_FATAL	  1
+	//LOG_WARN    2
+	//LOG_WARN    3
+	//LOG_INFO    4
+	//LOG_DEBUG   5 
+	//LOG_TRACE   6 
+	int GHOST_API_EXPORT GHOST_API_CALL SetHostLogLevel(int level);
+	int GHOST_API_EXPORT GHOST_API_CALL SetHostLogFile(char *file);
 #ifdef __cplusplus
 }
 #endif

@@ -40,10 +40,12 @@ int main(int argc, char* argv[])
 {
 #if 1
 	//OpenDeviceEx(0x2341, 0x8036);
+	SetHostLogLevel(6);
+
 	OpenDevice2();
 	//Sleep(5000);
 	//KeyPress("s", 1);
-	SetLogLevel(5);
+	SetDevLogLevel(6);
 	Sleep(5000);
 	//Disconnect(10);
 	//MoveTo(0, 0);

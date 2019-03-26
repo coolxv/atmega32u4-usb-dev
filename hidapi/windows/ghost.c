@@ -1651,14 +1651,14 @@ int GHOST_API_EXPORT  ResetMouseDoubleClickSpeed()
 }
 
 // 设置日志级别
-int GHOST_API_EXPORT SetLogLevel(int level)
+int GHOST_API_EXPORT SetDevLogLevel(int level)
 {
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_LOG;
-	pkg.lg_level = (unsigned char)constrain(level, 0, 6);;
+	pkg.lg_level = (unsigned char)constrain(level, 0, 6);
 	//send
 	int res;
 	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
@@ -1672,6 +1672,17 @@ int GHOST_API_EXPORT SetLogLevel(int level)
 		log_trace("sucess to write\n");
 		return 0;
 	}
+}
+// 设置主机日志级别
+int GHOST_API_EXPORT SetHostLogLevel(int level)
+{
+	log_set_level(constrain(level, 0, 6));
+	return 0;
+}
+// 设置主机日志输出到文件
+int GHOST_API_EXPORT SetHostLogFile(char *file)
+{
+	return 0;
 }
 //////////////////////////////////////////////
 ////////////     存储管理接口      ///////////

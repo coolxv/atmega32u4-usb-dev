@@ -36,16 +36,16 @@ static struct {
 } L;
 
 
+
 static const char *level_names[] = {
-  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+  "SILENT", "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"
 };
 
 #ifdef LOG_USE_COLOR
 static const char *level_colors[] = {
-  "\x1b[94m", "\x1b[36m", "\x1b[32m", "\x1b[33m", "\x1b[31m", "\x1b[35m"
+  "\x1b[34m", "\x1b[35m", "\x1b[31m", "\x1b[33m", "\x1b[32m", "\x1b[36m", "\x1b[94m"
 };
 #endif
-
 
 static void lock(void)   {
   if (L.lock) {
@@ -87,7 +87,7 @@ void log_set_quiet(int enable) {
 
 
 void log_log(int level, const char *file, int line, const char *fmt, ...) {
-  if (level < L.level) {
+  if (level > L.level) {
     return;
   }
 
