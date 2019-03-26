@@ -21,16 +21,16 @@
     <ClCompile Include="ghost.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="map.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="keymap.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="log.c">
+    <ClCompile Include="..\common\keymap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\log.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\map.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,16 +44,16 @@
     <ClInclude Include="..\hidapi\ghostapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="keymap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="log.h">
+    <ClInclude Include="..\hidapi\keymap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hidapi\log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hidapi\map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

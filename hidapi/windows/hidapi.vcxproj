@@ -92,20 +92,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\common\keymap.c" />
+    <ClCompile Include="..\common\log.c" />
+    <ClCompile Include="..\common\map.c" />
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="ghost.c" />
     <ClCompile Include="hid.c" />
-    <ClCompile Include="keymap.c" />
-    <ClCompile Include="log.c" />
-    <ClCompile Include="map.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\hidapi\ghostapi.h" />
     <ClInclude Include="..\hidapi\hidapi.h" />
+    <ClInclude Include="..\hidapi\keymap.h" />
+    <ClInclude Include="..\hidapi\log.h" />
+    <ClInclude Include="..\hidapi\map.h" />
     <ClInclude Include="..\hidapi\packdef.h" />
-    <ClInclude Include="keymap.h" />
-    <ClInclude Include="log.h" />
-    <ClInclude Include="map.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
