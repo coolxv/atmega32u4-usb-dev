@@ -391,73 +391,73 @@ void MouseProcess()
   {
     case MSG_CMD_MS_LEFT_DOWN:
       {
-        AbsoluteMouse.press(MOUSE_LEFT);
+        Mouse.press(MOUSE_LEFT);
         break;
       }
     case MSG_CMD_MS_LEFT_UP:
       {
-        AbsoluteMouse.release(MOUSE_LEFT);
+        Mouse.release(MOUSE_LEFT);
         break;
       }
     case MSG_CMD_MS_LEFT_CLICK:
       {
-        AbsoluteMouse.click(MOUSE_LEFT);
+        Mouse.click(MOUSE_LEFT);
         break;
       }
     case MSG_CMD_MS_LEFT_DCLICK:
       {
-        AbsoluteMouse.click(MOUSE_LEFT);
-        delay(500);
-        AbsoluteMouse.click(MOUSE_LEFT);
+        Mouse.click(MOUSE_LEFT);
+        delay(random(60,110));
+        Mouse.click(MOUSE_LEFT);
         break;
       }
     case MSG_CMD_MS_RIGHT_DOWN:
       {
-        AbsoluteMouse.press(MOUSE_RIGHT);
+        Mouse.press(MOUSE_RIGHT);
         break;
       }
     case MSG_CMD_MS_RIGHT_UP:
       {
-        AbsoluteMouse.release(MOUSE_RIGHT);
+        Mouse.release(MOUSE_RIGHT);
         break;
       }
     case MSG_CMD_MS_RIGHT_CLICK:
       {
-        AbsoluteMouse.click(MOUSE_RIGHT);
+        Mouse.click(MOUSE_RIGHT);
         break;
       }
     case MSG_CMD_MS_RIGHT_DCLICK:
       {
-        AbsoluteMouse.click(MOUSE_RIGHT);
-        delay(500);
-        AbsoluteMouse.click(MOUSE_RIGHT);
+        Mouse.click(MOUSE_RIGHT);
+        delay(random(60,110));
+        Mouse.click(MOUSE_RIGHT);
         break;
       }
     case MSG_CMD_MS_MIDDLE_DOWN:
       {
-        AbsoluteMouse.press(MOUSE_MIDDLE);
+        Mouse.press(MOUSE_MIDDLE);
         break;
       }
     case MSG_CMD_MS_MIDDLE_UP:
       {
-        AbsoluteMouse.release(MOUSE_MIDDLE);
+        Mouse.release(MOUSE_MIDDLE);
         break;
       }
     case MSG_CMD_MS_MIDDLE_CLICK:
       {
-        AbsoluteMouse.click(MOUSE_MIDDLE);
+        Mouse.click(MOUSE_MIDDLE);
         break;
       }
     case MSG_CMD_MS_MIDDLE_DCLICK:
       {
-        AbsoluteMouse.click(MOUSE_MIDDLE);
-        delay(500);
-        AbsoluteMouse.click(MOUSE_MIDDLE);
+        Mouse.click(MOUSE_MIDDLE);
+        delay(random(60,110));
+        Mouse.click(MOUSE_MIDDLE);
         break;
       }
     case MSG_CMD_MS_UP_ALL:
       {
-        AbsoluteMouse.releaseAll();
+        Mouse.releaseAll();
         break;
       }
     case MSG_CMD_MS_MOVE_TO:
@@ -473,7 +473,7 @@ void MouseProcess()
       }
     case MSG_CMD_MS_WHEEL_MOVE:
       {
-        AbsoluteMouse.move(0, 0, rawhidData.ms_wheel);
+        Mouse.move(0, 0, rawhidData.ms_wheel);
         break;
       }
     default:

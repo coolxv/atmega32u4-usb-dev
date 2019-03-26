@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	OpenDevice2();
 	//Sleep(5000);
 	//KeyPress("s", 1);
-	SetDevLogLevel(6);
+	SetDevLogLevel(5);
 	Sleep(5000);
 	int ret;
 	//Disconnect(10);
@@ -80,10 +80,10 @@ int main(int argc, char* argv[])
 	//SetCapsLock();
 	//ret = GetCapsLock();
 	//printf("GetCapsLock %d\n", ret);
-	SetNumLock();
-	ret = GetNumLock();
-	printf("GetNumLock %d\n", ret);
-	KeyPress("num0", 1);
+	//SetNumLock();
+	//ret = GetNumLock();
+	//printf("GetNumLock %d\n", ret);
+	//KeyPress("num0", 1);
 
 	//ret = GetScrollLock();
 	//printf("GetScrollLock %d\n", ret);
@@ -93,6 +93,14 @@ int main(int argc, char* argv[])
 	//Sleep(500);
 	//int ret = GetCapsLock();
 	//printf("ret=%d\n",ret);
+	//WheelsMove(100);
+	//Sleep(1000);
+	//WheelsMove(-50);
+	LeftClick(1);
+	//RightClick(1);
+	Sleep(100);
+	RightClick(1);
+	//MiddleClick(1);
 	CloseDevice();
 
 
