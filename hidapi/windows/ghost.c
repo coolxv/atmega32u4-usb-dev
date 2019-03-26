@@ -851,6 +851,32 @@ int GHOST_API_EXPORT  GetCapsLock()
 	}
 	return 0;
 }
+// 获取大写灯状态
+int GHOST_API_EXPORT  SetCapsLock()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
+	//send
+	int res;
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+
 // 获取NumLock灯状态
 int GHOST_API_EXPORT  GetNumLock()
 {
@@ -899,15 +925,16 @@ int GHOST_API_EXPORT  GetNumLock()
 	}
 	return 0;
 }
-// 获取大写灯状态
-int GHOST_API_EXPORT  SetCapsLock()
+
+// 获取NumLock灯状态
+int GHOST_API_EXPORT  SetNumLock()
 {
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
+	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
 	//send
 	int res;
 	EnterCriticalSection(&g_mutex);
@@ -923,16 +950,67 @@ int GHOST_API_EXPORT  SetCapsLock()
 		log_trace("sucess to write\n");
 		return 0;
 	}
+
 }
-// 获取NumLock灯状态
-int GHOST_API_EXPORT  SetNumLock()
+
+// 获取ScrollLock灯状态
+int GHOST_API_EXPORT  GetScrollLock()
 {
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
-	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
+	pkg.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
+	//send
+	int res;
+	EnterCriticalSection(&g_mutex);
+	res = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (res < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+	}
+	//
+	MSG_DATA_RESULT_T result;
+	res = 0;
+	while (res == 0)
+	{
+		EnterCriticalSection(&g_mutex);
+		res = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
+		if (res == 0)
+		{
+			log_trace("read for waiting...\n");
+			Sleep(500);
+		}
+
+		if (res < 0)
+		{
+			log_trace("failed to read\n");
+		}
+	}
+	if (0 < res)
+	{
+		return result.kb_ret;
+	}
+	return 0;
+}
+
+// 获取ScrollLock灯状态
+int GHOST_API_EXPORT  SetScrollLock()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_KEYBOARD;
+	pkg.kb_cmd = MSG_CMD_KB_SET_SCROLL_LOCK;
 	//send
 	int res;
 	EnterCriticalSection(&g_mutex);

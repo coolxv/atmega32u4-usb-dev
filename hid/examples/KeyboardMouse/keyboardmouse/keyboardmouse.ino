@@ -20,10 +20,11 @@
 #define  MSG_CMD_KB_COMB_UP 6
 #define  MSG_CMD_KB_COMB_PRESS 7
 #define  MSG_CMD_KB_GET_CAPS_LOCK 8
-#define  MSG_CMD_KB_GET_NUM_LOCK 9
-#define  MSG_CMD_KB_SET_CAPS_LOCK 10
+#define  MSG_CMD_KB_SET_CAPS_LOCK 9
+#define  MSG_CMD_KB_GET_NUM_LOCK 10
 #define  MSG_CMD_KB_SET_NUM_LOCK 11
-
+#define  MSG_CMD_KB_GET_SCROLL_LOCK 12
+#define  MSG_CMD_KB_SET_SCROLL_LOCK 13
 //mouse cmd
 #define  MSG_CMD_MS_LEFT_DOWN 1
 #define  MSG_CMD_MS_LEFT_UP 2
@@ -325,6 +326,11 @@ void keyboardProcess()
         }
         break;
       }
+    case MSG_CMD_KB_SET_CAPS_LOCK:
+      {
+        BootKeyboard.write(KEY_CAPS_LOCK);
+        break;
+      }
     case MSG_CMD_KB_GET_NUM_LOCK:
       {
         if (BootKeyboard.getLeds() & LED_NUM_LOCK)
@@ -343,14 +349,32 @@ void keyboardProcess()
         }
         break;
       }
-    case MSG_CMD_KB_SET_CAPS_LOCK:
-      {
-        BootKeyboard.write(KEY_CAPS_LOCK);
-        break;
-      }
     case MSG_CMD_KB_SET_NUM_LOCK:
       {
         BootKeyboard.write(KEY_NUM_LOCK);
+        break;
+      }
+    case MSG_CMD_KB_GET_SCROLL_LOCK:
+      {
+        if (BootKeyboard.getLeds() & LED_SCROLL_LOCK)
+        {
+          rawhidwriteData.type = MSG_TYPE_KEYBOARD;
+          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
+          rawhidwriteData.kb_ret = 1;
+          writeData();
+        }
+        else
+        {
+          rawhidwriteData.type = MSG_TYPE_KEYBOARD;
+          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
+          rawhidwriteData.kb_ret = 0;
+          writeData();
+        }
+        break;
+      }
+    case MSG_CMD_KB_SET_SCROLL_LOCK:
+      {
+        BootKeyboard.write(KEY_SCROLL_LOCK);
         break;
       }
     default:

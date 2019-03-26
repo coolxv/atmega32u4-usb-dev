@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
 	//KeyPress("s", 1);
 	SetDevLogLevel(6);
 	Sleep(5000);
+	int ret;
 	//Disconnect(10);
 	//MoveTo(0, 0);
 	//Sleep(1000);
@@ -70,7 +71,22 @@ int main(int argc, char* argv[])
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Say("HEllo world adfdsfsdf");
 	//KeyPress("H", 10);
-	CombinationKeyPress("shift", "a", "b", NULL, NULL, NULL,3);
+	//CombinationKeyPress("shift", "a", "b", NULL, NULL, NULL,3);
+	//ret = GetCapsLock();
+	//printf("GetCapsLock %d\n", ret);
+	//SetCapsLock();
+	//ret = GetCapsLock();
+	//printf("GetCapsLock %d\n", ret);
+	//SetCapsLock();
+	//ret = GetCapsLock();
+	//printf("GetCapsLock %d\n", ret);
+	SetNumLock();
+	ret = GetNumLock();
+	printf("GetNumLock %d\n", ret);
+	KeyPress("num0", 1);
+
+	//ret = GetScrollLock();
+	//printf("GetScrollLock %d\n", ret);
 	//Sleep(1000);
 	//SetLogLevel(0);
 	//SetCapsLock();

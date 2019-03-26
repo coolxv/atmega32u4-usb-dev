@@ -76,12 +76,16 @@ extern "C" {
 
 	// 获取大写灯状态
 	int GHOST_API_EXPORT GHOST_API_CALL GetCapsLock();
-	// 获取NumLock灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL GetNumLock();
 	// 设置大写灯状态
 	int GHOST_API_EXPORT GHOST_API_CALL SetCapsLock();
+	// 获取NumLock灯状态
+	int GHOST_API_EXPORT GHOST_API_CALL GetNumLock();
 	// 设置NumLock灯状态
 	int GHOST_API_EXPORT GHOST_API_CALL SetNumLock();
+	// 获取ScrollLock灯状态
+	int GHOST_API_EXPORT GHOST_API_CALL GetScrollLock();
+	// 设置ScrollLock灯状态
+	int GHOST_API_EXPORT GHOST_API_CALL SetScrollLock();
 	//////////////////////////////////////////////
 	////////////     鼠标管理接口      ///////////
 	//////////////////////////////////////////////
