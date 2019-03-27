@@ -39,10 +39,10 @@
 int main(int argc, char* argv[])
 {
 #if 1
-	//OpenDeviceEx(0x2341, 0x8036);
+	OpenDeviceEx(0x2341, 0x8036);
 	SetHostLogLevel(6);
 
-	OpenDeviceBySerialEx("1");
+	//OpenDeviceBySerialEx("1");
 	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);
 	//KeyPress("s", 1);
@@ -105,9 +105,12 @@ int main(int argc, char* argv[])
 	//RightClick(1);
 	//MiddleClick(1);
 	//SetSN("1");
-	RestoreSN();
-	printf("serial=%s\n", GetSN());
-
+	//RestoreSN();
+	SetProduct("abcefg");
+	//Sleep(1000);
+	//RestoretProduct();
+	printf("product=%s\n", GetProduct());
+	printf("manufacturer=%s\n", GetManufacturer());
 	CloseDevice();
 
 

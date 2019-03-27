@@ -50,11 +50,17 @@
 #define  MSG_CMD_FUNC_RESTORE_DEVICE_ID 4
 #define  MSG_CMD_FUNC_SET_SERIAL_NUMBER 5
 #define  MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER 6
+#define  MSG_CMD_FUNC_SET_PRODUCT 7
+#define  MSG_CMD_FUNC_RESTORE_PRODUCT 8
+#define  MSG_CMD_FUNC_SET_MANUFACTURER 9
+#define  MSG_CMD_FUNC_RESTORE_MANUFACTURER 10
 //info cmd
 #define  MSG_CMD_INFO_SN 1
 #define  MSG_CMD_INFO_MODEL 2
 #define  MSG_CMD_INFO_VERSION 3
 #define  MSG_CMD_INFO_PROD_DATE 4
+#define  MSG_CMD_INFO_PRODUCT 5
+#define  MSG_CMD_INFO_MANUFACTURER 6
 
 typedef union {
   unsigned char type;
@@ -91,6 +97,8 @@ typedef union {
       unsigned char fc_value[4];
       unsigned short fc_vidpid[2];
       unsigned char fc_serial[USB_SERIAL_LEN_MAX + 1];
+      unsigned char fc_product[USB_PRODUCT_LEN_MAX + 1];
+      unsigned char fc_manufacturer[USB_MANUFACTURER_LEN_MAX + 1];
     };
   };
   //info
@@ -130,7 +138,7 @@ typedef union {
 
 //global data
 const int pinLed = LED_BUILTIN;
-MSG_DATA_T rawhidData;
+MSG_DATA_T rawhidreadData;
 MSG_DATA_RESULT_T rawhidwriteData;
 
 int delay_time = 0;
@@ -164,7 +172,7 @@ void setup() {
   Mouse.begin();
   AbsoluteMouse.begin();
   //rawhid
-  RawHID.begin((uint8_t *)&rawhidData, sizeof(rawhidData));
+  RawHID.begin((uint8_t *)&rawhidreadData, sizeof(rawhidreadData));
   //led show
   delay(500);
   digitalWrite(pinLed, LOW);
@@ -175,11 +183,11 @@ int readData()
 {
 
   auto bytesAvailable = RawHID.available();
-  if (bytesAvailable > 0 && bytesAvailable <= sizeof(rawhidData))
+  if (bytesAvailable > 0 && bytesAvailable <= sizeof(rawhidreadData))
   {
     for (int i = 0; i < bytesAvailable; i++)
     {
-      rawhidData.buf[i] = (unsigned char)RawHID.read();
+      rawhidreadData.buf[i] = (unsigned char)RawHID.read();
     }
   }
   return bytesAvailable;
@@ -190,14 +198,14 @@ int writeData()
 }
 void keyboardProcess()
 {
-  Log.trace("keyboard command %d\n", rawhidData.kb_cmd);
-  switch (rawhidData.kb_cmd)
+  Log.trace("keyboard command %d\n", rawhidreadData.kb_cmd);
+  switch (rawhidreadData.kb_cmd)
   {
     case MSG_CMD_KB_DOWN:
       {
-        unsigned char key = (unsigned char)(0xff & rawhidData.kb_key[0]);
+        unsigned char key = (unsigned char)(0xff & rawhidreadData.kb_key[0]);
         BootKeyboard.add(KeyboardKeycode(key));
-        if (rawhidData.kb_key[0] & 0x8000)
+        if (rawhidreadData.kb_key[0] & 0x8000)
         {
           BootKeyboard.add(KEY_LEFT_SHIFT);
         }
@@ -207,9 +215,9 @@ void keyboardProcess()
     case MSG_CMD_KB_UP:
       {
 
-        unsigned char key = (unsigned char)(0xff & rawhidData.kb_key[0]);
+        unsigned char key = (unsigned char)(0xff & rawhidreadData.kb_key[0]);
         BootKeyboard.remove(KeyboardKeycode(key));
-        if (rawhidData.kb_key[0] & 0x8000)
+        if (rawhidreadData.kb_key[0] & 0x8000)
         {
           BootKeyboard.remove(KEY_LEFT_SHIFT);
         }
@@ -218,17 +226,17 @@ void keyboardProcess()
       }
     case MSG_CMD_KB_PRESS:
       {
-        unsigned char key = (unsigned char)(0xff & rawhidData.kb_key[0]);
+        unsigned char key = (unsigned char)(0xff & rawhidreadData.kb_key[0]);
         //press
         BootKeyboard.add(KeyboardKeycode(key));
-        if (rawhidData.kb_key[0] & 0x8000)
+        if (rawhidreadData.kb_key[0] & 0x8000)
         {
           BootKeyboard.add(KEY_LEFT_SHIFT);
         }
         BootKeyboard.send();
         //release
         BootKeyboard.remove(KeyboardKeycode(key));
-        if (rawhidData.kb_key[0] & 0x8000)
+        if (rawhidreadData.kb_key[0] & 0x8000)
         {
           BootKeyboard.remove(KEY_LEFT_SHIFT);
         }
@@ -246,9 +254,9 @@ void keyboardProcess()
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
+          if (KeyboardKeycode(rawhidreadData.kb_key[i]) != 0)
           {
-            BootKeyboard.add(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(0xff & rawhidreadData.kb_key[i]));
             j++;
           }
         }
@@ -263,9 +271,9 @@ void keyboardProcess()
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
+          if (KeyboardKeycode(rawhidreadData.kb_key[i]) != 0)
           {
-            BootKeyboard.remove(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(0xff & rawhidreadData.kb_key[i]));
             j++;
           }
         }
@@ -281,9 +289,9 @@ void keyboardProcess()
         int j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
+          if (KeyboardKeycode(rawhidreadData.kb_key[i]) != 0)
           {
-            BootKeyboard.add(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
+            BootKeyboard.add(KeyboardKeycode(0xff & rawhidreadData.kb_key[i]));
             j++;
           }
         }
@@ -295,9 +303,9 @@ void keyboardProcess()
         j = 0;
         for (int i = 0; i < 6; i++)
         {
-          if (KeyboardKeycode(rawhidData.kb_key[i]) != 0)
+          if (KeyboardKeycode(rawhidreadData.kb_key[i]) != 0)
           {
-            BootKeyboard.remove(KeyboardKeycode(0xff & rawhidData.kb_key[i]));
+            BootKeyboard.remove(KeyboardKeycode(0xff & rawhidreadData.kb_key[i]));
             j++;
           }
         }
@@ -378,15 +386,15 @@ void keyboardProcess()
       }
     default:
       {
-        Log.error("msg keyboard cmd error, cmd is %d\n", rawhidData.kb_cmd);
+        Log.error("msg keyboard cmd error, cmd is %d\n", rawhidreadData.kb_cmd);
         break;
       }
   }
 }
 void MouseProcess()
 {
-  Log.trace("mouse command %d\n", rawhidData.ms_cmd);
-  switch (rawhidData.ms_cmd)
+  Log.trace("mouse command %d\n", rawhidreadData.ms_cmd);
+  switch (rawhidreadData.ms_cmd)
   {
     case MSG_CMD_MS_LEFT_DOWN:
       {
@@ -461,23 +469,23 @@ void MouseProcess()
       }
     case MSG_CMD_MS_MOVE_TO:
       {
-        Log.trace("mouse absolute move %d, %d\n", rawhidData.ms_x, rawhidData.ms_y);
-        AbsoluteMouse.moveTo(rawhidData.ms_x, rawhidData.ms_y);
+        Log.trace("mouse absolute move %d, %d\n", rawhidreadData.ms_x, rawhidreadData.ms_y);
+        AbsoluteMouse.moveTo(rawhidreadData.ms_x, rawhidreadData.ms_y);
         break;
       }
     case MSG_CMD_MS_MOVE_TO_R:
       {
-        Mouse.move(rawhidData.ms_x, rawhidData.ms_y);
+        Mouse.move(rawhidreadData.ms_x, rawhidreadData.ms_y);
         break;
       }
     case MSG_CMD_MS_WHEEL_MOVE:
       {
-        Mouse.move(0, 0, rawhidData.ms_wheel);
+        Mouse.move(0, 0, rawhidreadData.ms_wheel);
         break;
       }
     default:
       {
-        Log.error("msg keyboard cmd error, cmd is %d\n", rawhidData.kb_cmd);
+        Log.error("msg keyboard cmd error, cmd is %d\n", rawhidreadData.kb_cmd);
         break;
       }
   }
@@ -487,15 +495,15 @@ void LogProcess()
 {
   if (Serial)
   {
-    Log.begin(rawhidData.lg_level, &Serial);
+    Log.begin(rawhidreadData.lg_level, &Serial);
   }
-  Log.trace("log level %d\n", rawhidData.lg_level);
+  Log.trace("log level %d\n", rawhidreadData.lg_level);
 }
 
 void FuncProcess()
 {
-  Log.trace("func command %d\n", rawhidData.fc_cmd);
-  switch (rawhidData.fc_cmd)
+  Log.trace("func command %d\n", rawhidreadData.fc_cmd);
+  switch (rawhidreadData.fc_cmd)
   {
     case MSG_CMD_FUNC_RESTART:
       {
@@ -506,7 +514,7 @@ void FuncProcess()
       }
     case MSG_CMD_FUNC_DISCONNECT:
       {
-        delay_time = rawhidData.fc_value[0] * 1000;
+        delay_time = rawhidreadData.fc_value[0] * 1000;
         delay_restart = true;
         resetFunc();
         break;
@@ -514,7 +522,7 @@ void FuncProcess()
     case MSG_CMD_FUNC_SET_DEVICE_ID:
       {
         //  DEVICE DESCRIPTOR
-        DeviceDescriptor dd_struct = D_DEVICE(0xEF, 0x02, 0x01, 64, rawhidData.fc_vidpid[0], rawhidData.fc_vidpid[1], 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
+        DeviceDescriptor dd_struct = D_DEVICE(0xEF, 0x02, 0x01, 64, rawhidreadData.fc_vidpid[0], rawhidreadData.fc_vidpid[1], 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
         //tag
         unsigned short ee_flag = 0x1277;
         unsigned char *val = (unsigned char *)&ee_flag;
@@ -544,7 +552,7 @@ void FuncProcess()
         eeprom_write_word(ee_addr, ee_flag);
         //write serial number
         ee_addr = USB_SERIAL_ADDR;
-        eeprom_write_block(rawhidData.fc_serial, ee_addr, USB_SERIAL_LEN_MAX);
+        eeprom_write_block(rawhidreadData.fc_serial, ee_addr, USB_SERIAL_LEN_MAX);
         break;
       }
     case MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER:
@@ -554,9 +562,51 @@ void FuncProcess()
         EEPROM.put(addr, ee_flag);
         break;
       }
+    case MSG_CMD_FUNC_SET_PRODUCT:
+      {
+        const u16* ee_addr = USB_PRODUCT_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        //write tag
+        val[0] = 0x77;
+        val[1] = USB_PRODUCT_LEN_MAX;
+        eeprom_write_word(ee_addr, ee_flag);
+        //write product
+        ee_addr = USB_PRODUCT_ADDR;
+        eeprom_write_block(rawhidreadData.fc_product, ee_addr, USB_PRODUCT_LEN_MAX);
+        break;
+      }
+    case MSG_CMD_FUNC_RESTORE_PRODUCT:
+      {
+        unsigned short ee_flag = 0;
+        int addr = USB_PRODUCT_TAG_ADDR;
+        EEPROM.put(addr, ee_flag);
+        break;
+      }
+    case MSG_CMD_FUNC_SET_MANUFACTURER:
+      {
+        const u16* ee_addr = USB_MANUFACTURER_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        //write tag
+        val[0] = 0x77;
+        val[1] = USB_MANUFACTURER_LEN_MAX;
+        eeprom_write_word(ee_addr, ee_flag);
+        //write serial number
+        ee_addr = USB_MANUFACTURER_ADDR;
+        eeprom_write_block(rawhidreadData.fc_manufacturer, ee_addr, USB_MANUFACTURER_LEN_MAX);
+        break;
+      }
+    case MSG_CMD_FUNC_RESTORE_MANUFACTURER:
+      {
+        unsigned short ee_flag = 0;
+        int addr = USB_MANUFACTURER_TAG_ADDR;
+        EEPROM.put(addr, ee_flag);
+        break;
+      }
     default:
       {
-        Log.error("msg func cmd error, cmd is %d\n", rawhidData.fc_cmd);
+        Log.error("msg func cmd error, cmd is %d\n", rawhidreadData.fc_cmd);
         break;
       }
   }
@@ -566,10 +616,10 @@ void FuncProcess()
 
 void InfoProcess()
 {
-  Log.trace("info command %d\n", rawhidData.if_cmd);
+  Log.trace("info command %d\n", rawhidreadData.if_cmd);
   char one_char;
   int k;  // counter variable
-  switch (rawhidData.if_cmd)
+  switch (rawhidreadData.if_cmd)
   {
     case MSG_CMD_INFO_SN:
       {
@@ -591,7 +641,6 @@ void InfoProcess()
         rawhidwriteData.type = MSG_TYPE_INFO;
         rawhidwriteData.if_cmd = MSG_CMD_INFO_SN;
         writeData();
-
         break;
       }
     case MSG_CMD_INFO_MODEL:
@@ -621,9 +670,53 @@ void InfoProcess()
         writeData();
         break;
       }
+    case MSG_CMD_INFO_PRODUCT:
+      {
+        const u16* ee_addr = USB_PRODUCT_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        ee_flag = eeprom_read_word(ee_addr);
+        // read info
+        if (val[0] == 0x77)
+        {
+          ee_addr = USB_PRODUCT_ADDR;
+          eeprom_read_block(rawhidwriteData.if_value, ee_addr, USB_PRODUCT_LEN_MAX);
+          rawhidwriteData.if_value[USB_PRODUCT_LEN_MAX] = 0;
+        }
+        else
+        {
+          strcpy_P(rawhidwriteData.if_value, STRING_PRODUCT);
+        }
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_PRODUCT;
+        writeData();
+        break;
+      }
+    case MSG_CMD_INFO_MANUFACTURER:
+      {
+        const u16* ee_addr = USB_MANUFACTURER_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        ee_flag = eeprom_read_word(ee_addr);
+        // read info
+        if (val[0] == 0x77)
+        {
+          ee_addr = USB_MANUFACTURER_ADDR;
+          eeprom_read_block(rawhidwriteData.if_value, ee_addr, USB_MANUFACTURER_LEN_MAX);
+          rawhidwriteData.if_value[USB_MANUFACTURER_LEN_MAX] = 0;
+        }
+        else
+        {
+          strcpy_P(rawhidwriteData.if_value, STRING_MANUFACTURER);
+        }
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_MANUFACTURER;
+        writeData();
+        break;
+      }
     default:
       {
-        Log.error("msg info cmd error, cmd is %d\n", rawhidData.if_cmd);
+        Log.error("msg info cmd error, cmd is %d\n", rawhidreadData.if_cmd);
         break;
       }
   }
@@ -634,9 +727,9 @@ void loop()
   // Check if there is new data from the RawHID device
 
   auto bytesAvailable = readData();
-  if (bytesAvailable && bytesAvailable == sizeof(rawhidData))
+  if (bytesAvailable && bytesAvailable == sizeof(rawhidreadData))
   {
-    switch (rawhidData.type)
+    switch (rawhidreadData.type)
     {
       case MSG_TYPE_KEYBOARD:
         {
@@ -665,7 +758,7 @@ void loop()
         }
       default:
         {
-          Log.error("msg type error, type is %d\n", rawhidData.type);
+          Log.error("msg type error, type is %d\n", rawhidreadData.type);
           break;
         }
     }

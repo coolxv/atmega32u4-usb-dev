@@ -32,10 +32,8 @@ volatile u8 RxLEDPulse; /**< Milliseconds remaining for data Rx LED pulse */
 //==================================================================
 //==================================================================
 
-extern const u16 STRING_LANGUAGE[] PROGMEM;
-extern const u8 STRING_PRODUCT[] PROGMEM;
-extern const u8 STRING_MANUFACTURER[] PROGMEM;
 extern const DeviceDescriptor USB_DeviceDescriptorIAD PROGMEM;
+
 
 const u16 STRING_LANGUAGE[2] = {
 	(3<<8) | (2+2),

@@ -47,6 +47,17 @@ extern "C" {
 	int GHOST_API_EXPORT GHOST_API_CALL SetSN(const char *serial);
 	// 恢复设备默认serial number
 	int GHOST_API_EXPORT GHOST_API_CALL RestoreSN();
+
+	// 设置自定义设备product
+	int GHOST_API_EXPORT GHOST_API_CALL SetProduct(const char *product);
+	// 恢复设备默认product
+	int GHOST_API_EXPORT GHOST_API_CALL RestoretProduct();
+
+	// 设置自定义设备manufacturer
+	int GHOST_API_EXPORT GHOST_API_CALL SetManufacturer(const char *manufacturer);
+	// 恢复设备默认manufacturer
+	int GHOST_API_EXPORT GHOST_API_CALL RestoretManufacturer();
+
 	// 获取序列号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetSN();
 	// 获取设备型号
@@ -55,7 +66,10 @@ extern "C" {
 	GHOST_API_EXPORT char* GHOST_API_CALL GetVer();
 	// 获取生产日期
 	GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate();
-
+	// 获取product
+	GHOST_API_EXPORT char* GHOST_API_CALL GetProduct();
+	// 获取manufacturer
+	GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer();
 	//////////////////////////////////////////////
 	////////////     键盘管理接口      ///////////
 	//////////////////////////////////////////////

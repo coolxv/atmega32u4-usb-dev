@@ -166,6 +166,14 @@
 #endif
 #define USB_SERIAL "05ea0849576a574681741d45ae174d8a"
 
+
+extern const u16 STRING_LANGUAGE[] PROGMEM;
+extern const u8 STRING_PRODUCT[] PROGMEM;
+extern const u8 STRING_MANUFACTURER[] PROGMEM;
+
+
+
+
 //	Device
 typedef struct {
 	u8 len;				// 18
