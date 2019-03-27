@@ -48,7 +48,8 @@
 #define  MSG_CMD_FUNC_DISCONNECT 2
 #define  MSG_CMD_FUNC_SET_DEVICE_ID 3
 #define  MSG_CMD_FUNC_RESTORE_DEVICE_ID 4
-
+#define  MSG_CMD_FUNC_SET_SERIAL_NUMBER 5
+#define  MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER 6
 //info cmd
 #define  MSG_CMD_INFO_SN 1
 #define  MSG_CMD_INFO_MODEL 2
@@ -89,6 +90,7 @@ typedef union {
     union {
       unsigned char fc_value[4];
       unsigned short fc_vidpid[2];
+      unsigned char fc_serial[USB_SERIAL_LEN_MAX + 1];
     };
   };
   //info
@@ -120,14 +122,11 @@ typedef union {
   unsigned char buf[64];
 } MSG_DATA_RESULT_T;
 
-
-
-
 //
-#define  MSG_CMD_INFO_SN 1
-#define  MSG_CMD_INFO_MODEL 2
-#define  MSG_CMD_INFO_VERSION 3
-#define  MSG_CMD_INFO_PROD_DATE 4
+#define DEV_MODEL_BASE_INFO "base"
+#define DEV_MODEL_ADVANCE_INFO "advance"
+#define DEV_VERSION_INFO "1.0.0"
+#define DEV_PRODUCTION_DATE_INFO "20190315"
 
 //global data
 const int pinLed = LED_BUILTIN;
@@ -139,10 +138,10 @@ bool delay_restart = false;
 void(* resetFunc) (void) = 0;
 
 // save some chars
-const char sn_info[] PROGMEM  = {"05ea0849576a574681741d45ae174d8a"};
-const char model_info[] PROGMEM  = {"base"};
-const char version_info[] PROGMEM  = {"1.0.0"};
-const char production_date_info[] PROGMEM  = {"20190315"};
+const char sn_info[] PROGMEM  = {USB_SERIAL};
+const char model_info[] PROGMEM  = {DEV_MODEL_BASE_INFO};
+const char version_info[] PROGMEM  = {DEV_VERSION_INFO};
+const char production_date_info[] PROGMEM  = {DEV_PRODUCTION_DATE_INFO};
 
 
 
@@ -407,7 +406,7 @@ void MouseProcess()
     case MSG_CMD_MS_LEFT_DCLICK:
       {
         Mouse.click(MOUSE_LEFT);
-        delay(random(60,110));
+        delay(random(60, 110));
         Mouse.click(MOUSE_LEFT);
         break;
       }
@@ -429,7 +428,7 @@ void MouseProcess()
     case MSG_CMD_MS_RIGHT_DCLICK:
       {
         Mouse.click(MOUSE_RIGHT);
-        delay(random(60,110));
+        delay(random(60, 110));
         Mouse.click(MOUSE_RIGHT);
         break;
       }
@@ -451,7 +450,7 @@ void MouseProcess()
     case MSG_CMD_MS_MIDDLE_DCLICK:
       {
         Mouse.click(MOUSE_MIDDLE);
-        delay(random(60,110));
+        delay(random(60, 110));
         Mouse.click(MOUSE_MIDDLE);
         break;
       }
@@ -516,10 +515,14 @@ void FuncProcess()
       {
         //  DEVICE DESCRIPTOR
         DeviceDescriptor dd_struct = D_DEVICE(0xEF, 0x02, 0x01, 64, rawhidData.fc_vidpid[0], rawhidData.fc_vidpid[1], 0x100, IMANUFACTURER, IPRODUCT, ISERIAL, 1);
-        unsigned short ee_flag = 0x7777;
-        int addr = 0;
+        //tag
+        unsigned short ee_flag = 0x1277;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        val[0] = 0x77;
+        val[1] = USB_DEVICE_DES_LEN_MAX;
+        int addr = USB_DEVICE_DES_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
-        addr += sizeof(unsigned short);
+        addr = USB_DEVICE_DES_ADDR;
         EEPROM.put(addr, dd_struct);
         break;
       }
@@ -530,7 +533,27 @@ void FuncProcess()
         EEPROM.put(addr, ee_flag);
         break;
       }
-
+    case MSG_CMD_FUNC_SET_SERIAL_NUMBER:
+      {
+        const u16* ee_addr = USB_SERIAL_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        //write tag
+        val[0] = 0x77;
+        val[1] = USB_SERIAL_LEN_MAX;
+        eeprom_write_word(ee_addr, ee_flag);
+        //write serial number
+        ee_addr = USB_SERIAL_ADDR;
+        eeprom_write_block(rawhidData.fc_serial, ee_addr, USB_SERIAL_LEN_MAX);
+        break;
+      }
+    case MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER:
+      {
+        unsigned short ee_flag = 0;
+        int addr = USB_SERIAL_TAG_ADDR;
+        EEPROM.put(addr, ee_flag);
+        break;
+      }
     default:
       {
         Log.error("msg func cmd error, cmd is %d\n", rawhidData.fc_cmd);
@@ -550,10 +573,23 @@ void InfoProcess()
   {
     case MSG_CMD_INFO_SN:
       {
+        const u16* ee_addr = USB_SERIAL_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        ee_flag = eeprom_read_word(ee_addr);
+        // read info
+        if (val[0] == 0x77)
+        {
+          ee_addr = USB_SERIAL_ADDR;
+          eeprom_read_block(rawhidwriteData.if_value, ee_addr, USB_SERIAL_LEN_MAX);
+          rawhidwriteData.if_value[USB_SERIAL_LEN_MAX] = 0;
+        }
+        else
+        {
+          strcpy_P(rawhidwriteData.if_value, sn_info);
+        }
         rawhidwriteData.type = MSG_TYPE_INFO;
         rawhidwriteData.if_cmd = MSG_CMD_INFO_SN;
-        // read info
-        strcpy_P(rawhidwriteData.if_value, sn_info);
         writeData();
 
         break;

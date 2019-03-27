@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
 #include <wchar.h>
 #include <windows.h>
@@ -26,6 +27,7 @@
 #define GHOST_MOUSE_R_X_MIN -127
 #define GHOST_MOUSE_R_Y_MAX 127
 #define GHOST_MOUSE_R_Y_MIN -127
+#define GHOST_MOUSE_MOVE_PIXEL 30
 ///--------------------------------------
 #define GHOST_VID 0x2341
 #define GHOST_PID 0x8036
@@ -76,7 +78,7 @@ int GHOST_API_EXPORT OpenDevice()
 	return OpenDeviceEx(GHOST_VID, GHOST_PID);
 }
 
-int GHOST_API_EXPORT OpenDevice2()
+int GHOST_API_EXPORT OpenDeviceBySerial()
 {
 	EnterCriticalSection(&g_mutex);
 	if (!g_initialized)
@@ -92,7 +94,41 @@ int GHOST_API_EXPORT OpenDevice2()
 			return -1;
 		}
 		log_trace("init device successful\n");
-		g_handle = hid_open_serial_no(2, L"GHOST@857WG");
+		g_handle = hid_open_serial_no(2, L"05ea0849576a574681741d45ae174d8a");
+		if (!g_handle) {
+			log_trace("open device failed\n");
+			keymap_fini();
+			hid_exit();
+			LeaveCriticalSection(&g_mutex);
+			return -2;
+		}
+		log_trace("open device successful\n");
+		g_initialized = 1;
+	}
+	LeaveCriticalSection(&g_mutex);
+	return 0;
+}
+
+int GHOST_API_EXPORT OpenDeviceBySerialEx(const char *serial)
+{
+	wchar_t wserial[128];
+	MultiByteToWideChar(CP_ACP, 0, serial, -1, wserial, sizeof(wserial));
+
+	EnterCriticalSection(&g_mutex);
+	if (!g_initialized)
+	{
+		//init key map
+		keymap_init();
+		//init device
+		if (hid_init() < 0)
+		{
+			log_trace("init device failed\n");
+			keymap_fini();
+			LeaveCriticalSection(&g_mutex);
+			return -1;
+		}
+		log_trace("init device successful\n");
+		g_handle = hid_open_serial_no(2, wserial);
 		if (!g_handle) {
 			log_trace("open device failed\n");
 			keymap_fini();
@@ -244,7 +280,57 @@ int GHOST_API_EXPORT RestoreDeviceID()
 	}
 }
 
-
+// 设置自定义设备serial number
+int GHOST_API_EXPORT SetSN(const char *serial)
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_SET_SERIAL_NUMBER;
+	strcpy_s(pkg.fc_serial,sizeof(pkg.fc_serial), serial);
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 恢复设备默认serial number
+int GHOST_API_EXPORT RestoreSN()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER;
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
 // 获取序列号
 GHOST_API_EXPORT char* GetSN()
 {
@@ -1452,6 +1538,56 @@ int GHOST_API_EXPORT  MouseUpAll()
 // 模拟鼠标移动
 int GHOST_API_EXPORT  MoveTo(int x, int y)
 {
+	int ret = 0;
+	int ccount = 0;
+	while (1)
+	{
+		if (++ccount > 2)
+		{
+			break;
+		}
+		POINT pt;
+		GetCursorPos(&pt); //获取鼠标指针位置到pt
+		int xt = abs(x - pt.x);
+		int yt = abs(y - pt.y);
+		int xo = x - pt.x;
+		int yo = y - pt.y;
+		//send
+		if (xt >= 0 && xt <= GHOST_MOUSE_MOVE_PIXEL && yt >= 0 && yt <= GHOST_MOUSE_MOVE_PIXEL)
+		{
+			ret = MoveToR(xo, yo);
+			return ret;
+		}
+		else
+		{
+			int count = 0;
+			int xc = 0;
+			int yc = 0;
+			if (xt > yt)
+			{
+				count = xt / GHOST_MOUSE_MOVE_PIXEL;
+				xc = GHOST_MOUSE_MOVE_PIXEL;
+				yc = yt / count;
+			}
+			else
+			{
+				count = yt / GHOST_MOUSE_MOVE_PIXEL;
+				yc = GHOST_MOUSE_MOVE_PIXEL;
+				xc = xt / count;
+			}
+			int i = 0;
+			while (count--)
+			{
+				MoveToR(xo>=0?xc:-xc, yo>=0?yc:-yc);
+			}
+		}
+	}
+	ret = MoveToA(x, y);
+	return ret;
+}
+// 鼠标绝对移动
+int GHOST_API_EXPORT  MoveToA(int x, int y)
+{
 	double ex = GetSystemMetrics(SM_CXSCREEN);
 	double ey = GetSystemMetrics(SM_CYSCREEN);
 	double rx = ((double)GHOST_MOUSE_X_MAX / ex)*x + 1;
@@ -1485,6 +1621,7 @@ int GHOST_API_EXPORT  MoveTo(int x, int y)
 		return 0;
 	}
 }
+
 // 相对移动鼠标
 int GHOST_API_EXPORT  MoveToR(int x, int y)
 {

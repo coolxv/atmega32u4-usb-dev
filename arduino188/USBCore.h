@@ -130,6 +130,42 @@
 #define USB_VERSION 0x200
 #endif
 
+//
+#define USB_DEVICE_DES_TAG_ADDR 0
+#define USB_DEVICE_DES_ADDR 2
+#define USB_DEVICE_DES_LEN_MAX sizeof(DeviceDescriptor)
+
+#define USB_PRODUCT_TAG_ADDR 20
+#define USB_PRODUCT_ADDR 22
+#define USB_PRODUCT_LEN_MAX 16
+
+#define USB_MANUFACTURER_TAG_ADDR 38
+#define USB_MANUFACTURER_ADDR 40
+#define USB_MANUFACTURER_LEN_MAX 16
+
+#define USB_SERIAL_TAG_ADDR 56
+#define USB_SERIAL_ADDR 58
+#define USB_SERIAL_LEN_MAX 32
+
+
+//
+#if defined(USB_PRODUCT)
+    #undef USB_PRODUCT
+#endif
+#define USB_PRODUCT     "GHOST KM"
+
+
+#if defined(USB_MANUFACTURER)
+    #undef USB_MANUFACTURER
+#endif
+#define USB_MANUFACTURER "GHOST LLC"
+
+
+#if defined(USB_SERIAL)
+    #undef USB_SERIAL
+#endif
+#define USB_SERIAL "05ea0849576a574681741d45ae174d8a"
+
 //	Device
 typedef struct {
 	u8 len;				// 18

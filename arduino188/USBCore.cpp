@@ -23,6 +23,7 @@
 
 #if defined(USBCON)
 
+
 /** Pulse generation counters to keep track of the number of milliseconds remaining for each pulse type */
 #define TX_RX_LED_PULSE_MS 100
 volatile u8 TxLEDPulse; /**< Milliseconds remaining for data Tx LED pulse */
@@ -41,24 +42,10 @@ const u16 STRING_LANGUAGE[2] = {
 	0x0409	// English
 };
 
-#if defined(USB_PRODUCT)
-    #undef USB_PRODUCT
-#endif
-#define USB_PRODUCT     "GHOST KM"
+
 const u8 STRING_PRODUCT[] PROGMEM = USB_PRODUCT;
-
-#if defined(USB_MANUFACTURER)
-    #undef USB_MANUFACTURER
-#endif
-#define USB_MANUFACTURER "GHOST LLC"
 const u8 STRING_MANUFACTURER[] PROGMEM = USB_MANUFACTURER;
-
-#if defined(USB_SERIAL)
-    #undef USB_SERIAL
-#endif
-#define USB_SERIAL "GHOST@857WG"
 const u8 STRING_SERIAL[] PROGMEM = USB_SERIAL;
-
 
 
 
@@ -437,9 +424,24 @@ int USB_SendControl(u8 flags, const void* d, int len)
 static bool USB_SendStringDescriptor(const u8*string_P, u8 string_len, uint8_t flags) {
         SendControl(2 + string_len * 2);
         SendControl(3);
-        bool pgm = flags & TRANSFER_PGM;
-        for(u8 i = 0; i < string_len; i++) {
-                bool r = SendControl(pgm ? pgm_read_byte(&string_P[i]) : string_P[i]);
+		const u8* data = string_P;
+        for(u8 i = 0; i < string_len; i++) 
+		{
+				u8 c;
+				if(flags & TRANSFER_PGM)
+				{
+					c = pgm_read_byte(data++);
+				}
+				else if(flags & TRANSFER_EPM)
+				{
+					c = eeprom_read_byte(data++);
+				}
+				else
+				{
+					c = *data++;
+				}
+		
+                bool r = SendControl(c);
                 r &= SendControl(0); // high byte
                 if(!r) {
                         return false;
@@ -517,18 +519,22 @@ bool SendDescriptor(USBSetup& setup)
 	}
 #endif
     unsigned short eeconfig = 0;
+	const u8* val = (u8*)&eeconfig;
+	const u16* ee_addr = 0;
 	const u8* desc_addr = 0;
+    u8 desc_length = 0;
+	uint8_t  desc_flags;
 	if (USB_DEVICE_DESCRIPTOR_TYPE == t)
 	{
-        const u16* ee_addr = 0;
+        ee_addr = USB_DEVICE_DES_TAG_ADDR;
         eeconfig = eeprom_read_word(ee_addr);
-        if(eeconfig != 0x7777)
+        if(val[0] != 0x77)
         {
     		desc_addr = (const u8*)&USB_DeviceDescriptorIAD;
         }
         else
         {
-            desc_addr = 2;
+            desc_addr = USB_DEVICE_DES_ADDR;
         }
 	}
 	else if (USB_STRING_DESCRIPTOR_TYPE == t)
@@ -537,14 +543,56 @@ bool SendDescriptor(USBSetup& setup)
 			desc_addr = (const u8*)&STRING_LANGUAGE;
 		}
 		else if (setup.wValueL == IPRODUCT) {
-			return USB_SendStringDescriptor(STRING_PRODUCT, strlen(USB_PRODUCT), TRANSFER_PGM);
+			ee_addr = USB_PRODUCT_TAG_ADDR;
+			eeconfig = eeprom_read_word(ee_addr);
+			if(val[0] != 0x77)
+			{
+				desc_addr = (const u8*)STRING_PRODUCT;
+				desc_length = strlen(USB_PRODUCT);
+				desc_flags = TRANSFER_PGM;
+			}
+			else
+			{
+				desc_addr = USB_PRODUCT_ADDR;
+				desc_length = val[1];
+				desc_flags = TRANSFER_EPM;
+			}
+			return USB_SendStringDescriptor(desc_addr, desc_length, desc_flags);
 		}
 		else if (setup.wValueL == IMANUFACTURER) {
-			return USB_SendStringDescriptor(STRING_MANUFACTURER, strlen(USB_MANUFACTURER), TRANSFER_PGM);
+			ee_addr = USB_MANUFACTURER_TAG_ADDR;
+			eeconfig = eeprom_read_word(ee_addr);
+			if(val[0] != 0x77)
+			{
+				desc_addr = (const u8*)STRING_MANUFACTURER;
+				desc_length = strlen(USB_MANUFACTURER);
+				desc_flags = TRANSFER_PGM;
+			}
+			else
+			{
+				desc_addr = USB_MANUFACTURER_ADDR;
+				desc_length = val[1];
+				desc_flags = TRANSFER_EPM;
+			}
+			return USB_SendStringDescriptor(desc_addr, desc_length, desc_flags);
 		}
 		else if (setup.wValueL == ISERIAL) {
 #ifdef PLUGGABLE_USB_ENABLED
-            return USB_SendStringDescriptor(STRING_SERIAL, strlen(USB_SERIAL), TRANSFER_PGM);
+			ee_addr = USB_SERIAL_TAG_ADDR;
+			eeconfig = eeprom_read_word(ee_addr);
+			if(val[0] != 0x77)
+			{
+				desc_addr = (const u8*)STRING_SERIAL;
+				desc_length = strlen(USB_SERIAL);
+				desc_flags = TRANSFER_PGM;
+			}
+			else
+			{
+				desc_addr = USB_SERIAL_ADDR;
+				desc_length = val[1];
+				desc_flags = TRANSFER_EPM;
+			}
+            return USB_SendStringDescriptor(desc_addr, desc_length, desc_flags);
 #endif
 		}
 		else
@@ -554,8 +602,7 @@ bool SendDescriptor(USBSetup& setup)
 	if (desc_addr == 0)
 		return false;
 
-    u8 desc_length = 0;
-	if ((USB_DEVICE_DESCRIPTOR_TYPE == t) && (eeconfig == 0x7777))
+	if ((USB_DEVICE_DESCRIPTOR_TYPE == t) && (val[0] == 0x77))
 	{
         desc_length = eeprom_read_byte(desc_addr);
         USB_SendControl(TRANSFER_EPM,desc_addr,desc_length);

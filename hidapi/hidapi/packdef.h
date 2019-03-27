@@ -41,6 +41,8 @@
 #define  MSG_CMD_FUNC_DISCONNECT 2
 #define  MSG_CMD_FUNC_SET_DEVICE_ID 3
 #define  MSG_CMD_FUNC_RESTORE_DEVICE_ID 4
+#define  MSG_CMD_FUNC_SET_SERIAL_NUMBER 5
+#define  MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER 6
 //info cmd
 #define  MSG_CMD_INFO_SN 1
 #define  MSG_CMD_INFO_MODEL 2
@@ -88,6 +90,7 @@ typedef union {
 		union {
 			unsigned char fc_value[4];
 			unsigned short fc_vidpid[2];
+			unsigned char fc_serial[33];
 		};
 	};
 	//info

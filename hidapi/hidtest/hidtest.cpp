@@ -42,15 +42,18 @@ int main(int argc, char* argv[])
 	//OpenDeviceEx(0x2341, 0x8036);
 	SetHostLogLevel(6);
 
-	OpenDevice2();
+	OpenDeviceBySerialEx("1");
+	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);
 	//KeyPress("s", 1);
 	SetDevLogLevel(5);
 	Sleep(5000);
-	int ret;
+	//int ret;
 	//Disconnect(10);
 	//MoveTo(0, 0);
 	//Sleep(1000);
+	//ResetMouseMoveSpeed();
+	//SetMouseMoveSpeed(20);
 	//POINT pt;
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
@@ -58,7 +61,7 @@ int main(int argc, char* argv[])
 	//SetDeviceID(0x2342, 0x8037);
 	//RestoreDeviceID();
 	//KeyPress("A", 10);
-	//MoveToR(255, 255);
+	//MoveTo(200, 200);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
 	//printf("ver:%s\n", GetVer());
@@ -96,11 +99,15 @@ int main(int argc, char* argv[])
 	//WheelsMove(100);
 	//Sleep(1000);
 	//WheelsMove(-50);
-	LeftClick(1);
+	//LeftClick(1);
 	//RightClick(1);
-	Sleep(100);
-	RightClick(1);
+	//Sleep(100);
+	//RightClick(1);
 	//MiddleClick(1);
+	//SetSN("1");
+	RestoreSN();
+	printf("serial=%s\n", GetSN());
+
 	CloseDevice();
 
 

@@ -24,10 +24,11 @@ extern "C" {
 	//////////////////////////////////////////////
 	// 打开设备（根据设备VID和PID）
 	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceEx(int vid, int pid);
-	// 打开设备
 	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();//基于默认vid、pid
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice2();//基于默认serial number
-		// 关闭设备
+	// 打开设备（根据设备serial number）
+	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceBySerialEx(const char *serial);
+	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceBySerial();//基于默认serial number
+	// 关闭设备
 	int GHOST_API_EXPORT GHOST_API_CALL CloseDevice();
 	// 检查设备是否有效
 	int GHOST_API_EXPORT GHOST_API_CALL CheckDevice();
@@ -42,7 +43,10 @@ extern "C" {
 	// 恢复设备默认ID
 	int GHOST_API_EXPORT GHOST_API_CALL RestoreDeviceID();
 
-
+	// 设置自定义设备serial number
+	int GHOST_API_EXPORT GHOST_API_CALL SetSN(const char *serial);
+	// 恢复设备默认serial number
+	int GHOST_API_EXPORT GHOST_API_CALL RestoreSN();
 	// 获取序列号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetSN();
 	// 获取设备型号
@@ -117,6 +121,8 @@ extern "C" {
 	int GHOST_API_EXPORT GHOST_API_CALL MouseUpAll();
 	// 模拟鼠标移动
 	int GHOST_API_EXPORT GHOST_API_CALL MoveTo(int x, int y);
+	// 绝对移动鼠标
+	int GHOST_API_EXPORT GHOST_API_CALL MoveToA(int x, int y);
 	// 相对移动鼠标
 	int GHOST_API_EXPORT GHOST_API_CALL MoveToR(int x, int y);
 	// 鼠标滚轮滚动
