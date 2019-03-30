@@ -1,0 +1,69 @@
+digraph eeprom {
+    label = <<B>km eeprom layout</B>>;
+	ratio="fill"
+	size="10,50"
+	rankdir=TB
+	node [shape=plaintext]
+    eeprom [shape=none, width=0, height=0, margin=0, label=
+	<
+		<table title="eeprom" border="0" cellborder="1" cellspacing="0" cellpadding="4">
+			<tr>
+				<td colspan="1">tag</td>
+				<td colspan="4" width="128" port="start">enable=0x77,unable!=0x77</td>
+			</tr>
+			<tr>
+				<td colspan="1">len</td>
+				<td colspan="4">value size</td>
+			</tr>
+			<tr>
+				<td colspan="1" rowspan="2">value</td>
+				<td colspan="4" rowspan="2" bgcolor="grey">usb device description</td>
+			</tr>
+
+
+			<tr>
+				<td colspan="1">tag</td>
+				<td colspan="4" >enable=0x77,unable!=0x77</td>
+			</tr>
+			<tr>
+				<td colspan="1">len</td>
+				<td colspan="4">value size</td>
+			</tr>
+			<tr>
+				<td colspan="1" rowspan="2">value</td>
+				<td colspan="4" rowspan="2" height="32" bgcolor="grey">usb product name</td>
+			</tr>
+
+
+			<tr>
+				<td colspan="1">tag</td>
+				<td colspan="4">enable=0x77,unable!=0x77</td>
+			</tr>
+			<tr>
+				<td colspan="1">len</td>
+				<td colspan="4">value size</td>
+			</tr>
+			<tr>
+				<td colspan="1" rowspan="2">value</td>
+				<td colspan="4" rowspan="2" height="32" bgcolor="grey">usb manufacturer name</td>
+			</tr>
+			
+			
+			<tr>
+				<td colspan="1">tag</td>
+				<td colspan="4">enable=0x77,unable!=0x77</td>
+			</tr>
+			<tr>
+				<td colspan="1">len</td>
+				<td colspan="4">value size</td>
+			</tr>
+			<tr>
+				<td colspan="1" rowspan="2">value</td>
+				<td colspan="4" rowspan="2" height="32" bgcolor="grey">usb serial</td>
+			</tr>					
+			
+		</table>
+	>
+    ]	
+	
+}
