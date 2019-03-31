@@ -1,0 +1,39 @@
+digraph ip {
+    label = <<B>ip datagram</B>>;
+
+    ip [shape=none, width=0, height=0, margin=0, label=
+<
+    <table title="ip datagram" border="0" cellborder="1" cellspacing="0" cellpadding="4">
+        <tr>
+            <td colspan="4">version</td>
+            <td colspan="4">length</td>
+            <td colspan="8">type of service(TOS)</td>
+            <td colspan="16" width="256">total length</td>
+        </tr>
+        <tr>
+            <td colspan="16" bgcolor="bisque">identification</td>
+            <td colspan="3"  bgcolor="bisque"><FONT color="red">flags</FONT></td>
+            <td colspan="13" bgcolor="bisque"><FONT color="red">fragment offset</FONT></td>
+        </tr>
+        <tr>
+            <td colspan="8">time to live(TTL)</td>
+            <td colspan="8">protocol</td>
+            <td colspan="16">header checksum</td>
+        </tr>
+        <tr>
+            <td colspan="32">source ip address</td>
+        </tr>
+        <tr>
+            <td colspan="32">destination ip address</td>
+        </tr>
+        <tr>
+            <td colspan="32" bgcolor="grey">options(if any)</td>
+        </tr>
+        <tr>
+            <td colspan="32" rowspan="3" height="64" bgcolor="grey">data</td>
+        </tr>
+
+    </table>
+>
+    ]
+}
