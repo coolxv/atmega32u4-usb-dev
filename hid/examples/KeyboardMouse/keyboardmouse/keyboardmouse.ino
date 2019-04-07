@@ -61,7 +61,9 @@
 #define  MSG_CMD_INFO_PROD_DATE 4
 #define  MSG_CMD_INFO_PRODUCT 5
 #define  MSG_CMD_INFO_MANUFACTURER 6
+#define  MSG_CMD_INFO_DEVICE_ID 7
 
+#pragma pack(push, 1)
 typedef union {
   unsigned char type;
   //mouse
@@ -125,12 +127,19 @@ typedef union {
     unsigned char if_type;
     //use
     unsigned char if_cmd;
-    unsigned char if_value[48];
+    union {
+      unsigned char if_value[48];
+      unsigned short if_vidpid[2];
+    };
   };
   unsigned char buf[64];
 } MSG_DATA_RESULT_T;
+#pragma pack(pop)
 
-//
+
+
+
+//info define
 #define DEV_MODEL_BASE_INFO "base"
 #define DEV_MODEL_ADVANCE_INFO "advance"
 #define DEV_VERSION_INFO "1.0.0"
@@ -532,6 +541,7 @@ void FuncProcess()
         EEPROM.put(addr, ee_flag);
         addr = USB_DEVICE_DES_ADDR;
         EEPROM.put(addr, dd_struct);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_DEVICE_ID:
@@ -539,6 +549,7 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = 0;
         EEPROM.put(addr, ee_flag);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_SET_SERIAL_NUMBER:
@@ -553,6 +564,7 @@ void FuncProcess()
         //write serial number
         ee_addr = USB_SERIAL_ADDR;
         eeprom_write_block(rawhidreadData.fc_serial, ee_addr, USB_SERIAL_LEN_MAX);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER:
@@ -560,6 +572,7 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = USB_SERIAL_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_SET_PRODUCT:
@@ -574,6 +587,7 @@ void FuncProcess()
         //write product
         ee_addr = USB_PRODUCT_ADDR;
         eeprom_write_block(rawhidreadData.fc_product, ee_addr, USB_PRODUCT_LEN_MAX);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_PRODUCT:
@@ -581,6 +595,7 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = USB_PRODUCT_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_SET_MANUFACTURER:
@@ -595,6 +610,7 @@ void FuncProcess()
         //write serial number
         ee_addr = USB_MANUFACTURER_ADDR;
         eeprom_write_block(rawhidreadData.fc_manufacturer, ee_addr, USB_MANUFACTURER_LEN_MAX);
+        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_MANUFACTURER:
@@ -602,6 +618,7 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = USB_MANUFACTURER_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
+        writeData();
         break;
       }
     default:
@@ -714,6 +731,34 @@ void InfoProcess()
         writeData();
         break;
       }
+    case MSG_CMD_INFO_DEVICE_ID:
+      {
+        const u16* ee_addr = USB_DEVICE_DES_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        ee_flag = eeprom_read_word(ee_addr);
+        // read info
+        unsigned short vidpid[2];
+        if (val[0] == 0x77)
+        {
+          ee_addr = USB_DEVICE_DES_ADDR + 8;
+          vidpid[0] = eeprom_read_word(ee_addr);
+          ee_addr = USB_DEVICE_DES_ADDR + 10;
+          vidpid[1] = eeprom_read_word(ee_addr);
+          rawhidwriteData.if_vidpid[0] =  vidpid[0];
+          rawhidwriteData.if_vidpid[1] =  vidpid[1];
+        }
+        else
+        {
+          rawhidwriteData.if_vidpid[0] = USB_VID;
+          rawhidwriteData.if_vidpid[1] =  USB_PID;
+        }
+        rawhidwriteData.type = MSG_TYPE_INFO;
+        rawhidwriteData.if_cmd = MSG_CMD_INFO_DEVICE_ID;
+        writeData();
+        break;
+      }
+
     default:
       {
         Log.error("msg info cmd error, cmd is %d\n", rawhidreadData.if_cmd);

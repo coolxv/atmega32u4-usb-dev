@@ -42,34 +42,39 @@ extern "C" {
 	int GHOST_API_EXPORT GHOST_API_CALL SetDeviceID(int vid, int pid);
 	// 恢复设备默认ID
 	int GHOST_API_EXPORT GHOST_API_CALL RestoreDeviceID();
+	// 获取ID 高两位pid，低两位vid
+	int GHOST_API_EXPORT GHOST_API_CALL GetDeviceID();
 
-	// 设置自定义设备serial number
+	// 设置自定义设备序列号
 	int GHOST_API_EXPORT GHOST_API_CALL SetSN(const char *serial);
-	// 恢复设备默认serial number
+	// 恢复设备默认序列号
 	int GHOST_API_EXPORT GHOST_API_CALL RestoreSN();
-
-	// 设置自定义设备product
-	int GHOST_API_EXPORT GHOST_API_CALL SetProduct(const char *product);
-	// 恢复设备默认product
-	int GHOST_API_EXPORT GHOST_API_CALL RestoretProduct();
-
-	// 设置自定义设备manufacturer
-	int GHOST_API_EXPORT GHOST_API_CALL SetManufacturer(const char *manufacturer);
-	// 恢复设备默认manufacturer
-	int GHOST_API_EXPORT GHOST_API_CALL RestoretManufacturer();
-
 	// 获取序列号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetSN();
+
+
+	// 设置自定义设备产品名
+	int GHOST_API_EXPORT GHOST_API_CALL SetProduct(const char *product);
+	// 恢复设备默认产品名
+	int GHOST_API_EXPORT GHOST_API_CALL RestoretProduct();
+	// 获取产品名
+	GHOST_API_EXPORT char* GHOST_API_CALL GetProduct();
+
+	// 设置自定义设备生产商
+	int GHOST_API_EXPORT GHOST_API_CALL SetManufacturer(const char *manufacturer);
+	// 恢复设备默认生产商
+	int GHOST_API_EXPORT GHOST_API_CALL RestoretManufacturer();
+	// 获取生产商
+	GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer();
+
 	// 获取设备型号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetModel();
 	// 获取固件版本号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetVer();
 	// 获取生产日期
 	GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate();
-	// 获取product
-	GHOST_API_EXPORT char* GHOST_API_CALL GetProduct();
-	// 获取manufacturer
-	GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer();
+
+
 	//////////////////////////////////////////////
 	////////////     键盘管理接口      ///////////
 	//////////////////////////////////////////////

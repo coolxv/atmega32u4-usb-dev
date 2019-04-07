@@ -54,6 +54,7 @@
 #define  MSG_CMD_INFO_PROD_DATE 4
 #define  MSG_CMD_INFO_PRODUCT 5
 #define  MSG_CMD_INFO_MANUFACTURER 6
+#define  MSG_CMD_INFO_DEVICE_ID 7
 
 #pragma pack(push, 1)
 typedef union {
@@ -123,7 +124,10 @@ typedef union {
 		unsigned char if_type;
 		//use
 		unsigned char if_cmd;
-		unsigned char if_value[48];
+		union {
+			unsigned char if_value[48];
+			unsigned short if_vidpid[2];
+		};
 	};
 	unsigned char buf[64];
 } MSG_DATA_RESULT_T;

@@ -39,10 +39,12 @@
 int main(int argc, char* argv[])
 {
 #if 1
-	OpenDeviceEx(0x2341, 0x8036);
+
 	SetHostLogLevel(6);
 
-	//OpenDeviceBySerialEx("1");
+	OpenDevice();
+	//OpenDeviceEx(0x2341, 0x8036);
+	//OpenDeviceBySerial();
 	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);
 	//KeyPress("s", 1);
@@ -109,8 +111,12 @@ int main(int argc, char* argv[])
 	SetProduct("abcefg");
 	//Sleep(1000);
 	//RestoretProduct();
+	//int vidpid = GetDeviceID();
+	//unsigned short *vp = (unsigned short*)&vidpid;
+	//printf("vid=%x\n", vp[0]);
+	//printf("pid=%x\n", vp[1]);
 	printf("product=%s\n", GetProduct());
-	printf("manufacturer=%s\n", GetManufacturer());
+	//printf("manufacturer=%s\n", GetManufacturer());
 	CloseDevice();
 
 

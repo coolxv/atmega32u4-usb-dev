@@ -39,6 +39,43 @@ static int g_initialized = 0;
 ///--------------------------------------
 CRITICAL_SECTION g_mutex;
 
+
+
+
+//////////////////////////////////////////////
+////////////       内部接口        ///////////
+//////////////////////////////////////////////
+
+// 获取ID
+static int  WaitResult()
+{
+	//package
+	//recv
+	static MSG_DATA_RESULT_T result;
+	int ret = 0;
+	int count = 0;
+	while (ret == 0 && count < 3)
+	{
+		EnterCriticalSection(&g_mutex);
+		ret = hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 500);
+		LeaveCriticalSection(&g_mutex);
+		if (ret == 0)
+		{
+			count++;
+		}
+
+		if (ret < 0)
+		{
+			log_trace("failed to read\n");
+		}
+	}
+	if (0 < ret)
+	{
+		return 0;
+	}
+	return -1;
+}
+
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
 //////////////////////////////////////////////
@@ -243,6 +280,8 @@ int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -268,6 +307,8 @@ int GHOST_API_EXPORT RestoreDeviceID()
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -279,6 +320,57 @@ int GHOST_API_EXPORT RestoreDeviceID()
 		return 0;
 	}
 }
+
+// 获取ID
+int GHOST_API_EXPORT GetDeviceID()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_DEVICE_ID;
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+	}
+	//recv
+	static MSG_DATA_RESULT_T result;
+	ret = 0;
+	while (ret == 0)
+	{
+		EnterCriticalSection(&g_mutex);
+		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
+		if (ret == 0)
+		{
+			log_trace("read for waiting...\n");
+			Sleep(500);
+		}
+
+		if (ret < 0)
+		{
+			log_trace("failed to read\n");
+		}
+	}
+	if (0 < ret)
+	{
+		log_trace("sucess to read\n");
+		return *(int*)result.if_vidpid;
+	}
+	return NULL;
+}
+
 
 // 设置自定义设备serial number
 int GHOST_API_EXPORT SetSN(const char *serial)
@@ -295,6 +387,8 @@ int GHOST_API_EXPORT SetSN(const char *serial)
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -320,6 +414,8 @@ int GHOST_API_EXPORT RestoreSN()
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
 	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -331,117 +427,9 @@ int GHOST_API_EXPORT RestoreSN()
 		return 0;
 	}
 }
-
-
-// 设置自定义设备product
-int GHOST_API_EXPORT SetProduct(const char *product)
-{
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_FUNC;
-	pkg.fc_cmd = MSG_CMD_FUNC_SET_PRODUCT;
-	strcpy_s(pkg.fc_product, sizeof(pkg.fc_product), product);
-	//send
-	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-		return 0;
-	}
-}
-// 恢复设备默认product
-int GHOST_API_EXPORT RestoretProduct()
-{
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_FUNC;
-	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_PRODUCT;
-	//send
-	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-		return 0;
-	}
-}
-
-// 设置自定义设备product
-int GHOST_API_EXPORT SetManufacturer(const char *manufacturer)
-{
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_FUNC;
-	pkg.fc_cmd = MSG_CMD_FUNC_SET_MANUFACTURER;
-	strcpy_s(pkg.fc_manufacturer, sizeof(pkg.fc_manufacturer), manufacturer);
-	//send
-	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-		return 0;
-	}
-}
-// 恢复设备默认product
-int GHOST_API_EXPORT RestoretManufacturer()
-{
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_FUNC;
-	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_MANUFACTURER;
-	//send
-	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-		return 0;
-	}
-}
-
-
-
 
 // 获取序列号
-GHOST_API_EXPORT char* GetSN()
+GHOST_API_EXPORT char*  GetSN()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -489,6 +477,222 @@ GHOST_API_EXPORT char* GetSN()
 	}
 	return NULL;
 }
+
+
+// 设置自定义设备product
+int GHOST_API_EXPORT SetProduct(const char *product)
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_SET_PRODUCT;
+	strcpy_s(pkg.fc_product, sizeof(pkg.fc_product), product);
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 恢复设备默认product
+int GHOST_API_EXPORT RestoretProduct()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_PRODUCT;
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+
+// 获取product
+GHOST_API_EXPORT char* GetProduct()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_PRODUCT;
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+	}
+	//recv
+	static MSG_DATA_RESULT_T result;
+	ret = 0;
+	while (ret == 0)
+	{
+		EnterCriticalSection(&g_mutex);
+		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
+		if (ret == 0)
+		{
+			log_trace("read for waiting...\n");
+			Sleep(500);
+		}
+
+		if (ret < 0)
+		{
+			log_trace("failed to read\n");
+		}
+	}
+	if (0 < ret)
+	{
+		log_trace("sucess to read\n");
+		return result.if_value;
+	}
+	return NULL;
+}
+// 设置自定义设备product
+int GHOST_API_EXPORT SetManufacturer(const char *manufacturer)
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_SET_MANUFACTURER;
+	strcpy_s(pkg.fc_manufacturer, sizeof(pkg.fc_manufacturer), manufacturer);
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 恢复设备默认product
+int GHOST_API_EXPORT RestoretManufacturer()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_FUNC;
+	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_MANUFACTURER;
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	//wait
+	WaitResult();
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+
+
+// 获取manufacturer
+GHOST_API_EXPORT char* GetManufacturer()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_INFO;
+	pkg.kb_cmd = MSG_CMD_INFO_MANUFACTURER;
+	//send
+	int ret;
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
+	LeaveCriticalSection(&g_mutex);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+	}
+	//recv
+	static MSG_DATA_RESULT_T result;
+	ret = 0;
+	while (ret == 0)
+	{
+		EnterCriticalSection(&g_mutex);
+		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
+		LeaveCriticalSection(&g_mutex);
+		if (ret == 0)
+		{
+			log_trace("read for waiting...\n");
+			Sleep(500);
+		}
+
+		if (ret < 0)
+		{
+			log_trace("failed to read\n");
+		}
+	}
+	if (0 < ret)
+	{
+		log_trace("sucess to read\n");
+		return result.if_value;
+	}
+	return NULL;
+}
+
+
+
 // 获取设备型号
 GHOST_API_EXPORT char* GetModel()
 {
@@ -637,104 +841,6 @@ GHOST_API_EXPORT char* GetProductionDate()
 	return NULL;
 }
 
-// 获取product
-GHOST_API_EXPORT char* GetProduct()
-{
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_INFO;
-	pkg.kb_cmd = MSG_CMD_INFO_PRODUCT;
-	//send
-	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return NULL;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
-		return result.if_value;
-	}
-	return NULL;
-}
-// 获取product
-GHOST_API_EXPORT char* GetManufacturer()
-{
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_INFO;
-	pkg.kb_cmd = MSG_CMD_INFO_MANUFACTURER;
-	//send
-	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return NULL;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
-		return result.if_value;
-	}
-	return NULL;
-}
 //////////////////////////////////////////////
 ////////////     键盘管理接口      ///////////
 //////////////////////////////////////////////
