@@ -331,14 +331,12 @@ void keyboardProcess()
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
           rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 1;
-          writeData();
         }
         else
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
           rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 0;
-          writeData();
         }
         break;
       }
@@ -354,14 +352,12 @@ void keyboardProcess()
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
           rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 1;
-          writeData();
         }
         else
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
           rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 0;
-          writeData();
         }
         break;
       }
@@ -377,14 +373,12 @@ void keyboardProcess()
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
           rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
           rawhidwriteData.kb_ret = 1;
-          writeData();
         }
         else
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
           rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
           rawhidwriteData.kb_ret = 0;
-          writeData();
         }
         break;
       }
@@ -518,6 +512,7 @@ void FuncProcess()
       {
         delay_time = 0;
         delay_restart = false;
+        writeData();//special need
         resetFunc();
         break;
       }
@@ -525,6 +520,7 @@ void FuncProcess()
       {
         delay_time = rawhidreadData.fc_value[0] * 1000;
         delay_restart = true;
+        writeData();//special need
         resetFunc();
         break;
       }
@@ -541,7 +537,6 @@ void FuncProcess()
         EEPROM.put(addr, ee_flag);
         addr = USB_DEVICE_DES_ADDR;
         EEPROM.put(addr, dd_struct);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_DEVICE_ID:
@@ -549,7 +544,6 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = 0;
         EEPROM.put(addr, ee_flag);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_SET_SERIAL_NUMBER:
@@ -564,7 +558,6 @@ void FuncProcess()
         //write serial number
         ee_addr = USB_SERIAL_ADDR;
         eeprom_write_block(rawhidreadData.fc_serial, ee_addr, USB_SERIAL_LEN_MAX);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER:
@@ -572,7 +565,6 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = USB_SERIAL_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_SET_PRODUCT:
@@ -587,7 +579,6 @@ void FuncProcess()
         //write product
         ee_addr = USB_PRODUCT_ADDR;
         eeprom_write_block(rawhidreadData.fc_product, ee_addr, USB_PRODUCT_LEN_MAX);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_PRODUCT:
@@ -595,7 +586,6 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = USB_PRODUCT_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_SET_MANUFACTURER:
@@ -610,7 +600,6 @@ void FuncProcess()
         //write serial number
         ee_addr = USB_MANUFACTURER_ADDR;
         eeprom_write_block(rawhidreadData.fc_manufacturer, ee_addr, USB_MANUFACTURER_LEN_MAX);
-        writeData();
         break;
       }
     case MSG_CMD_FUNC_RESTORE_MANUFACTURER:
@@ -618,7 +607,6 @@ void FuncProcess()
         unsigned short ee_flag = 0;
         int addr = USB_MANUFACTURER_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
-        writeData();
         break;
       }
     default:
@@ -657,7 +645,6 @@ void InfoProcess()
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
         rawhidwriteData.if_cmd = MSG_CMD_INFO_SN;
-        writeData();
         break;
       }
     case MSG_CMD_INFO_MODEL:
@@ -666,7 +653,6 @@ void InfoProcess()
         rawhidwriteData.if_cmd = MSG_CMD_INFO_MODEL;
         // read info
         strcpy_P(rawhidwriteData.if_value, model_info);
-        writeData();
         break;
       }
     case MSG_CMD_INFO_VERSION:
@@ -675,7 +661,6 @@ void InfoProcess()
         rawhidwriteData.if_cmd = MSG_CMD_INFO_VERSION;
         // read info
         strcpy_P(rawhidwriteData.if_value, version_info);
-        writeData();
         break;
       }
     case MSG_CMD_INFO_PROD_DATE:
@@ -684,7 +669,6 @@ void InfoProcess()
         rawhidwriteData.if_cmd = MSG_CMD_INFO_PROD_DATE;
         // read info
         strcpy_P(rawhidwriteData.if_value, production_date_info);
-        writeData();
         break;
       }
     case MSG_CMD_INFO_PRODUCT:
@@ -706,7 +690,6 @@ void InfoProcess()
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
         rawhidwriteData.if_cmd = MSG_CMD_INFO_PRODUCT;
-        writeData();
         break;
       }
     case MSG_CMD_INFO_MANUFACTURER:
@@ -728,7 +711,6 @@ void InfoProcess()
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
         rawhidwriteData.if_cmd = MSG_CMD_INFO_MANUFACTURER;
-        writeData();
         break;
       }
     case MSG_CMD_INFO_DEVICE_ID:
@@ -755,10 +737,8 @@ void InfoProcess()
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
         rawhidwriteData.if_cmd = MSG_CMD_INFO_DEVICE_ID;
-        writeData();
         break;
       }
-
     default:
       {
         Log.error("msg info cmd error, cmd is %d\n", rawhidreadData.if_cmd);
@@ -770,7 +750,6 @@ void InfoProcess()
 void loop()
 {
   // Check if there is new data from the RawHID device
-
   auto bytesAvailable = readData();
   if (bytesAvailable && bytesAvailable == sizeof(rawhidreadData))
   {
@@ -807,13 +786,10 @@ void loop()
           break;
         }
     }
+    //response
+    writeData();
     Log.verbose("read data sucessful\n");
 
   }
-  else
-  {
-    Log.verbose("read data error\n");
-  }
-
   Log.verbose("read data size %d\n", bytesAvailable);
 }
