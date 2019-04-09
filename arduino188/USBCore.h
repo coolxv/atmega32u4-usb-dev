@@ -129,7 +129,8 @@
 #ifndef USB_VERSION
 #define USB_VERSION 0x200
 #endif
-
+//
+#define USB_FLAGS 0x77
 //
 #define USB_DEVICE_DES_TAG_ADDR 0
 #define USB_DEVICE_DES_ADDR 2

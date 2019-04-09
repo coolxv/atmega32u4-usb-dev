@@ -5,6 +5,7 @@
 #define  MSG_TYPE_LOG 3
 #define  MSG_TYPE_FUNC 4
 #define  MSG_TYPE_INFO 5
+#define  MSG_TYPE_DEFAULT 6
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
 #define  MSG_CMD_KB_UP 2

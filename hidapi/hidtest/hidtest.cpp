@@ -48,10 +48,10 @@ int main(int argc, char* argv[])
 	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);
 	//KeyPress("s", 1);
-	SetDevLogLevel(5);
+	SetDevLogLevel(3);
 	Sleep(5000);
 	//int ret;
-	//Disconnect(10);
+	Disconnect(10);
 	//MoveTo(0, 0);
 	//Sleep(1000);
 	//ResetMouseMoveSpeed();

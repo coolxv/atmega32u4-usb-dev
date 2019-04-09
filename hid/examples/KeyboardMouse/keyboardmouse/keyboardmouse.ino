@@ -10,6 +10,7 @@
 #define  MSG_TYPE_LOG 3
 #define  MSG_TYPE_FUNC 4
 #define  MSG_TYPE_INFO 5
+#define  MSG_TYPE_DEFAULT 6
 
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
@@ -62,6 +63,7 @@
 #define  MSG_CMD_INFO_PRODUCT 5
 #define  MSG_CMD_INFO_MANUFACTURER 6
 #define  MSG_CMD_INFO_DEVICE_ID 7
+
 
 #pragma pack(push, 1)
 typedef union {
@@ -531,7 +533,7 @@ void FuncProcess()
         //tag
         unsigned short ee_flag = 0x1277;
         unsigned char *val = (unsigned char *)&ee_flag;
-        val[0] = 0x77;
+        val[0] = USB_FLAGS;
         val[1] = USB_DEVICE_DES_LEN_MAX;
         int addr = USB_DEVICE_DES_TAG_ADDR;
         EEPROM.put(addr, ee_flag);
@@ -552,7 +554,7 @@ void FuncProcess()
         unsigned short ee_flag;
         unsigned char *val = (unsigned char *)&ee_flag;
         //write tag
-        val[0] = 0x77;
+        val[0] = USB_FLAGS;
         val[1] = USB_SERIAL_LEN_MAX;
         eeprom_write_word(ee_addr, ee_flag);
         //write serial number
@@ -573,7 +575,7 @@ void FuncProcess()
         unsigned short ee_flag;
         unsigned char *val = (unsigned char *)&ee_flag;
         //write tag
-        val[0] = 0x77;
+        val[0] = USB_FLAGS;
         val[1] = USB_PRODUCT_LEN_MAX;
         eeprom_write_word(ee_addr, ee_flag);
         //write product
@@ -594,7 +596,7 @@ void FuncProcess()
         unsigned short ee_flag;
         unsigned char *val = (unsigned char *)&ee_flag;
         //write tag
-        val[0] = 0x77;
+        val[0] = USB_FLAGS;
         val[1] = USB_MANUFACTURER_LEN_MAX;
         eeprom_write_word(ee_addr, ee_flag);
         //write serial number
@@ -633,7 +635,7 @@ void InfoProcess()
         unsigned char *val = (unsigned char *)&ee_flag;
         ee_flag = eeprom_read_word(ee_addr);
         // read info
-        if (val[0] == 0x77)
+        if (val[0] == USB_FLAGS)
         {
           ee_addr = USB_SERIAL_ADDR;
           eeprom_read_block(rawhidwriteData.if_value, ee_addr, USB_SERIAL_LEN_MAX);
@@ -678,7 +680,7 @@ void InfoProcess()
         unsigned char *val = (unsigned char *)&ee_flag;
         ee_flag = eeprom_read_word(ee_addr);
         // read info
-        if (val[0] == 0x77)
+        if (val[0] == USB_FLAGS)
         {
           ee_addr = USB_PRODUCT_ADDR;
           eeprom_read_block(rawhidwriteData.if_value, ee_addr, USB_PRODUCT_LEN_MAX);
@@ -699,7 +701,7 @@ void InfoProcess()
         unsigned char *val = (unsigned char *)&ee_flag;
         ee_flag = eeprom_read_word(ee_addr);
         // read info
-        if (val[0] == 0x77)
+        if (val[0] == USB_FLAGS)
         {
           ee_addr = USB_MANUFACTURER_ADDR;
           eeprom_read_block(rawhidwriteData.if_value, ee_addr, USB_MANUFACTURER_LEN_MAX);
@@ -721,7 +723,7 @@ void InfoProcess()
         ee_flag = eeprom_read_word(ee_addr);
         // read info
         unsigned short vidpid[2];
-        if (val[0] == 0x77)
+        if (val[0] == USB_FLAGS)
         {
           ee_addr = USB_DEVICE_DES_ADDR + 8;
           vidpid[0] = eeprom_read_word(ee_addr);
@@ -753,6 +755,7 @@ void loop()
   auto bytesAvailable = readData();
   if (bytesAvailable && bytesAvailable == sizeof(rawhidreadData))
   {
+    rawhidwriteData.type = MSG_TYPE_DEFAULT;
     switch (rawhidreadData.type)
     {
       case MSG_TYPE_KEYBOARD:
@@ -788,7 +791,6 @@ void loop()
     }
     //response
     writeData();
-    Log.verbose("read data sucessful\n");
 
   }
   Log.verbose("read data size %d\n", bytesAvailable);

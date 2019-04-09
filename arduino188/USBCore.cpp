@@ -526,7 +526,7 @@ bool SendDescriptor(USBSetup& setup)
 	{
         ee_addr = USB_DEVICE_DES_TAG_ADDR;
         eeconfig = eeprom_read_word(ee_addr);
-        if(val[0] != 0x77)
+        if(val[0] != USB_FLAGS)
         {
     		desc_addr = (const u8*)&USB_DeviceDescriptorIAD;
         }
@@ -543,7 +543,7 @@ bool SendDescriptor(USBSetup& setup)
 		else if (setup.wValueL == IPRODUCT) {
 			ee_addr = USB_PRODUCT_TAG_ADDR;
 			eeconfig = eeprom_read_word(ee_addr);
-			if(val[0] != 0x77)
+			if(val[0] != USB_FLAGS)
 			{
 				desc_addr = (const u8*)STRING_PRODUCT;
 				desc_length = strlen(USB_PRODUCT);
@@ -560,7 +560,7 @@ bool SendDescriptor(USBSetup& setup)
 		else if (setup.wValueL == IMANUFACTURER) {
 			ee_addr = USB_MANUFACTURER_TAG_ADDR;
 			eeconfig = eeprom_read_word(ee_addr);
-			if(val[0] != 0x77)
+			if(val[0] != USB_FLAGS)
 			{
 				desc_addr = (const u8*)STRING_MANUFACTURER;
 				desc_length = strlen(USB_MANUFACTURER);
@@ -578,7 +578,7 @@ bool SendDescriptor(USBSetup& setup)
 #ifdef PLUGGABLE_USB_ENABLED
 			ee_addr = USB_SERIAL_TAG_ADDR;
 			eeconfig = eeprom_read_word(ee_addr);
-			if(val[0] != 0x77)
+			if(val[0] != USB_FLAGS)
 			{
 				desc_addr = (const u8*)STRING_SERIAL;
 				desc_length = strlen(USB_SERIAL);
@@ -600,7 +600,7 @@ bool SendDescriptor(USBSetup& setup)
 	if (desc_addr == 0)
 		return false;
 
-	if ((USB_DEVICE_DESCRIPTOR_TYPE == t) && (val[0] == 0x77))
+	if ((USB_DEVICE_DESCRIPTOR_TYPE == t) && (val[0] == USB_FLAGS))
 	{
         desc_length = eeprom_read_byte(desc_addr);
         USB_SendControl(TRANSFER_EPM,desc_addr,desc_length);

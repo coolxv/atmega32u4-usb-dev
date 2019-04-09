@@ -54,10 +54,13 @@ static int  SendAndWaitIgnoreResult(MSG_DATA_T *ppkg)
 	//send and recv
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
-	hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 1500);
+	if (ret > 0)
+	{
+		hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 1500);
+	}
 	LeaveCriticalSection(&g_mutex);
 
-	return ret;
+	return (ret <= 0 ? -1 : 0);
 }
 static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 {
@@ -65,7 +68,7 @@ static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 	//send and recv
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
-	if (ret < 0)
+	if (ret <= 0)
 	{
 		ret = -1;
 	}
@@ -75,7 +78,7 @@ static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 	}
 	LeaveCriticalSection(&g_mutex);
 
-	return ret;
+	return (ret <= 0 ? -1 : 0);
 }
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
