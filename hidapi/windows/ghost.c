@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -47,33 +47,17 @@ CRITICAL_SECTION g_mutex;
 //////////////////////////////////////////////
 
 // 获取ID
-static int  WaitResult()
+static int  SendAndWaitResult(MSG_DATA_T *ppkg)
 {
-	//package
-	//recv
 	static MSG_DATA_RESULT_T result;
 	int ret = 0;
-	int count = 0;
-	while (ret == 0 && count < 3)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 500);
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			count++;
-		}
+	//send and recv
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
+	hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 1500);
+	LeaveCriticalSection(&g_mutex);
 
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		return 0;
-	}
-	return -1;
+	return ret;
 }
 
 //////////////////////////////////////////////
@@ -224,11 +208,7 @@ int GHOST_API_EXPORT Restart()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTART;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -252,11 +232,7 @@ int GHOST_API_EXPORT Disconnect(int second)
 	pkg.fc_value[0] = constrain(second, 0, 255);
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -281,11 +257,7 @@ int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
 	pkg.fc_vidpid[1] = constrain(pid, 0, 65535);
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -308,11 +280,7 @@ int GHOST_API_EXPORT RestoreDeviceID()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_DEVICE_ID;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -388,11 +356,7 @@ int GHOST_API_EXPORT SetSN(const char *serial)
 	strcpy_s(pkg.fc_serial,sizeof(pkg.fc_serial), serial);
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -415,11 +379,7 @@ int GHOST_API_EXPORT RestoreSN()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -495,11 +455,7 @@ int GHOST_API_EXPORT SetProduct(const char *product)
 	strcpy_s(pkg.fc_product, sizeof(pkg.fc_product), product);
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -522,11 +478,7 @@ int GHOST_API_EXPORT RestoretProduct()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_PRODUCT;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -600,11 +552,7 @@ int GHOST_API_EXPORT SetManufacturer(const char *manufacturer)
 	strcpy_s(pkg.fc_manufacturer, sizeof(pkg.fc_manufacturer), manufacturer);
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -627,11 +575,7 @@ int GHOST_API_EXPORT RestoretManufacturer()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_MANUFACTURER;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -870,11 +814,7 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	pkg.kb_key[0] = keycode;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -908,11 +848,7 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	pkg.kb_key[0] = keycode;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -969,11 +905,8 @@ int GHOST_API_EXPORT  KeyPress2(char *key, int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		//send
+		ret = SendAndWaitResult(&pkg);
 	}
 	if (ret < 0)
 	{
@@ -1020,11 +953,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	pkg.kb_count = count;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1069,11 +998,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	pkg.kb_count = count;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1142,11 +1067,7 @@ int GHOST_API_EXPORT  CombinationKeyPress2(char *key1, char *key2, char *key3, c
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 	}
 	if (ret < 0)
 	{
@@ -1169,12 +1090,9 @@ int GHOST_API_EXPORT  KeyUpAll()
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
 	pkg.kb_cmd = MSG_CMD_KB_UP_ALL;
 	//send
+	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1263,11 +1181,7 @@ int GHOST_API_EXPORT  SetCapsLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1340,11 +1254,7 @@ int GHOST_API_EXPORT  SetNumLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1418,11 +1328,7 @@ int GHOST_API_EXPORT  SetScrollLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_SCROLL_LOCK;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1449,11 +1355,7 @@ int GHOST_API_EXPORT  LeftDown()
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_DOWN;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1476,11 +1378,7 @@ int GHOST_API_EXPORT  LeftUp()
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_UP;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1528,11 +1426,7 @@ int GHOST_API_EXPORT  LeftClick2(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 	}
 	if (ret < 0)
 	{
@@ -1559,11 +1453,7 @@ int GHOST_API_EXPORT  LeftDoubleClick(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1591,11 +1481,7 @@ int GHOST_API_EXPORT  RightDown()
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_DOWN;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1618,11 +1504,7 @@ int GHOST_API_EXPORT  RightUp()
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_UP;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1669,11 +1551,7 @@ int GHOST_API_EXPORT  RightClick2(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1705,11 +1583,7 @@ int GHOST_API_EXPORT  RightDoubleClick(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1737,11 +1611,7 @@ int GHOST_API_EXPORT  MiddleDown()
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_DOWN;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1764,11 +1634,7 @@ int GHOST_API_EXPORT  MiddleUp()
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_UP;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1815,11 +1681,7 @@ int GHOST_API_EXPORT  MiddleClick2(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1850,11 +1712,7 @@ int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-		LeaveCriticalSection(&g_mutex);
-		//wait
-		WaitResult();
+		ret = SendAndWaitResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1882,11 +1740,7 @@ int GHOST_API_EXPORT  MouseUpAll()
 	pkg.ms_cmd = MSG_CMD_MS_UP_ALL;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1970,11 +1824,7 @@ int GHOST_API_EXPORT  MoveToA(int x, int y)
 	//pkg.ms_y = y;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -2003,11 +1853,7 @@ int GHOST_API_EXPORT  MoveToR(int x, int y)
 	pkg.ms_y = iy;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -2033,11 +1879,7 @@ int GHOST_API_EXPORT  WheelsMove(int y)
 	pkg.ms_wheel = iy;
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -2213,11 +2055,7 @@ int GHOST_API_EXPORT SetDevLogLevel(int level)
 	pkg.lg_level = (unsigned char)constrain(level, 0, 6);
 	//send
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
-	//wait
-	WaitResult();
+	ret = SendAndWaitResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));

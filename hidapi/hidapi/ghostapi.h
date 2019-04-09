@@ -1,4 +1,4 @@
-#ifndef GHOSTAPI_H__
+﻿#ifndef GHOSTAPI_H__
 #define GHOSTAPI_H__
 
 #ifdef _WIN32

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 //msg type
 #define  MSG_TYPE_KEYBOARD 1
 #define  MSG_TYPE_MOUSE 2

@@ -1,4 +1,4 @@
-#include <locale.h>
+ï»¿#include <locale.h>
 #include <windows.h>
 
 extern CRITICAL_SECTION g_mutex;
@@ -15,7 +15,7 @@ BOOL WINAPI DllMain(
 	case DLL_PROCESS_ATTACH:
 		// Initialize once for each new process.
 		// Return FALSE to fail DLL load.
-		//setlocale(LC_ALL, "");//Ìí¼ÓÕâĞĞ write ²»»áÊ§°Ü£¬²»ÖªÉ¶Ô­Òò£¬¡°Á¬µ½ÏµÍ³ÉÏµÄÉè±¸Ã»ÓĞ·¢»Ó×÷ÓÃ¡±
+		//setlocale(LC_ALL, "");//æ·»åŠ è¿™è¡Œ write ä¸ä¼šå¤±è´¥ï¼Œä¸çŸ¥å•¥åŸå› ï¼Œâ€œè¿åˆ°ç³»ç»Ÿä¸Šçš„è®¾å¤‡æ²¡æœ‰å‘æŒ¥ä½œç”¨â€
 
 		InitializeCriticalSection(&g_mutex);
 		break;
