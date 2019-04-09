@@ -9,8 +9,6 @@
 #define GHOST_API_CALL /**< API call macro */
 #endif
 
-#define GHOST_API_EXPORT_CALL GHOST_API_EXPORT GHOST_API_CALL /**< API export and call macro*/
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,47 +21,47 @@ extern "C" {
 	////////////     设备管理接口      ///////////
 	//////////////////////////////////////////////
 	// 打开设备（根据设备VID和PID）
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceEx(int vid, int pid);
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDevice();//基于默认vid、pid
+	GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceEx(int vid, int pid);
+	GHOST_API_EXPORT int GHOST_API_CALL OpenDevice();//基于默认vid、pid
 	// 打开设备（根据设备serial number）
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceBySerialEx(const char *serial);
-	int GHOST_API_EXPORT GHOST_API_CALL OpenDeviceBySerial();//基于默认serial number
+	GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial);
+	GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerial();//基于默认serial number
 	// 关闭设备
-	int GHOST_API_EXPORT GHOST_API_CALL CloseDevice();
+	GHOST_API_EXPORT int GHOST_API_CALL CloseDevice();
 	// 检查设备是否有效
-	int GHOST_API_EXPORT GHOST_API_CALL CheckDevice();
+	GHOST_API_EXPORT int GHOST_API_CALL CheckDevice();
 	// 检查设备是否有效
-	int GHOST_API_EXPORT GHOST_API_CALL Restart();
+	GHOST_API_EXPORT int GHOST_API_CALL Restart();
 	// 断开设备连接
-	int GHOST_API_EXPORT GHOST_API_CALL Disconnect(int second);
+	GHOST_API_EXPORT int GHOST_API_CALL Disconnect(int second);
 
 
 	// 设置自定义设备ID（厂商ID+产品ID）
-	int GHOST_API_EXPORT GHOST_API_CALL SetDeviceID(int vid, int pid);
+	GHOST_API_EXPORT int GHOST_API_CALL SetDeviceID(int vid, int pid);
 	// 恢复设备默认ID
-	int GHOST_API_EXPORT GHOST_API_CALL RestoreDeviceID();
+	GHOST_API_EXPORT int GHOST_API_CALL RestoreDeviceID();
 	// 获取ID 高两位pid，低两位vid
-	int GHOST_API_EXPORT GHOST_API_CALL GetDeviceID();
+	GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID();
 
 	// 设置自定义设备序列号
-	int GHOST_API_EXPORT GHOST_API_CALL SetSN(const char *serial);
+	GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial);
 	// 恢复设备默认序列号
-	int GHOST_API_EXPORT GHOST_API_CALL RestoreSN();
+	GHOST_API_EXPORT int GHOST_API_CALL RestoreSN();
 	// 获取序列号
 	GHOST_API_EXPORT char* GHOST_API_CALL GetSN();
 
 
 	// 设置自定义设备产品名
-	int GHOST_API_EXPORT GHOST_API_CALL SetProduct(const char *product);
+	GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product);
 	// 恢复设备默认产品名
-	int GHOST_API_EXPORT GHOST_API_CALL RestoretProduct();
+	GHOST_API_EXPORT int GHOST_API_CALL RestoretProduct();
 	// 获取产品名
 	GHOST_API_EXPORT char* GHOST_API_CALL GetProduct();
 
 	// 设置自定义设备生产商
-	int GHOST_API_EXPORT GHOST_API_CALL SetManufacturer(const char *manufacturer);
+	GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer);
 	// 恢复设备默认生产商
-	int GHOST_API_EXPORT GHOST_API_CALL RestoretManufacturer();
+	GHOST_API_EXPORT int GHOST_API_CALL RestoretManufacturer();
 	// 获取生产商
 	GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer();
 
@@ -79,101 +77,101 @@ extern "C" {
 	////////////     键盘管理接口      ///////////
 	//////////////////////////////////////////////
 	// 键按下
-	int GHOST_API_EXPORT GHOST_API_CALL KeyDown(char *key);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyDown(char *key);
 	// 键弹起
-	int GHOST_API_EXPORT GHOST_API_CALL KeyUp(char *key);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyUp(char *key);
 	// 一次按键
-	int GHOST_API_EXPORT GHOST_API_CALL KeyPress(char *key, int count);
-	int GHOST_API_EXPORT GHOST_API_CALL KeyPress2(char *key, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyPress(char *key, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyPress2(char *key, int count);
 	// 组合键按下
-	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
 	// 组合键弹起
-	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
 	// 组合按键
-	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
-	int GHOST_API_EXPORT GHOST_API_CALL CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
 	// 释放所有按键
-	int GHOST_API_EXPORT GHOST_API_CALL KeyUpAll();
+	GHOST_API_EXPORT int GHOST_API_CALL KeyUpAll();
 	// 模拟按键输入
-	int GHOST_API_EXPORT GHOST_API_CALL Say(char *keys);
+	GHOST_API_EXPORT int GHOST_API_CALL Say(char *keys);
 
 	// 获取大写灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL GetCapsLock();
+	GHOST_API_EXPORT int GHOST_API_CALL GetCapsLock();
 	// 设置大写灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL SetCapsLock();
+	GHOST_API_EXPORT int GHOST_API_CALL SetCapsLock();
 	// 获取NumLock灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL GetNumLock();
+	GHOST_API_EXPORT int GHOST_API_CALL GetNumLock();
 	// 设置NumLock灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL SetNumLock();
+	GHOST_API_EXPORT int GHOST_API_CALL SetNumLock();
 	// 获取ScrollLock灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL GetScrollLock();
+	GHOST_API_EXPORT int GHOST_API_CALL GetScrollLock();
 	// 设置ScrollLock灯状态
-	int GHOST_API_EXPORT GHOST_API_CALL SetScrollLock();
+	GHOST_API_EXPORT int GHOST_API_CALL SetScrollLock();
 	//////////////////////////////////////////////
 	////////////     鼠标管理接口      ///////////
 	//////////////////////////////////////////////
 	// 鼠标左键按下
-	int GHOST_API_EXPORT GHOST_API_CALL LeftDown();
+	GHOST_API_EXPORT int GHOST_API_CALL LeftDown();
 	// 鼠标左键弹起
-	int GHOST_API_EXPORT GHOST_API_CALL LeftUp();
+	GHOST_API_EXPORT int GHOST_API_CALL LeftUp();
 	// 鼠标左键单击
-	int GHOST_API_EXPORT GHOST_API_CALL LeftClick(int count);
+	GHOST_API_EXPORT int GHOST_API_CALL LeftClick(int count);
 	// 鼠标左键双击
-	int GHOST_API_EXPORT GHOST_API_CALL LeftDoubleClick(int count);
+	GHOST_API_EXPORT int GHOST_API_CALL LeftDoubleClick(int count);
 	// 鼠标右键按下
-	int GHOST_API_EXPORT GHOST_API_CALL RightDown();
+	GHOST_API_EXPORT int GHOST_API_CALL RightDown();
 	// 鼠标右键弹起
-	int GHOST_API_EXPORT GHOST_API_CALL RightUp();
+	GHOST_API_EXPORT int GHOST_API_CALL RightUp();
 	// 鼠标右键单击
-	int GHOST_API_EXPORT GHOST_API_CALL RightClick(int count);
+	GHOST_API_EXPORT int GHOST_API_CALL RightClick(int count);
 	// 鼠标右键双击
-	int GHOST_API_EXPORT GHOST_API_CALL RightDoubleClick(int count);
+	GHOST_API_EXPORT int GHOST_API_CALL RightDoubleClick(int count);
 	// 鼠标中键按下
-	int GHOST_API_EXPORT GHOST_API_CALL MiddleDown();
+	GHOST_API_EXPORT int GHOST_API_CALL MiddleDown();
 	// 鼠标中键弹起
-	int GHOST_API_EXPORT GHOST_API_CALL MiddleUp();
+	GHOST_API_EXPORT int GHOST_API_CALL MiddleUp();
 	// 鼠标中键单击
-	int GHOST_API_EXPORT GHOST_API_CALL MiddleClick(int count);
+	GHOST_API_EXPORT int GHOST_API_CALL MiddleClick(int count);
 	// 鼠标中键双击
-	int GHOST_API_EXPORT GHOST_API_CALL MiddleDoubleClick(int count);
+	GHOST_API_EXPORT int GHOST_API_CALL MiddleDoubleClick(int count);
 	// 释放所有鼠标按键
-	int GHOST_API_EXPORT GHOST_API_CALL MouseUpAll();
+	GHOST_API_EXPORT int GHOST_API_CALL MouseUpAll();
 	// 模拟鼠标移动
-	int GHOST_API_EXPORT GHOST_API_CALL MoveTo(int x, int y);
+	GHOST_API_EXPORT int GHOST_API_CALL MoveTo(int x, int y);
 	// 绝对移动鼠标
-	int GHOST_API_EXPORT GHOST_API_CALL MoveToA(int x, int y);
+	GHOST_API_EXPORT int GHOST_API_CALL MoveToA(int x, int y);
 	// 相对移动鼠标
-	int GHOST_API_EXPORT GHOST_API_CALL MoveToR(int x, int y);
+	GHOST_API_EXPORT int GHOST_API_CALL MoveToR(int x, int y);
 	// 鼠标滚轮滚动
-	int GHOST_API_EXPORT GHOST_API_CALL WheelsMove(int y);
+	GHOST_API_EXPORT int GHOST_API_CALL WheelsMove(int y);
 
 	// 获取鼠标移动速度
-	int GHOST_API_EXPORT GHOST_API_CALL GetMouseMoveSpeed();
+	GHOST_API_EXPORT int GHOST_API_CALL GetMouseMoveSpeed();
 	// 设置鼠标移动速度
-	int GHOST_API_EXPORT GHOST_API_CALL SetMouseMoveSpeed(int speed);
+	GHOST_API_EXPORT int GHOST_API_CALL SetMouseMoveSpeed(int speed);
 	// 重置鼠标移动速度,默认10
-	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseMoveSpeed();
+	GHOST_API_EXPORT int GHOST_API_CALL ResetMouseMoveSpeed();
 
 	// 获取鼠标滚轮速度-行数
-	int GHOST_API_EXPORT GHOST_API_CALL GetMouseWheelLines();
+	GHOST_API_EXPORT int GHOST_API_CALL GetMouseWheelLines();
 	// 设置鼠标滚轮速度-行数
-	int GHOST_API_EXPORT GHOST_API_CALL SetMouseWheelLines(int speed);
+	GHOST_API_EXPORT int GHOST_API_CALL SetMouseWheelLines(int speed);
 	// 重置鼠标滚轮速度-行数,默认3
-	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseWheelLines();
+	GHOST_API_EXPORT int GHOST_API_CALL ResetMouseWheelLines();
 
 	// 获取鼠标滚轮速度-字符
-	int GHOST_API_EXPORT GHOST_API_CALL GetMouseWheelChars();
+	GHOST_API_EXPORT int GHOST_API_CALL GetMouseWheelChars();
 	// 设置鼠标滚轮速度-字符
-	int GHOST_API_EXPORT GHOST_API_CALL SetMouseWheelChars(int speed);
+	GHOST_API_EXPORT int GHOST_API_CALL SetMouseWheelChars(int speed);
 	// 重置鼠标滚轮速度-字符,默认3
-	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseWheelChars();
+	GHOST_API_EXPORT int GHOST_API_CALL ResetMouseWheelChars();
 
 	// 获取鼠标双击速度-毫秒
-	int GHOST_API_EXPORT GHOST_API_CALL GetMouseDoubleClickSpeed();
+	GHOST_API_EXPORT int GHOST_API_CALL GetMouseDoubleClickSpeed();
 	// 设置鼠标双击速度-毫秒
-	int GHOST_API_EXPORT GHOST_API_CALL SetMouseDoubleClickSpeed(int speed);
+	GHOST_API_EXPORT int GHOST_API_CALL SetMouseDoubleClickSpeed(int speed);
 	// 重置鼠标双击速度-毫秒,默认500
-	int GHOST_API_EXPORT GHOST_API_CALL ResetMouseDoubleClickSpeed();
+	GHOST_API_EXPORT int GHOST_API_CALL ResetMouseDoubleClickSpeed();
 	//////////////////////////////////////////////
 	////////////     存储管理接口      ///////////
 	//////////////////////////////////////////////	   
@@ -191,7 +189,7 @@ extern "C" {
 	// LOG_LEVEL_NOTICE  4
 	// LOG_LEVEL_TRACE   5
 	// LOG_LEVEL_VERBOSE 6
-	int GHOST_API_EXPORT GHOST_API_CALL SetDevLogLevel(int level);
+	GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level);
 	// 设置设备日志级别:0=关闭，1-6级别
 	//LOG_SILENT  0
 	//LOG_FATAL	  1
@@ -200,8 +198,8 @@ extern "C" {
 	//LOG_INFO    4
 	//LOG_DEBUG   5 
 	//LOG_TRACE   6 
-	int GHOST_API_EXPORT GHOST_API_CALL SetHostLogLevel(int level);
-	int GHOST_API_EXPORT GHOST_API_CALL SetHostLogFile(char *file);
+	GHOST_API_EXPORT int GHOST_API_CALL SetHostLogLevel(int level);
+	GHOST_API_EXPORT int GHOST_API_CALL SetHostLogFile(char *file);
 #ifdef __cplusplus
 }
 #endif

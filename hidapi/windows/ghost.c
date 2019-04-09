@@ -46,8 +46,8 @@ CRITICAL_SECTION g_mutex;
 ////////////       内部接口        ///////////
 //////////////////////////////////////////////
 
-// 获取ID
-static int  SendAndWaitResult(MSG_DATA_T *ppkg)
+
+static int  SendAndWaitIgnoreResult(MSG_DATA_T *ppkg)
 {
 	static MSG_DATA_RESULT_T result;
 	int ret = 0;
@@ -59,11 +59,28 @@ static int  SendAndWaitResult(MSG_DATA_T *ppkg)
 
 	return ret;
 }
+static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
+{
+	int ret = 0;
+	//send and recv
+	EnterCriticalSection(&g_mutex);
+	ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
+	if (ret < 0)
+	{
+		ret = -1;
+	}
+	else
+	{
+		ret = hid_read_timeout(g_handle, (unsigned char*)presult, sizeof(*presult), 3000);
+	}
+	LeaveCriticalSection(&g_mutex);
 
+	return ret;
+}
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
 //////////////////////////////////////////////
-int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
+GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceEx(int vid, int pid)
 {
 	EnterCriticalSection(&g_mutex);
 	if (!g_initialized)
@@ -94,12 +111,12 @@ int GHOST_API_EXPORT OpenDeviceEx(int vid, int pid)
 	return 0;
 }
 
-int GHOST_API_EXPORT OpenDevice()
+GHOST_API_EXPORT int GHOST_API_CALL OpenDevice()
 {
 	return OpenDeviceEx(GHOST_VID, GHOST_PID);
 }
 
-int GHOST_API_EXPORT OpenDeviceBySerial()
+GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerial()
 {
 	EnterCriticalSection(&g_mutex);
 	if (!g_initialized)
@@ -130,7 +147,7 @@ int GHOST_API_EXPORT OpenDeviceBySerial()
 	return 0;
 }
 
-int GHOST_API_EXPORT OpenDeviceBySerialEx(const char *serial)
+GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial)
 {
 	wchar_t wserial[128];
 	MultiByteToWideChar(CP_ACP, 0, serial, -1, wserial, sizeof(wserial));
@@ -164,7 +181,7 @@ int GHOST_API_EXPORT OpenDeviceBySerialEx(const char *serial)
 	return 0;
 }
 
-int HID_API_EXPORT CloseDevice()
+GHOST_API_EXPORT int HID_API_EXPORT CloseDevice()
 {
 	EnterCriticalSection(&g_mutex);
 	if (g_initialized)
@@ -189,7 +206,7 @@ int HID_API_EXPORT CloseDevice()
 }
 
 // 检查设备是否有效
-int GHOST_API_EXPORT CheckDevice()
+GHOST_API_EXPORT int GHOST_API_CALL CheckDevice()
 {
 	if (g_initialized)
 	{
@@ -198,7 +215,7 @@ int GHOST_API_EXPORT CheckDevice()
 	return 0;
 }
 // 检查设备是否有效
-int GHOST_API_EXPORT Restart()
+GHOST_API_EXPORT int GHOST_API_CALL Restart()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -208,7 +225,7 @@ int GHOST_API_EXPORT Restart()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTART;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -221,7 +238,7 @@ int GHOST_API_EXPORT Restart()
 	}
 }
 // 断开设备连接
-int GHOST_API_EXPORT Disconnect(int second)
+GHOST_API_EXPORT int GHOST_API_CALL Disconnect(int second)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -232,7 +249,7 @@ int GHOST_API_EXPORT Disconnect(int second)
 	pkg.fc_value[0] = constrain(second, 0, 255);
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -245,7 +262,7 @@ int GHOST_API_EXPORT Disconnect(int second)
 	}
 }
 // 设置自定义设备ID（厂商ID+产品ID）
-int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
+GHOST_API_EXPORT int GHOST_API_CALL SetDeviceID(int vid, int pid)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -257,7 +274,7 @@ int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
 	pkg.fc_vidpid[1] = constrain(pid, 0, 65535);
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -270,7 +287,7 @@ int GHOST_API_EXPORT SetDeviceID(int vid, int pid)
 	}
 }
 // 恢复设备默认ID
-int GHOST_API_EXPORT RestoreDeviceID()
+GHOST_API_EXPORT int GHOST_API_CALL RestoreDeviceID()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -280,7 +297,7 @@ int GHOST_API_EXPORT RestoreDeviceID()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_DEVICE_ID;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -294,7 +311,7 @@ int GHOST_API_EXPORT RestoreDeviceID()
 }
 
 // 获取ID
-int GHOST_API_EXPORT GetDeviceID()
+GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -302,50 +319,25 @@ int GHOST_API_EXPORT GetDeviceID()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_DEVICE_ID;
-	//send
+	//send and recv
+	MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return *(int*)result.if_vidpid;
 	}
-	return 0;
 }
 
 
 // 设置自定义设备serial number
-int GHOST_API_EXPORT SetSN(const char *serial)
+GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -356,7 +348,7 @@ int GHOST_API_EXPORT SetSN(const char *serial)
 	strcpy_s(pkg.fc_serial,sizeof(pkg.fc_serial), serial);
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -369,7 +361,7 @@ int GHOST_API_EXPORT SetSN(const char *serial)
 	}
 }
 // 恢复设备默认serial number
-int GHOST_API_EXPORT RestoreSN()
+GHOST_API_EXPORT int GHOST_API_CALL RestoreSN()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -379,7 +371,7 @@ int GHOST_API_EXPORT RestoreSN()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_SERIAL_NUMBER;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -393,7 +385,7 @@ int GHOST_API_EXPORT RestoreSN()
 }
 
 // 获取序列号
-GHOST_API_EXPORT char*  GetSN()
+GHOST_API_EXPORT char* GHOST_API_CALL GetSN()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -401,50 +393,25 @@ GHOST_API_EXPORT char*  GetSN()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_SN;
-	//send
+	//send and recv
+	static MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
-	return NULL;
 }
 
 
 // 设置自定义设备product
-int GHOST_API_EXPORT SetProduct(const char *product)
+GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -455,7 +422,7 @@ int GHOST_API_EXPORT SetProduct(const char *product)
 	strcpy_s(pkg.fc_product, sizeof(pkg.fc_product), product);
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -468,7 +435,7 @@ int GHOST_API_EXPORT SetProduct(const char *product)
 	}
 }
 // 恢复设备默认product
-int GHOST_API_EXPORT RestoretProduct()
+GHOST_API_EXPORT int GHOST_API_CALL RestoretProduct()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -478,7 +445,7 @@ int GHOST_API_EXPORT RestoretProduct()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_PRODUCT;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -492,7 +459,7 @@ int GHOST_API_EXPORT RestoretProduct()
 }
 
 // 获取product
-GHOST_API_EXPORT char* GetProduct()
+GHOST_API_EXPORT char* GHOST_API_CALL GetProduct()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -500,48 +467,23 @@ GHOST_API_EXPORT char* GetProduct()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_PRODUCT;
-	//send
+	//send and recv
+	static MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
-	return NULL;
 }
 // 设置自定义设备product
-int GHOST_API_EXPORT SetManufacturer(const char *manufacturer)
+GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -552,7 +494,7 @@ int GHOST_API_EXPORT SetManufacturer(const char *manufacturer)
 	strcpy_s(pkg.fc_manufacturer, sizeof(pkg.fc_manufacturer), manufacturer);
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -565,7 +507,7 @@ int GHOST_API_EXPORT SetManufacturer(const char *manufacturer)
 	}
 }
 // 恢复设备默认product
-int GHOST_API_EXPORT RestoretManufacturer()
+GHOST_API_EXPORT int GHOST_API_CALL RestoretManufacturer()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -575,7 +517,7 @@ int GHOST_API_EXPORT RestoretManufacturer()
 	pkg.fc_cmd = MSG_CMD_FUNC_RESTORE_MANUFACTURER;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -590,7 +532,7 @@ int GHOST_API_EXPORT RestoretManufacturer()
 
 
 // 获取manufacturer
-GHOST_API_EXPORT char* GetManufacturer()
+GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -598,51 +540,26 @@ GHOST_API_EXPORT char* GetManufacturer()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_MANUFACTURER;
-	//send
+	//send and recv
+	static MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
-	return NULL;
 }
 
 
 
 // 获取设备型号
-GHOST_API_EXPORT char* GetModel()
+GHOST_API_EXPORT char* GHOST_API_CALL GetModel()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -650,48 +567,23 @@ GHOST_API_EXPORT char* GetModel()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_MODEL;
-	//send
+	//send and recv
+	static MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
-	return NULL;
 }
 // 获取固件版本号
-GHOST_API_EXPORT char* GetVer()
+GHOST_API_EXPORT char* GHOST_API_CALL GetVer()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -699,48 +591,24 @@ GHOST_API_EXPORT char* GetVer()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_VERSION;
-	//send
+	//send and recv
+	static MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
-	return NULL;
+
 }
 // 获取生产日期
-GHOST_API_EXPORT char* GetProductionDate()
+GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -748,52 +616,27 @@ GHOST_API_EXPORT char* GetProductionDate()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_INFO;
 	pkg.kb_cmd = MSG_CMD_INFO_PROD_DATE;
-	//send
+	//send and recv
+	static MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//recv
-	static MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
-		log_trace("sucess to read\n");
+		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
-	return NULL;
 }
 
 //////////////////////////////////////////////
 ////////////     键盘管理接口      ///////////
 //////////////////////////////////////////////
 // 键按下
-int GHOST_API_EXPORT  KeyDown(char *key)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(char *key)
 {
 	if (NULL == key || 0 == strlen(key))
 	{
@@ -814,7 +657,7 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 	pkg.kb_key[0] = keycode;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -828,7 +671,7 @@ int GHOST_API_EXPORT  KeyDown(char *key)
 
 }
 // 键弹起
-int GHOST_API_EXPORT  KeyUp(char *key)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(char *key)
 {
 	if (NULL == key || 0 == strlen(key))
 	{
@@ -848,7 +691,7 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	pkg.kb_key[0] = keycode;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -861,7 +704,7 @@ int GHOST_API_EXPORT  KeyUp(char *key)
 	}
 }
 // 一次按键
-int GHOST_API_EXPORT  KeyPress(char *key, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyPress(char *key, int count)
 {
 	//send
 	int ret = 0;
@@ -882,7 +725,7 @@ int GHOST_API_EXPORT  KeyPress(char *key, int count)
 	}
 	return ret;
 }
-int GHOST_API_EXPORT  KeyPress2(char *key, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(char *key, int count)
 {
 	if (NULL == key || 0 == strlen(key))
 	{
@@ -906,7 +749,7 @@ int GHOST_API_EXPORT  KeyPress2(char *key, int count)
 	while (ret >= 0 && i++ < count)
 	{
 		//send
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 	}
 	if (ret < 0)
 	{
@@ -921,7 +764,7 @@ int GHOST_API_EXPORT  KeyPress2(char *key, int count)
 
 }
 // 组合键按下
-int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
 	unsigned count = 0;
 	unsigned short keycode = 0;
@@ -953,7 +796,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	pkg.kb_count = count;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -966,7 +809,7 @@ int GHOST_API_EXPORT  CombinationKeyDown(char *key1, char *key2, char *key3, cha
 	}
 }
 // 组合键弹起
-int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
 {
 	unsigned count = 0;
 	unsigned short keycode = 0;
@@ -998,7 +841,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	pkg.kb_count = count;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1011,7 +854,7 @@ int GHOST_API_EXPORT  CombinationKeyUp(char *key1, char *key2, char *key3, char 
 	}
 }
 // 组合按键
-int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
 {
 	//send
 	int ret = 0;
@@ -1032,7 +875,7 @@ int GHOST_API_EXPORT  CombinationKeyPress(char *key1, char *key2, char *key3, ch
 	}
 	return ret;
 }
-int GHOST_API_EXPORT  CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
 {
 	unsigned int cnt = 0;
 	unsigned short keycode = 0;
@@ -1067,7 +910,7 @@ int GHOST_API_EXPORT  CombinationKeyPress2(char *key1, char *key2, char *key3, c
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 	}
 	if (ret < 0)
 	{
@@ -1081,7 +924,7 @@ int GHOST_API_EXPORT  CombinationKeyPress2(char *key1, char *key2, char *key3, c
 	}
 }
 // 释放所有按键
-int GHOST_API_EXPORT  KeyUpAll()
+GHOST_API_EXPORT int GHOST_API_CALL  KeyUpAll()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1092,7 +935,7 @@ int GHOST_API_EXPORT  KeyUpAll()
 	//send
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1105,7 +948,7 @@ int GHOST_API_EXPORT  KeyUpAll()
 	}
 }
 // 模拟按键输入
-int GHOST_API_EXPORT  Say(char *keys)
+GHOST_API_EXPORT int GHOST_API_CALL  Say(char *keys)
 {
 	if (NULL == keys || 0 == strlen(keys))
 	{
@@ -1123,7 +966,7 @@ int GHOST_API_EXPORT  Say(char *keys)
 }
 
 // 获取大写灯状态
-int GHOST_API_EXPORT  GetCapsLock()
+int GHOST_API_CALL  GetCapsLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1131,47 +974,23 @@ int GHOST_API_EXPORT  GetCapsLock()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
 	pkg.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
-	//send
+	//send and recv
+	MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
+		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//
-	MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0) 
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
+		log_trace("sucess to write and read\n");
 		return result.kb_ret;
 	}
-	return 0;
 }
 // 获取大写灯状态
-int GHOST_API_EXPORT  SetCapsLock()
+GHOST_API_EXPORT int GHOST_API_CALL  SetCapsLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1181,7 +1000,7 @@ int GHOST_API_EXPORT  SetCapsLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_CAPS_LOCK;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1195,7 +1014,7 @@ int GHOST_API_EXPORT  SetCapsLock()
 }
 
 // 获取NumLock灯状态
-int GHOST_API_EXPORT  GetNumLock()
+GHOST_API_EXPORT int GHOST_API_CALL  GetNumLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1203,48 +1022,24 @@ int GHOST_API_EXPORT  GetNumLock()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
 	pkg.kb_cmd = MSG_CMD_KB_GET_NUM_LOCK;
-	//send
+	//send and recv
+	MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
+		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//
-	MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
+		log_trace("sucess to write and read\n");
 		return result.kb_ret;
 	}
-	return 0;
 }
 
 // 获取NumLock灯状态
-int GHOST_API_EXPORT  SetNumLock()
+GHOST_API_EXPORT int GHOST_API_CALL  SetNumLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1254,7 +1049,7 @@ int GHOST_API_EXPORT  SetNumLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_NUM_LOCK;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1269,7 +1064,7 @@ int GHOST_API_EXPORT  SetNumLock()
 }
 
 // 获取ScrollLock灯状态
-int GHOST_API_EXPORT  GetScrollLock()
+GHOST_API_EXPORT int GHOST_API_CALL  GetScrollLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1277,48 +1072,24 @@ int GHOST_API_EXPORT  GetScrollLock()
 	pkg.type[0] = 0x1;
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
 	pkg.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
-	//send
+	//send and recv
+	MSG_DATA_RESULT_T result;
 	int ret;
-	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)&pkg, sizeof(pkg));
-	LeaveCriticalSection(&g_mutex);
+	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
+		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
-	}
-	//
-	MSG_DATA_RESULT_T result;
-	ret = 0;
-	while (ret == 0)
-	{
-		EnterCriticalSection(&g_mutex);
-		ret = hid_read(g_handle, (unsigned char*)&result, sizeof(result));
-		LeaveCriticalSection(&g_mutex);
-		if (ret == 0)
-		{
-			log_trace("read for waiting...\n");
-			Sleep(500);
-		}
-
-		if (ret < 0)
-		{
-			log_trace("failed to read\n");
-		}
-	}
-	if (0 < ret)
-	{
+		log_trace("sucess to write and read\n");
 		return result.kb_ret;
 	}
-	return 0;
 }
 
 // 获取ScrollLock灯状态
-int GHOST_API_EXPORT  SetScrollLock()
+GHOST_API_EXPORT int GHOST_API_CALL  SetScrollLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1328,7 +1099,7 @@ int GHOST_API_EXPORT  SetScrollLock()
 	pkg.kb_cmd = MSG_CMD_KB_SET_SCROLL_LOCK;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1345,7 +1116,7 @@ int GHOST_API_EXPORT  SetScrollLock()
 ////////////     鼠标管理接口      ///////////
 //////////////////////////////////////////////
 // 鼠标左键按下
-int GHOST_API_EXPORT  LeftDown()
+GHOST_API_EXPORT int GHOST_API_CALL  LeftDown()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1355,7 +1126,7 @@ int GHOST_API_EXPORT  LeftDown()
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_DOWN;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1368,7 +1139,7 @@ int GHOST_API_EXPORT  LeftDown()
 	}
 }
 // 鼠标左键弹起
-int GHOST_API_EXPORT  LeftUp()
+GHOST_API_EXPORT int GHOST_API_CALL  LeftUp()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1378,7 +1149,7 @@ int GHOST_API_EXPORT  LeftUp()
 	pkg.ms_cmd = MSG_CMD_MS_LEFT_UP;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1391,7 +1162,7 @@ int GHOST_API_EXPORT  LeftUp()
 	}
 }
 // 鼠标左键单击
-int GHOST_API_EXPORT  LeftClick(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  LeftClick(int count)
 {
 	//send
 	int ret = 0;
@@ -1413,7 +1184,7 @@ int GHOST_API_EXPORT  LeftClick(int count)
 	return ret;
 
 }
-int GHOST_API_EXPORT  LeftClick2(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  LeftClick2(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1426,7 +1197,7 @@ int GHOST_API_EXPORT  LeftClick2(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 	}
 	if (ret < 0)
 	{
@@ -1440,7 +1211,7 @@ int GHOST_API_EXPORT  LeftClick2(int count)
 	}
 }
 // 鼠标左键双击
-int GHOST_API_EXPORT  LeftDoubleClick(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  LeftDoubleClick(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1453,7 +1224,7 @@ int GHOST_API_EXPORT  LeftDoubleClick(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1471,7 +1242,7 @@ int GHOST_API_EXPORT  LeftDoubleClick(int count)
 	}
 }
 // 鼠标右键按下
-int GHOST_API_EXPORT  RightDown()
+GHOST_API_EXPORT int GHOST_API_CALL  RightDown()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1481,7 +1252,7 @@ int GHOST_API_EXPORT  RightDown()
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_DOWN;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1494,7 +1265,7 @@ int GHOST_API_EXPORT  RightDown()
 	}
 }
 // 鼠标右键弹起
-int GHOST_API_EXPORT  RightUp()
+GHOST_API_EXPORT int GHOST_API_CALL  RightUp()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1504,7 +1275,7 @@ int GHOST_API_EXPORT  RightUp()
 	pkg.ms_cmd = MSG_CMD_MS_RIGHT_UP;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1517,7 +1288,7 @@ int GHOST_API_EXPORT  RightUp()
 	}
 }
 // 鼠标右键单击
-int GHOST_API_EXPORT  RightClick(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  RightClick(int count)
 {
 	//send
 	int ret = 0;
@@ -1538,7 +1309,7 @@ int GHOST_API_EXPORT  RightClick(int count)
 	}
 	return ret;
 }
-int GHOST_API_EXPORT  RightClick2(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  RightClick2(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1551,7 +1322,7 @@ int GHOST_API_EXPORT  RightClick2(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1570,7 +1341,7 @@ int GHOST_API_EXPORT  RightClick2(int count)
 }
 
 // 鼠标右键双击
-int GHOST_API_EXPORT  RightDoubleClick(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  RightDoubleClick(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1583,7 +1354,7 @@ int GHOST_API_EXPORT  RightDoubleClick(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1601,7 +1372,7 @@ int GHOST_API_EXPORT  RightDoubleClick(int count)
 	}
 }
 // 鼠标中键按下
-int GHOST_API_EXPORT  MiddleDown()
+GHOST_API_EXPORT int GHOST_API_CALL  MiddleDown()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1611,7 +1382,7 @@ int GHOST_API_EXPORT  MiddleDown()
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_DOWN;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1624,7 +1395,7 @@ int GHOST_API_EXPORT  MiddleDown()
 	}
 }
 // 鼠标中键弹起
-int GHOST_API_EXPORT  MiddleUp()
+GHOST_API_EXPORT int GHOST_API_CALL  MiddleUp()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1634,7 +1405,7 @@ int GHOST_API_EXPORT  MiddleUp()
 	pkg.ms_cmd = MSG_CMD_MS_MIDDLE_UP;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1647,7 +1418,7 @@ int GHOST_API_EXPORT  MiddleUp()
 	}
 }
 // 鼠标中键单击
-int GHOST_API_EXPORT  MiddleClick(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick(int count)
 {
 	//send
 	int ret = 0;
@@ -1668,7 +1439,7 @@ int GHOST_API_EXPORT  MiddleClick(int count)
 	}
 	return ret;
 }
-int GHOST_API_EXPORT  MiddleClick2(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick2(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1681,7 +1452,7 @@ int GHOST_API_EXPORT  MiddleClick2(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1699,7 +1470,7 @@ int GHOST_API_EXPORT  MiddleClick2(int count)
 	}
 }
 // 鼠标中键双击
-int GHOST_API_EXPORT  MiddleDoubleClick(int count)
+GHOST_API_EXPORT int GHOST_API_CALL  MiddleDoubleClick(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1712,7 +1483,7 @@ int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		ret = SendAndWaitResult(&pkg);
+		ret = SendAndWaitIgnoreResult(&pkg);
 		if (ret >= 0 && i < count)
 		{
 			Sleep(constrain((rand() % 901), 500, 900));
@@ -1730,7 +1501,7 @@ int GHOST_API_EXPORT  MiddleDoubleClick(int count)
 	}
 }
 // 释放所有鼠标按键
-int GHOST_API_EXPORT  MouseUpAll()
+GHOST_API_EXPORT int GHOST_API_CALL  MouseUpAll()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1740,7 +1511,7 @@ int GHOST_API_EXPORT  MouseUpAll()
 	pkg.ms_cmd = MSG_CMD_MS_UP_ALL;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1753,7 +1524,7 @@ int GHOST_API_EXPORT  MouseUpAll()
 	}
 }
 // 模拟鼠标移动
-int GHOST_API_EXPORT  MoveTo(int x, int y)
+GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 {
 	int ret = 0;
 	int ccount = 0;
@@ -1803,7 +1574,7 @@ int GHOST_API_EXPORT  MoveTo(int x, int y)
 	return ret;
 }
 // 鼠标绝对移动
-int GHOST_API_EXPORT  MoveToA(int x, int y)
+GHOST_API_EXPORT int GHOST_API_CALL  MoveToA(int x, int y)
 {
 	double ex = GetSystemMetrics(SM_CXSCREEN);
 	double ey = GetSystemMetrics(SM_CYSCREEN);
@@ -1820,11 +1591,9 @@ int GHOST_API_EXPORT  MoveToA(int x, int y)
 	pkg.ms_cmd = MSG_CMD_MS_MOVE_TO;
 	pkg.ms_x = ix;
 	pkg.ms_y = iy;
-	//pkg.ms_x = x;
-	//pkg.ms_y = y;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1838,7 +1607,7 @@ int GHOST_API_EXPORT  MoveToA(int x, int y)
 }
 
 // 相对移动鼠标
-int GHOST_API_EXPORT  MoveToR(int x, int y)
+GHOST_API_EXPORT int GHOST_API_CALL  MoveToR(int x, int y)
 {
 	short ix = constrain(x, GHOST_MOUSE_R_X_MIN, GHOST_MOUSE_R_X_MAX);
 	short iy = constrain(y, GHOST_MOUSE_R_Y_MIN, GHOST_MOUSE_R_Y_MAX);
@@ -1853,7 +1622,7 @@ int GHOST_API_EXPORT  MoveToR(int x, int y)
 	pkg.ms_y = iy;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1866,7 +1635,7 @@ int GHOST_API_EXPORT  MoveToR(int x, int y)
 	}
 }
 // 鼠标滚轮滚动
-int GHOST_API_EXPORT  WheelsMove(int y)
+GHOST_API_EXPORT int GHOST_API_CALL  WheelsMove(int y)
 {
 	char iy = constrain(y, GHOST_MOUSE_R_Y_MIN, GHOST_MOUSE_R_Y_MAX);
 
@@ -1879,7 +1648,7 @@ int GHOST_API_EXPORT  WheelsMove(int y)
 	pkg.ms_wheel = iy;
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
@@ -1894,7 +1663,7 @@ int GHOST_API_EXPORT  WheelsMove(int y)
 
 
 // 设置鼠标移动速度
-int GHOST_API_EXPORT  GetMouseMoveSpeed()
+GHOST_API_EXPORT int GHOST_API_CALL  GetMouseMoveSpeed()
 {
 	int mouseSpeed = -1;
 	BOOL bResult = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &mouseSpeed, 0);
@@ -1908,7 +1677,7 @@ int GHOST_API_EXPORT  GetMouseMoveSpeed()
 }
 
 // 设置鼠标移动速度
-int GHOST_API_EXPORT  SetMouseMoveSpeed(int speed)
+GHOST_API_EXPORT int GHOST_API_CALL  SetMouseMoveSpeed(int speed)
 {
 	int mouseSpeed = constrain(speed, 1, 20);
 	;
@@ -1922,7 +1691,7 @@ int GHOST_API_EXPORT  SetMouseMoveSpeed(int speed)
 	return -1;
 }
 // 重置鼠标移动速度
-int GHOST_API_EXPORT  ResetMouseMoveSpeed()
+GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseMoveSpeed()
 {
 	//Sets the current mouse speed. The pvParam parameter is an integer between 1 (slowest) and 20 (fastest).
 	//A value of 10 is the default. 
@@ -1931,7 +1700,7 @@ int GHOST_API_EXPORT  ResetMouseMoveSpeed()
 }
 
 // 设置鼠标滚轮速度
-int GHOST_API_EXPORT  GetMouseWheelLines()
+GHOST_API_EXPORT int GHOST_API_CALL  GetMouseWheelLines()
 {
 	int mouseSpeed = -1;
 	BOOL bResult = SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &mouseSpeed, 0);
@@ -1945,7 +1714,7 @@ int GHOST_API_EXPORT  GetMouseWheelLines()
 }
 
 // 设置鼠标滚轮速度
-int GHOST_API_EXPORT  SetMouseWheelLines(int speed)
+GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelLines(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 20);
 	;
@@ -1959,7 +1728,7 @@ int GHOST_API_EXPORT  SetMouseWheelLines(int speed)
 	return -1;
 }
 // 重置鼠标滚轮速度
-int GHOST_API_EXPORT  ResetMouseWheelLines()
+GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseWheelLines()
 {
 	//Retrieves the number of lines to scroll when the vertical mouse wheel is moved.
 	//The pvParam parameter must point to a UINT variable that receives the number of lines.
@@ -1967,7 +1736,7 @@ int GHOST_API_EXPORT  ResetMouseWheelLines()
 	return SetMouseMoveSpeed(3);
 }
 // 设置鼠标滚轮速度
-int GHOST_API_EXPORT  GetMouseWheelChars()
+GHOST_API_EXPORT int GHOST_API_CALL  GetMouseWheelChars()
 {
 	int mouseSpeed = -1;
 	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLCHARS, 0, &mouseSpeed, 0);
@@ -1981,7 +1750,7 @@ int GHOST_API_EXPORT  GetMouseWheelChars()
 }
 
 // 设置鼠标滚轮速度
-int GHOST_API_EXPORT  SetMouseWheelChars(int speed)
+GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelChars(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 20);
 	;
@@ -1995,7 +1764,7 @@ int GHOST_API_EXPORT  SetMouseWheelChars(int speed)
 	return -1;
 }
 // 重置鼠标滚轮速度
-int GHOST_API_EXPORT  ResetMouseWheelChars()
+GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseWheelChars()
 {
 	//Retrieves the number of characters to scroll when the horizontal mouse wheel is moved. 
 	//The pvParam parameter must point to a UINT variable that receives the number of lines.
@@ -2004,7 +1773,7 @@ int GHOST_API_EXPORT  ResetMouseWheelChars()
 }
 
 // 设置鼠标双击速度
-int GHOST_API_EXPORT  GetMouseDoubleClickSpeed()
+GHOST_API_EXPORT int GHOST_API_CALL  GetMouseDoubleClickSpeed()
 {
 	unsigned int mouseSpeed = -1;
 	mouseSpeed = GetDoubleClickTime();
@@ -2013,7 +1782,7 @@ int GHOST_API_EXPORT  GetMouseDoubleClickSpeed()
 }
 
 // 设置鼠标双击速度
-int GHOST_API_EXPORT  SetMouseDoubleClickSpeed(int speed)
+GHOST_API_EXPORT int GHOST_API_CALL  SetMouseDoubleClickSpeed(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 5000);
 	BOOL bResult =  SetDoubleClickTime(mouseSpeed);
@@ -2026,7 +1795,7 @@ int GHOST_API_EXPORT  SetMouseDoubleClickSpeed(int speed)
 	return -1;
 }
 // 重置鼠标双击速度
-int GHOST_API_EXPORT  ResetMouseDoubleClickSpeed()
+GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseDoubleClickSpeed()
 {
 	//The number of milliseconds that may occur between the first and second clicks of a double-click.
 	//If this parameter is set to 0, the system uses the default double-click time of 500 milliseconds.
@@ -2045,7 +1814,7 @@ int GHOST_API_EXPORT  ResetMouseDoubleClickSpeed()
 //////////////////////////////////////////////
 
 // 设置日志级别
-int GHOST_API_EXPORT SetDevLogLevel(int level)
+GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -2055,11 +1824,11 @@ int GHOST_API_EXPORT SetDevLogLevel(int level)
 	pkg.lg_level = (unsigned char)constrain(level, 0, 6);
 	//send
 	int ret;
-	ret = SendAndWaitResult(&pkg);
+	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return 3;
+		return -1;
 	}
 	else
 	{
@@ -2068,13 +1837,13 @@ int GHOST_API_EXPORT SetDevLogLevel(int level)
 	}
 }
 // 设置主机日志级别
-int GHOST_API_EXPORT SetHostLogLevel(int level)
+GHOST_API_EXPORT int GHOST_API_CALL SetHostLogLevel(int level)
 {
 	log_set_level(constrain(level, 0, 6));
 	return 0;
 }
 // 设置主机日志输出到文件
-int GHOST_API_EXPORT SetHostLogFile(char *file)
+GHOST_API_EXPORT int GHOST_API_CALL SetHostLogFile(char *file)
 {
 	return 0;
 }
