@@ -201,10 +201,15 @@ int readData()
       rawhidreadData.buf[i] = (unsigned char)RawHID.read();
     }
   }
+  if (bytesAvailable > 0)
+  {
+    Log.verbose("read data size %d\n", bytesAvailable);
+  }
   return bytesAvailable;
 }
 int writeData()
 {
+  Log.verbose("write data size %d\n", sizeof(rawhidwriteData));
   return RawHID.write((unsigned char*)&rawhidwriteData, sizeof(rawhidwriteData));
 }
 void keyboardProcess()
@@ -225,7 +230,6 @@ void keyboardProcess()
       }
     case MSG_CMD_KB_UP:
       {
-
         unsigned char key = (unsigned char)(0xff & rawhidreadData.kb_key[0]);
         BootKeyboard.remove(KeyboardKeycode(key));
         if (rawhidreadData.kb_key[0] & 0x8000)
@@ -515,6 +519,7 @@ void FuncProcess()
         delay_time = 0;
         delay_restart = false;
         writeData();//special need
+        delay(10);
         resetFunc();
         break;
       }
@@ -523,6 +528,7 @@ void FuncProcess()
         delay_time = rawhidreadData.fc_value[0] * 1000;
         delay_restart = true;
         writeData();//special need
+        delay(10);
         resetFunc();
         break;
       }
@@ -791,7 +797,5 @@ void loop()
     }
     //response
     writeData();
-
   }
-  Log.verbose("read data size %d\n", bytesAvailable);
 }

@@ -48,18 +48,19 @@ int main(int argc, char* argv[])
 	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);
 	//KeyPress("s", 1);
-	SetDevLogLevel(3);
+	//SetDevLogLevel(5);
 	Sleep(5000);
 	//int ret;
-	Disconnect(10);
+	//Disconnect(1);
+	//Restart();
 	//MoveTo(0, 0);
-	//Sleep(1000);
+	//Sleep(5000);
 	//ResetMouseMoveSpeed();
 	//SetMouseMoveSpeed(20);
 	//POINT pt;
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
-	//MoveTo(800, 600);
+	MoveTo(800, 600);
 	//SetDeviceID(0x2342, 0x8037);
 	//RestoreDeviceID();
 	//KeyPress("A", 10);
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Say("HEllo world adfdsfsdf");
 	//KeyPress("H", 10);
-	//CombinationKeyPress("shift", "a", "b", NULL, NULL, NULL,3);
+	//CombinationKeyPress("shift", "a", "b", NULL, NULL, NULL,20);
 	//ret = GetCapsLock();
 	//printf("GetCapsLock %d\n", ret);
 	//SetCapsLock();
@@ -108,14 +109,13 @@ int main(int argc, char* argv[])
 	//MiddleClick(1);
 	//SetSN("1");
 	//RestoreSN();
-	SetProduct("abcefg");
-	//Sleep(1000);
+	//SetProduct("abcefg");
 	//RestoretProduct();
 	//int vidpid = GetDeviceID();
 	//unsigned short *vp = (unsigned short*)&vidpid;
 	//printf("vid=%x\n", vp[0]);
 	//printf("pid=%x\n", vp[1]);
-	printf("product=%s\n", GetProduct());
+	//printf("product=%s\n", GetProduct());
 	//printf("manufacturer=%s\n", GetManufacturer());
 	CloseDevice();
 

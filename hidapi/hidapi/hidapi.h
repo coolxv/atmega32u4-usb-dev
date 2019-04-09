@@ -200,6 +200,7 @@ extern "C" {
 				This function returns the actual number of bytes written and
 				-1 on error.
 		*/
+		int HID_API_EXPORT HID_API_CALL hid_write_timeout(hid_device *dev, const unsigned char *data, size_t length, int milliseconds);
 		int  HID_API_EXPORT HID_API_CALL hid_write(hid_device *device, const unsigned char *data, size_t length);
 
 		/** @brief Read an Input report from a HID device with timeout.

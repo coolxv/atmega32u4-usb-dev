@@ -53,10 +53,15 @@ static int  SendAndWaitIgnoreResult(MSG_DATA_T *ppkg)
 	int ret = 0;
 	//send and recv
 	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
-	if (ret > 0)
+	ret = hid_write_timeout(g_handle, (unsigned char*)ppkg, sizeof(*ppkg), 3000);
+	//ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
+	if (ret <= 0)
 	{
-		hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 1500);
+		ret = -1;
+	}
+	else
+	{
+		ret = hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 3000);
 	}
 	LeaveCriticalSection(&g_mutex);
 
@@ -67,7 +72,8 @@ static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 	int ret = 0;
 	//send and recv
 	EnterCriticalSection(&g_mutex);
-	ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
+	ret = hid_write_timeout(g_handle, (unsigned char*)ppkg, sizeof(*ppkg), 3000);
+	//ret = hid_write(g_handle, (unsigned char*)ppkg, sizeof(*ppkg));
 	if (ret <= 0)
 	{
 		ret = -1;
