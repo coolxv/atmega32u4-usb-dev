@@ -50,3 +50,7 @@ https://github.com/bblanchon/ArduinoJson
 
 encrypt
 https://github.com/rweather/arduinolibs
+
+xxtea
+https://github.com/boseji/xxtea-lib
+https://github.com/leoserra/crypto-arduino-library
