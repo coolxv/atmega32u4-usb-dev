@@ -1537,9 +1537,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 {
 	int ret = 0;
 	int ccount = 0;
+	int err_count = 0;
 	while (1)
 	{
-		if (++ccount > 2)
+		if (++ccount > 3 || err_count > 3)
 		{
 			break;
 		}
@@ -1550,10 +1551,14 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 		int xo = x - pt.x;
 		int yo = y - pt.y;
 		//send
-		if (xt >= 0 && xt <= GHOST_MOUSE_MOVE_PIXEL && yt >= 0 && yt <= GHOST_MOUSE_MOVE_PIXEL)
+		if (xt == 0 && yt == 0)
+		{
+			return ret;
+		}
+		else if (xt >= 0 && xt <= GHOST_MOUSE_MOVE_PIXEL && yt >= 0 && yt <= GHOST_MOUSE_MOVE_PIXEL)
 		{
 			ret = MoveToR(xo, yo);
-			return ret;
+			continue;
 		}
 		else
 		{
@@ -1575,7 +1580,11 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 			int i = 0;
 			while (count--)
 			{
-				MoveToR(xo>=0?xc:-xc, yo>=0?yc:-yc);
+				ret = MoveToR(xo>=0?xc:-xc, yo>=0?yc:-yc);
+				if (ret < 0)
+				{
+					err_count++;
+				}
 			}
 		}
 	}

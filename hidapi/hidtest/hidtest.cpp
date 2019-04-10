@@ -52,9 +52,9 @@ int main(int argc, char* argv[])
 	Sleep(5000);
 	//int ret;
 	//Disconnect(1);
-	//Restart();
+	Restart();
 	//MoveTo(0, 0);
-	//Sleep(5000);
+	Sleep(5000);
 	//ResetMouseMoveSpeed();
 	//SetMouseMoveSpeed(20);
 	//POINT pt;
