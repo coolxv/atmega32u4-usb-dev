@@ -1,8 +1,10 @@
+#include <avr/wdt.h>
 #include <EEPROM.h>
-
 #include "HID-Project.h"
 //#define DISABLE_LOGGING
 #include "ArduinoLog.h"
+
+
 
 //msg type
 #define  MSG_TYPE_KEYBOARD 1
@@ -162,17 +164,36 @@ const char model_info[] PROGMEM  = {DEV_MODEL_BASE_INFO};
 const char version_info[] PROGMEM  = {DEV_VERSION_INFO};
 const char production_date_info[] PROGMEM  = {DEV_PRODUCTION_DATE_INFO};
 
+#if 0
+// Function Pototype
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+// Function Implementation
+void wdt_init(void)
+{
+  MCUSR = 0;
+  wdt_disable();
+  return;
+}
+#endif
+#define soft_reset()        \
+  do                        \
+  {                         \
+    wdt_enable(WDTO_15MS);  \
+    for(;;)                 \
+    {                       \
+    }                       \
+  } while(0)
 
 
 void setup() {
   //led init
   pinMode(pinLed, OUTPUT);
   digitalWrite(pinLed, HIGH);
-  if (true == delay_restart && delay_time > 0) {
-    delay_time = 0;
-    delay_restart = false;
-    delay(delay_time);
-  }
+  //if (true == delay_restart && delay_time > 0) {
+  //  delay_time = 0;
+  //  delay_restart = false;
+  //  delay(delay_time);
+  //}
   //serial
   Serial.begin(9600);
   //log
@@ -185,7 +206,7 @@ void setup() {
   //rawhid
   RawHID.begin((uint8_t *)&rawhidreadData, sizeof(rawhidreadData));
   //led show
-  delay(500);
+  delay(250);
   digitalWrite(pinLed, LOW);
   Log.trace("device initial successful\n");
 }
@@ -516,20 +537,18 @@ void FuncProcess()
   {
     case MSG_CMD_FUNC_RESTART:
       {
-        delay_time = 0;
-        delay_restart = false;
+        //delay_time = 0;
+        //delay_restart = false;
         writeData();//special need
-        delay(10);
-        resetFunc();
+        soft_reset();
         break;
       }
     case MSG_CMD_FUNC_DISCONNECT:
       {
-        delay_time = rawhidreadData.fc_value[0] * 1000;
-        delay_restart = true;
+        //delay_time = rawhidreadData.fc_value[0] * 1000;
+        //delay_restart = true;
         writeData();//special need
-        delay(10);
-        resetFunc();
+        soft_reset();
         break;
       }
     case MSG_CMD_FUNC_SET_DEVICE_ID:

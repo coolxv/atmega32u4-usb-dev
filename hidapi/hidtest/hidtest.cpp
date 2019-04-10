@@ -115,8 +115,8 @@ int main(int argc, char* argv[])
 	//unsigned short *vp = (unsigned short*)&vidpid;
 	//printf("vid=%x\n", vp[0]);
 	//printf("pid=%x\n", vp[1]);
-	//printf("product=%s\n", GetProduct());
-	//printf("manufacturer=%s\n", GetManufacturer());
+	printf("product=%s\n", GetProduct());
+	printf("manufacturer=%s\n", GetManufacturer());
 	CloseDevice();
 
 
