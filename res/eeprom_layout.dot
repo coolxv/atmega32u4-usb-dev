@@ -63,7 +63,7 @@ digraph eeprom {
 				<td colspan="4" width="128" rowspan="1" height="128" bgcolor="grey">data index 1</td></tr>		
 
 			<tr><td colspan="1" rowspan="1"></td>
-				<td colspan="4" width="128" rowspan="1" height="50"></td></tr>
+				<td colspan="4" width="128" rowspan="1" height="50" bgcolor="honeydew4">data index 2-15</td></tr>
 				
 			<tr><td colspan="1">tag</td>
 				<td colspan="4" width="128" port="eeprom_11">enable=0x77,unable!=0x77</td></tr>

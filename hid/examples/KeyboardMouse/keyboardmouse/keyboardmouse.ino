@@ -166,8 +166,22 @@ typedef union {
 #pragma pack(pop)
 
 
+//data addr define
+#define DATA_KEY_TAG_ADDR 100
+#define DATA_KEY_ADDR 102
+#define DATA_KEY_LEN_MAX 8
 
+#define DATA_WRITE_PWD_TAG_ADDR 110
+#define DATA_WRITE_PWD_ADDR 112
+#define DATA_WRITE_PWD_LEN_MAX 8
 
+#define DATA_READ_PWD_TAG_ADDR 120
+#define DATA_READ_PWD_ADDR 122
+#define DATA_READ_PWD_LEN_MAX 8
+
+#define DATA_DATA_TAG_ADDR(index) (130 + (index - 1)*32)
+#define DATA_DATA_ADDR(index) (130 + (index - 1)*32 + 2)
+#define DATA_DATA_LEN_MAX 32
 //info define
 #define DEV_MODEL_BASE_INFO "base"
 #define DEV_MODEL_ADVANCE_INFO "advance"
@@ -799,6 +813,94 @@ void InfoProcess()
   }
 
 }
+
+
+void DataProcess()
+{
+  Log.trace("data command %d\n", rawhidreadData.dt_cmd);
+  switch (rawhidreadData.dt_cmd)
+  {
+    case MSG_CMD_ENCRYP_INIT_LOCK:
+      {
+        {
+          const u16* ee_addr = DATA_WRITE_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          //write tag
+          val[0] = USB_FLAGS;
+          val[1] = DATA_WRITE_PWD_LEN_MAX;
+          eeprom_write_word(ee_addr, ee_flag);
+          //write write pwd
+          ee_addr = DATA_WRITE_PWD_ADDR;
+          eeprom_write_block(rawhidreadData.dt_wpwd, ee_addr, DATA_WRITE_PWD_LEN_MAX);
+        }
+        {
+          const u16* ee_addr = DATA_READ_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          //write tag
+          val[0] = USB_FLAGS;
+          val[1] = DATA_READ_PWD_LEN_MAX;
+          eeprom_write_word(ee_addr, ee_flag);
+          //write read pwd
+          ee_addr = DATA_READ_PWD_ADDR;
+          eeprom_write_block(rawhidreadData.dt_rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
+
+        }
+        break;
+      }
+    case MSG_CMD_ENCRYP_READ_STR:
+      {
+        break;
+      }
+    case MSG_CMD_ENCRYP_WRITE_STR:
+      {
+        const u16* ee_addr = DATA_DATA_TAG_ADDR(rawhidreadData.dt_index);
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        //write tag
+        val[0] = USB_FLAGS;
+        val[1] = DATA_DATA_LEN_MAX;
+        eeprom_write_word(ee_addr, ee_flag);
+        //write product
+        ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
+        eeprom_write_block(rawhidreadData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+        break;
+      }
+    case MSG_CMD_ENCRYP_INIT_KEY:
+      {
+        const u16* ee_addr = DATA_KEY_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        //write tag
+        val[0] = USB_FLAGS;
+        val[1] = DATA_KEY_LEN_MAX;
+        eeprom_write_word(ee_addr, ee_flag);
+        //write key
+        ee_addr = DATA_KEY_ADDR;
+        eeprom_write_block(rawhidreadData.dt_wpwd, ee_addr, DATA_KEY_LEN_MAX);
+        break;
+      }
+    case MSG_CMD_ENCRYP_ENC_STR:
+      {
+
+        break;
+      }
+    case MSG_CMD_ENCRYP_DEC_STR:
+      {
+
+        break;
+      }
+    default:
+      {
+        Log.error("msg data cmd error, cmd is %d\n", rawhidreadData.dt_cmd);
+        break;
+      }
+  }
+
+}
+
+
 void loop()
 {
   // Check if there is new data from the RawHID device
@@ -831,6 +933,11 @@ void loop()
       case MSG_TYPE_INFO:
         {
           InfoProcess();
+          break;
+        }
+      case MSG_TYPE_DATA:
+        {
+          DataProcess();
           break;
         }
       default:
