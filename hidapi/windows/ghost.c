@@ -160,11 +160,10 @@ GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerial()
 GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial)
 {
 	//check
-	if (NULL == serial || 0 == strlen(serial))
+	if (NULL == serial || 1 > strlen(serial) || 32 < strlen(serial))
 	{
 		return -3;
 	}
-
 	wchar_t wserial[128];
 	MultiByteToWideChar(CP_ACP, 0, serial, -1, wserial, sizeof(wserial));
 
@@ -356,7 +355,7 @@ GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID()
 GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial)
 {
 	//check
-	if (NULL == serial || 0 == strlen(serial))
+	if (NULL == serial || 1 > strlen(serial) || 32 < strlen(serial))
 	{
 		return -2;
 	}
@@ -435,7 +434,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetSN()
 GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product)
 {
 	//check
-	if (NULL == product || 0 == strlen(product))
+	if (NULL == product || 1 > strlen(product) || 16 < strlen(product))
 	{
 		return -2;
 	}
@@ -512,7 +511,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProduct()
 GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer)
 {
 	//check
-	if (NULL == manufacturer || 0 == strlen(manufacturer))
+	if (NULL == manufacturer || 1 > strlen(manufacturer) || 16 < strlen(manufacturer))
 	{
 		return -2;
 	}
