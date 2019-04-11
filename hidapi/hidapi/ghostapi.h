@@ -77,23 +77,23 @@ extern "C" {
 	////////////     键盘管理接口      ///////////
 	//////////////////////////////////////////////
 	// 键按下
-	GHOST_API_EXPORT int GHOST_API_CALL KeyDown(char *key);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyDown(const char *key);
 	// 键弹起
-	GHOST_API_EXPORT int GHOST_API_CALL KeyUp(char *key);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyUp(const char *key);
 	// 一次按键
-	GHOST_API_EXPORT int GHOST_API_CALL KeyPress(char *key, int count);
-	GHOST_API_EXPORT int GHOST_API_CALL KeyPress2(char *key, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyPress(const char *key, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL KeyPress2(const char *key, int count);
 	// 组合键按下
-	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyDown(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6);
 	// 组合键弹起
-	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyUp(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6);
 	// 组合按键
-	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
-	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyPress(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count);
+	GHOST_API_EXPORT int GHOST_API_CALL CombinationKeyPress2(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count);
 	// 释放所有按键
 	GHOST_API_EXPORT int GHOST_API_CALL KeyUpAll();
 	// 模拟按键输入
-	GHOST_API_EXPORT int GHOST_API_CALL Say(char *keys);
+	GHOST_API_EXPORT int GHOST_API_CALL Say(const char *keys);
 
 	// 获取大写灯状态
 	GHOST_API_EXPORT int GHOST_API_CALL GetCapsLock();
@@ -173,8 +173,20 @@ extern "C" {
 	// 重置鼠标双击速度-毫秒,默认500
 	GHOST_API_EXPORT int GHOST_API_CALL ResetMouseDoubleClickSpeed();
 	//////////////////////////////////////////////
-	////////////     存储管理接口      ///////////
-	//////////////////////////////////////////////	   
+	////////////     加密管理接口      ///////////
+	//////////////////////////////////////////////	  
+	// 初始化加密锁
+	GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd);
+	// 从存储器读字符串
+	GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index);
+	// 写字符串到存储器
+	GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str);
+	// 设置算法密钥
+	GHOST_API_EXPORT int GHOST_API_CALL InitKey( const char *key);
+	// 加密字符串
+	GHOST_API_EXPORT char* GHOST_API_CALL EncString(const char *str);
+	// 解密字符串
+	GHOST_API_EXPORT char* GHOST_API_CALL DecString(const char *str);
 
 
 

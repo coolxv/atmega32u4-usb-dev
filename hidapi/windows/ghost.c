@@ -31,6 +31,7 @@
 ///--------------------------------------
 #define GHOST_VID 0x2341
 #define GHOST_PID 0x8036
+#define GHOST_SN L"05ea0849576a574681741d45ae174d8a"
 ///--------------------------------------
 static hid_device *g_handle = NULL;
 static int g_initialized = 0;
@@ -141,7 +142,7 @@ GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerial()
 			return -1;
 		}
 		log_trace("init device successful\n");
-		g_handle = hid_open_serial_no(2, L"05ea0849576a574681741d45ae174d8a");
+		g_handle = hid_open_serial_no(2, GHOST_SN);
 		if (!g_handle) {
 			log_trace("open device failed\n");
 			keymap_fini();
@@ -158,6 +159,12 @@ GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerial()
 
 GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial)
 {
+	//check
+	if (NULL == serial || 0 == strlen(serial))
+	{
+		return -3;
+	}
+
 	wchar_t wserial[128];
 	MultiByteToWideChar(CP_ACP, 0, serial, -1, wserial, sizeof(wserial));
 
@@ -348,6 +355,11 @@ GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID()
 // 设置自定义设备serial number
 GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial)
 {
+	//check
+	if (NULL == serial || 0 == strlen(serial))
+	{
+		return -2;
+	}
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -422,6 +434,11 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetSN()
 // 设置自定义设备product
 GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product)
 {
+	//check
+	if (NULL == product || 0 == strlen(product))
+	{
+		return -2;
+	}
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -494,6 +511,11 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProduct()
 // 设置自定义设备product
 GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer)
 {
+	//check
+	if (NULL == manufacturer || 0 == strlen(manufacturer))
+	{
+		return -2;
+	}
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -645,17 +667,18 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate()
 ////////////     键盘管理接口      ///////////
 //////////////////////////////////////////////
 // 键按下
-GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(char *key)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(const char *key)
 {
+	//check
 	if (NULL == key || 0 == strlen(key))
 	{
-		return -1;
+		return -2;
 	}
 
 	unsigned short keycode = keymap_map(key);
 	if (!keycode)
 	{
-		return -2;
+		return -3;
 	}
 	//package
 	MSG_DATA_T pkg;
@@ -670,7 +693,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(char *key)
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -3;
+		return -1;
 	}
 	else
 	{
@@ -680,16 +703,17 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(char *key)
 
 }
 // 键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(char *key)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(const char *key)
 {
+	//check
 	if (NULL == key || 0 == strlen(key))
 	{
-		return -1;
+		return -2;
 	}
 	unsigned short keycode = keymap_map(key);
 	if (!keycode)
 	{
-		return -2;
+		return -3;
 	}
 	//package
 	MSG_DATA_T pkg;
@@ -704,7 +728,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(char *key)
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -3;
+		return -1;
 	}
 	else
 	{
@@ -713,7 +737,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(char *key)
 	}
 }
 // 一次按键
-GHOST_API_EXPORT int GHOST_API_CALL  KeyPress(char *key, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyPress(const char *key, int count)
 {
 	//send
 	int ret = 0;
@@ -734,16 +758,17 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyPress(char *key, int count)
 	}
 	return ret;
 }
-GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(char *key, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(const char *key, int count)
 {
+	//check
 	if (NULL == key || 0 == strlen(key))
 	{
-		return -1;
+		return -2;
 	}
 	unsigned short keycode = keymap_map(key);
 	if (!keycode)
 	{
-		return -2;
+		return -3;
 	}
 	//package
 	MSG_DATA_T pkg;
@@ -757,13 +782,12 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(char *key, int count)
 	int i = 0;
 	while (ret >= 0 && i++ < count)
 	{
-		//send
 		ret = SendAndWaitIgnoreResult(&pkg);
 	}
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -3;
+		return -1;
 	}
 	else
 	{
@@ -773,11 +797,11 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(char *key, int count)
 
 }
 // 组合键按下
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6)
 {
 	unsigned count = 0;
 	unsigned short keycode = 0;
-	char * key[6] = { key1, key2, key3, key4, key5, key6 };
+	const char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -794,9 +818,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(char *key1, char *key2, 
 			}
 		}
 	}
+	//check
 	if (0 == count)
 	{
-		return -1;
+		return -2;
 	}
 	//package
 	pkg.type[0] = 0x1;
@@ -809,7 +834,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(char *key1, char *key2, 
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -2;
+		return -1;
 	}
 	else
 	{
@@ -818,11 +843,11 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(char *key1, char *key2, 
 	}
 }
 // 组合键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6)
 {
 	unsigned count = 0;
 	unsigned short keycode = 0;
-	char * key[6] = { key1, key2, key3, key4, key5, key6 };
+	const char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -839,9 +864,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(char *key1, char *key2, ch
 			}
 		}
 	}
+	//check
 	if (0 == count)
 	{
-		return -1;
+		return -2;
 	}
 	//package
 	pkg.type[0] = 0x1;
@@ -854,7 +880,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(char *key1, char *key2, ch
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -2;
+		return -1;
 	}
 	else
 	{
@@ -863,7 +889,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(char *key1, char *key2, ch
 	}
 }
 // 组合按键
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count)
 {
 	//send
 	int ret = 0;
@@ -884,11 +910,11 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress(char *key1, char *key2,
 	}
 	return ret;
 }
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(char *key1, char *key2, char *key3, char *key4, char *key5, char *key6, int count)
+GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count)
 {
 	unsigned int cnt = 0;
 	unsigned short keycode = 0;
-	char * key[6] = { key1, key2, key3, key4, key5, key6 };
+	const char * key[6] = { key1, key2, key3, key4, key5, key6 };
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
@@ -905,9 +931,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(char *key1, char *key2
 			}
 		}
 	}
+	//check
 	if (0 == cnt)
 	{
-		return -1;
+		return -2;
 	}
 	//package
 	pkg.type[0] = 0x1;
@@ -924,7 +951,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(char *key1, char *key2
 	if (ret < 0)
 	{
 		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -2;
+		return -1;
 	}
 	else
 	{
@@ -942,7 +969,6 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUpAll()
 	pkg.type[1] = MSG_TYPE_KEYBOARD;
 	pkg.kb_cmd = MSG_CMD_KB_UP_ALL;
 	//send
-	//send
 	int ret;
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
@@ -957,11 +983,12 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUpAll()
 	}
 }
 // 模拟按键输入
-GHOST_API_EXPORT int GHOST_API_CALL  Say(char *keys)
+GHOST_API_EXPORT int GHOST_API_CALL  Say(const char *keys)
 {
+	//check
 	if (NULL == keys || 0 == strlen(keys))
 	{
-		return 1;
+		return -2;
 	}
 	int ret = 0;
 	int len = strlen(keys);
@@ -1822,9 +1849,213 @@ GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseDoubleClickSpeed()
 }
 
 //////////////////////////////////////////////
-////////////     存储管理接口      ///////////
-//////////////////////////////////////////////	   
+////////////     加密管理接口      ///////////
+//////////////////////////////////////////////	 
+// 初始化加密锁
+GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd)
+{
+	//check
+	if (NULL == wpwd || 8 < strlen(wpwd))
+	{
+		return -2;
+	}
 
+	if (NULL == rpwd || 8 < strlen(rpwd))
+	{
+		return -2;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_INIT_LOCK;
+	strcpy_s(pkg.dt_rpwd, sizeof(pkg.dt_rpwd), rpwd);
+	strcpy_s(pkg.dt_wpwd, sizeof(pkg.dt_wpwd), wpwd);
+	//send
+	int ret;
+	ret = SendAndWaitIgnoreResult(&pkg);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 从存储器读字符串
+GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index)
+{
+	//check
+	if (NULL == rpwd || 8 < strlen(rpwd))
+	{
+		return NULL;
+	}
+
+	if (1 < index || 16 < index)
+	{
+		return NULL;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_READ_STR;
+	pkg.dt_index = index;
+	strcpy_s(pkg.dt_rpwd, sizeof(pkg.dt_rpwd), rpwd);
+	//send and recv
+	static MSG_DATA_RESULT_T result;
+	int ret;
+	ret = SendAndWaitResult(&pkg, &result);
+	if (ret < 0)
+	{
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write and read\n");
+		result.dt_buf[result.dt_len] = 0;
+		return result.dt_buf;
+	}
+}
+// 写字符串到存储器
+GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str)
+{
+	//check
+	if (NULL == wpwd || 8 < strlen(wpwd))
+	{
+		return -2;
+	}
+
+	if (1 < index || 16 < index)
+	{
+		return -2;
+	}
+
+	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
+	{
+		return -2;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_WRITE_STR;
+	pkg.dt_index = index;
+	strcpy_s(pkg.dt_wpwd, sizeof(pkg.dt_wpwd), wpwd);
+	strcpy_s(pkg.dt_buf,sizeof(pkg.dt_buf), str);
+	//send
+	int ret;
+	ret = SendAndWaitIgnoreResult(&pkg);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 设置算法密钥
+GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
+{
+	//check
+	if (NULL == key || 8 < strlen(key))
+	{
+		return -2;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_INIT_KEY;
+	strcpy_s(pkg.dt_kkey, sizeof(pkg.dt_kkey), key);
+	//send
+	int ret;
+	ret = SendAndWaitIgnoreResult(&pkg);
+	if (ret < 0)
+	{
+		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
+		return -1;
+	}
+	else
+	{
+		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 加密字符串
+GHOST_API_EXPORT char* GHOST_API_CALL EncString(const char *str)
+{
+	//check
+	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
+	{
+		return NULL;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_ENC_STR;
+	strcpy_s(pkg.dt_buf, sizeof(pkg.dt_buf), str);
+	//send and recv
+	static MSG_DATA_RESULT_T result;
+	int ret;
+	ret = SendAndWaitResult(&pkg, &result);
+	if (ret < 0)
+	{
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write and read\n");
+		result.dt_buf[result.dt_len] = 0;
+		return result.dt_buf;
+	}
+}
+// 解密字符串
+GHOST_API_EXPORT char* GHOST_API_CALL DecString(const char *str)
+{
+	//check
+	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
+	{
+		return NULL;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_DEC_STR;
+	strcpy_s(pkg.dt_buf, sizeof(pkg.dt_buf), str);
+	//send and recv
+	static MSG_DATA_RESULT_T result;
+	int ret;
+	ret = SendAndWaitResult(&pkg, &result);
+	if (ret < 0)
+	{
+		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
+		return NULL;
+	}
+	else
+	{
+		log_trace("sucess to write and read\n");
+		result.dt_buf[result.dt_len] = 0;
+		return result.dt_buf;
+	}
+
+}
 
 
 //////////////////////////////////////////////

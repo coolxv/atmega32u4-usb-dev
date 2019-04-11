@@ -7,13 +7,13 @@
 
 
 //msg type
-#define  MSG_TYPE_KEYBOARD 1
-#define  MSG_TYPE_MOUSE 2
-#define  MSG_TYPE_LOG 3
-#define  MSG_TYPE_FUNC 4
-#define  MSG_TYPE_INFO 5
-#define  MSG_TYPE_DEFAULT 6
-
+#define  MSG_TYPE_DEFAULT 1
+#define  MSG_TYPE_KEYBOARD 2
+#define  MSG_TYPE_MOUSE 3
+#define  MSG_TYPE_LOG 4
+#define  MSG_TYPE_FUNC 5
+#define  MSG_TYPE_INFO 6
+#define  MSG_TYPE_DATA 7
 //keyboard cmd
 #define  MSG_CMD_KB_DOWN 1
 #define  MSG_CMD_KB_UP 2
@@ -65,7 +65,13 @@
 #define  MSG_CMD_INFO_PRODUCT 5
 #define  MSG_CMD_INFO_MANUFACTURER 6
 #define  MSG_CMD_INFO_DEVICE_ID 7
-
+//data cmd
+#define  MSG_CMD_ENCRYP_INIT_LOCK 1
+#define  MSG_CMD_ENCRYP_READ_STR 2
+#define  MSG_CMD_ENCRYP_WRITE_STR 3
+#define  MSG_CMD_ENCRYP_INIT_KEY 4
+#define  MSG_CMD_ENCRYP_ENC_STR 5
+#define  MSG_CMD_ENCRYP_DEC_STR 6
 
 #pragma pack(push, 1)
 typedef union {
@@ -113,6 +119,18 @@ typedef union {
     //use
     unsigned char if_cmd;
   };
+  //data
+  struct {
+    unsigned char dt_type;
+    //use
+    unsigned char dt_cmd;
+    unsigned char dt_index;
+    unsigned char dt_rpwd[9];
+    unsigned char dt_wpwd[9];
+    unsigned char dt_kkey[9];
+    unsigned char dt_len;
+    unsigned char dt_buf[33];
+  };
   unsigned char buf[64];
 } MSG_DATA_T;
 
@@ -136,7 +154,14 @@ typedef union {
       unsigned short if_vidpid[2];
     };
   };
-  unsigned char buf[64];
+  //data
+  struct {
+    unsigned char dt_type;
+    //use
+    unsigned char dt_cmd;
+    unsigned char dt_len;
+    unsigned char dt_buf[33];
+  };  unsigned char buf[64];
 } MSG_DATA_RESULT_T;
 #pragma pack(pop)
 
