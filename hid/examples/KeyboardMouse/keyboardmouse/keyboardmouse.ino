@@ -3,6 +3,7 @@
 #include "HID-Project.h"
 //#define DISABLE_LOGGING
 #include "ArduinoLog.h"
+#include <xxtea-lib.h>
 
 
 
@@ -161,7 +162,15 @@ typedef union {
     unsigned char dt_cmd;
     unsigned char dt_len;
     unsigned char dt_buf[33];
-  };  unsigned char buf[64];
+  };
+  //comm
+  struct {
+    unsigned char cm_type;
+    //use
+    unsigned char cm_cmd;
+    unsigned char cm_error;
+  };
+  unsigned char buf[64];
 } MSG_DATA_RESULT_T;
 #pragma pack(pop)
 
@@ -845,26 +854,71 @@ void DataProcess()
           //write read pwd
           ee_addr = DATA_READ_PWD_ADDR;
           eeprom_write_block(rawhidreadData.dt_rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
-
         }
         break;
       }
     case MSG_CMD_ENCRYP_READ_STR:
       {
+        {
+          const u16* ee_addr = DATA_READ_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          unsigned char rpwd[DATA_READ_PWD_LEN_MAX + 1] ;
+          memset(rpwd, 0, sizeof(rpwd));
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_READ_PWD_ADDR;
+            eeprom_read_block(rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
+          }
+          if (0 != strcmp(rpwd, rawhidreadData.dt_rpwd))
+          {
+            rawhidwriteData.cm_error = 1;
+            break;
+          }
+        }
+        {
+          memset(rawhidwriteData.dt_buf, 0, sizeof(rawhidwriteData.dt_buf));
+          const u16* ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);;
+          eeprom_read_block(rawhidwriteData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+        }
         break;
       }
     case MSG_CMD_ENCRYP_WRITE_STR:
       {
-        const u16* ee_addr = DATA_DATA_TAG_ADDR(rawhidreadData.dt_index);
-        unsigned short ee_flag;
-        unsigned char *val = (unsigned char *)&ee_flag;
-        //write tag
-        val[0] = USB_FLAGS;
-        val[1] = DATA_DATA_LEN_MAX;
-        eeprom_write_word(ee_addr, ee_flag);
-        //write product
-        ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
-        eeprom_write_block(rawhidreadData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+        {
+          const u16* ee_addr = DATA_WRITE_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          unsigned char wpwd[DATA_WRITE_PWD_LEN_MAX + 1] ;
+          memset(wpwd, 0, sizeof(wpwd));
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_WRITE_PWD_ADDR;
+            eeprom_read_block(wpwd, ee_addr, DATA_WRITE_PWD_LEN_MAX);
+          }
+          if (0 != strcmp(wpwd, rawhidreadData.dt_wpwd))
+          {
+            rawhidwriteData.cm_error = 1;
+            break;
+          }
+        }
+
+        {
+          const u16* ee_addr = DATA_DATA_TAG_ADDR(rawhidreadData.dt_index);
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          //write tag
+          val[0] = USB_FLAGS;
+          val[1] = DATA_DATA_LEN_MAX;
+          eeprom_write_word(ee_addr, ee_flag);
+          //write product
+          ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
+          eeprom_write_block(rawhidreadData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+        }
         break;
       }
     case MSG_CMD_ENCRYP_INIT_KEY:
@@ -883,11 +937,51 @@ void DataProcess()
       }
     case MSG_CMD_ENCRYP_ENC_STR:
       {
+        {
+          const u16* ee_addr = DATA_KEY_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          unsigned char key[DATA_KEY_LEN_MAX + 1] ;
+          memset(key, 0, sizeof(key));
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_KEY_ADDR;
+            eeprom_read_block(key, ee_addr, DATA_KEY_LEN_MAX);
+          }
+        }
+
+        {
+          xxtea.setKey(rawhidreadData.dt_kkey);
+          String result = xxtea.encrypt(rawhidreadData.dt_buf);
+          strcpy(rawhidwriteData.dt_buf, result.c_str());
+        }
 
         break;
       }
     case MSG_CMD_ENCRYP_DEC_STR:
       {
+        {
+          const u16* ee_addr = DATA_KEY_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          unsigned char key[DATA_KEY_LEN_MAX + 1] ;
+          memset(key, 0, sizeof(key));
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_KEY_ADDR;
+            eeprom_read_block(key, ee_addr, DATA_KEY_LEN_MAX);
+          }
+        }
+
+        {
+          xxtea.setKey(rawhidreadData.dt_kkey);
+          String result = xxtea.decrypt(rawhidreadData.dt_buf);
+          strcpy(rawhidwriteData.dt_buf, result.c_str());
+        }
 
         break;
       }
@@ -907,7 +1001,10 @@ void loop()
   auto bytesAvailable = readData();
   if (bytesAvailable && bytesAvailable == sizeof(rawhidreadData))
   {
+    //set return result
     rawhidwriteData.type = MSG_TYPE_DEFAULT;
+    rawhidwriteData.cm_error = 0;
+    //execute task by type
     switch (rawhidreadData.type)
     {
       case MSG_TYPE_KEYBOARD:

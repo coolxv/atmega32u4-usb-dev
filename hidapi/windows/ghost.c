@@ -66,7 +66,7 @@ static int  SendAndWaitIgnoreResult(MSG_DATA_T *ppkg)
 	}
 	LeaveCriticalSection(&g_mutex);
 
-	return (ret <= 0 ? -1 : 0);
+	return (result.cm_error != 0 ? -1 : 0);
 }
 static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 {

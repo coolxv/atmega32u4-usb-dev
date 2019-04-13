@@ -159,6 +159,13 @@ typedef union {
 		unsigned char dt_len;
 		unsigned char dt_buf[33];
 	};
+	//comm
+	struct {
+		unsigned char cm_type;
+		//use
+		unsigned char cm_cmd;
+		unsigned char cm_error;
+	};
 	unsigned char buf[64];
 } MSG_DATA_RESULT_T;
 #pragma pack(pop)
