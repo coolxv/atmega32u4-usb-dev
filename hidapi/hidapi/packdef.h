@@ -67,13 +67,13 @@
 
 #pragma pack(push, 1)
 typedef union {
-	unsigned char type[2];
+	unsigned char type[3];
 	//mouse
 	struct {
 		unsigned char ms_pad0;
 		unsigned char ms_type;
-		//use
 		unsigned char ms_cmd;//right,left...
+		//use
 		unsigned char ms_count;
 		short ms_x;
 		short ms_y;
@@ -83,8 +83,8 @@ typedef union {
 	struct {
 		unsigned char kb_pad0;
 		unsigned char kb_type;
-		//use
 		unsigned char kb_cmd;//down,up,press...
+		//use
 		unsigned char kb_count;
 		unsigned short kb_key[6];
 	};
@@ -92,6 +92,7 @@ typedef union {
 	struct {
 		unsigned char lg_pad0;
 		unsigned char lg_type;
+		unsigned char lg_cmd;
 		//use
 		unsigned char lg_level;
 	};
@@ -99,8 +100,8 @@ typedef union {
 	struct {
 		unsigned char fc_pad0;
 		unsigned char fc_type;
-		//use
 		unsigned char fc_cmd;
+		//use
 		union {
 			unsigned char fc_value[4];
 			unsigned short fc_vidpid[2];
@@ -113,15 +114,15 @@ typedef union {
 	struct {
 		unsigned char if_pad0;
 		unsigned char if_type;
-		//use
 		unsigned char if_cmd;
+		//use
 	};
 	//data
 	struct {
 		unsigned char dt_pad0;
 		unsigned char dt_type;
-		//use
 		unsigned char dt_cmd;
+		//use
 		unsigned char dt_index;
 		unsigned char dt_rpwd[9];
 		unsigned char dt_wpwd[9];
@@ -132,40 +133,31 @@ typedef union {
 	unsigned char buf[65];
 } MSG_DATA_T;
 
-typedef union {
+typedef struct {
 	unsigned char type;
-	//keyboard
-	struct {
-		unsigned char kb_type;
-		//use
-		unsigned char kb_cmd;
-		unsigned char kb_ret;
-	};
-	//info
-	struct {
-		unsigned char if_type;
-		//use
-		unsigned char if_cmd;
+	unsigned char cmd;
+	unsigned char error;
+	unsigned char pad;
+	union
+	{
+		//keyboard
+		struct {
+			unsigned char kb_ret;
+		};
+		//info
+
 		union {
 			unsigned char if_value[48];
 			unsigned short if_vidpid[2];
 		};
+
+		//data
+		struct {
+			unsigned char dt_len;
+			unsigned char dt_buf[33];
+		};
+		unsigned char buf[60];
 	};
-	//data
-	struct {
-		unsigned char dt_type;
-		//use
-		unsigned char dt_cmd;
-		unsigned char dt_len;
-		unsigned char dt_buf[33];
-	};
-	//comm
-	struct {
-		unsigned char cm_type;
-		//use
-		unsigned char cm_cmd;
-		unsigned char cm_error;
-	};
-	unsigned char buf[64];
+
 } MSG_DATA_RESULT_T;
 #pragma pack(pop)

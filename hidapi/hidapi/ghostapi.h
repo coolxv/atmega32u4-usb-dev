@@ -15,7 +15,7 @@ extern "C" {
 	
 	//返回值说明：
 	//0一般成功，非0失败
-	//如果是真假，0是假，1是真
+	//如果是真假，0是假，非0是真
 
 	//////////////////////////////////////////////
 	////////////     设备管理接口      ///////////
@@ -72,7 +72,6 @@ extern "C" {
 	// 获取生产日期
 	GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate();
 
-
 	//////////////////////////////////////////////
 	////////////     键盘管理接口      ///////////
 	//////////////////////////////////////////////
@@ -107,6 +106,7 @@ extern "C" {
 	GHOST_API_EXPORT int GHOST_API_CALL GetScrollLock();
 	// 设置ScrollLock灯状态
 	GHOST_API_EXPORT int GHOST_API_CALL SetScrollLock();
+
 	//////////////////////////////////////////////
 	////////////     鼠标管理接口      ///////////
 	//////////////////////////////////////////////
@@ -172,15 +172,16 @@ extern "C" {
 	GHOST_API_EXPORT int GHOST_API_CALL SetMouseDoubleClickSpeed(int speed);
 	// 重置鼠标双击速度-毫秒,默认500
 	GHOST_API_EXPORT int GHOST_API_CALL ResetMouseDoubleClickSpeed();
+
 	//////////////////////////////////////////////
 	////////////     加密管理接口      ///////////
 	//////////////////////////////////////////////	  
 	// 初始化加密锁
 	GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd);
-	// 从存储器读字符串
-	GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index);
 	// 写字符串到存储器
 	GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str);
+	// 从存储器读字符串
+	GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index);
 	// 设置算法密钥
 	GHOST_API_EXPORT int GHOST_API_CALL InitKey( const char *key);
 	// 加密字符串
@@ -188,30 +189,15 @@ extern "C" {
 	// 解密字符串
 	GHOST_API_EXPORT char* GHOST_API_CALL DecString(const char *str);
 
-
-
 	//////////////////////////////////////////////
 	////////////     辅助管理接口      ///////////
 	//////////////////////////////////////////////
 	// 设置设备日志级别:0=关闭，1-6级别
-	// LOG_LEVEL_SILENT  0
-	// LOG_LEVEL_FATAL   1
-	// LOG_LEVEL_ERROR   2
-	// LOG_LEVEL_WARNING 3
-	// LOG_LEVEL_NOTICE  4
-	// LOG_LEVEL_TRACE   5
-	// LOG_LEVEL_VERBOSE 6
+	// SILENT=0;FATAL=1;ERROR=2;WARNING=3;NOTICE=4;TRACE=5;VERBOSE=6
 	GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level);
-	// 设置设备日志级别:0=关闭，1-6级别
-	//LOG_SILENT  0
-	//LOG_FATAL	  1
-	//LOG_WARN    2
-	//LOG_WARN    3
-	//LOG_INFO    4
-	//LOG_DEBUG   5 
-	//LOG_TRACE   6 
+	// 设置主机日志级别:0=关闭，1-6级别
+	//SILENT=0;FATAL=1;ERROR=2;WARN=3;INFO=4;DEBUG=5;TRACE=6 
 	GHOST_API_EXPORT int GHOST_API_CALL SetHostLogLevel(int level);
-	GHOST_API_EXPORT int GHOST_API_CALL SetHostLogFile(char *file);
 #ifdef __cplusplus
 }
 #endif

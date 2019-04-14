@@ -48,19 +48,19 @@ int main(int argc, char* argv[])
 	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);
 	//KeyPress("s", 1);
-	//SetDevLogLevel(5);
+	SetDevLogLevel(5);
 	Sleep(5000);
 	//int ret;
 	//Disconnect(1);
-	Restart();
+	//Restart();
 	//MoveTo(0, 0);
-	Sleep(5000);
+	//Sleep(5000);
 	//ResetMouseMoveSpeed();
 	//SetMouseMoveSpeed(20);
 	//POINT pt;
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("px=%ld,py=%ld\n", pt.x, pt.y);
-	MoveTo(800, 600);
+	//MoveTo(800, 600);
 	//SetDeviceID(0x2342, 0x8037);
 	//RestoreDeviceID();
 	//KeyPress("A", 10);
@@ -90,7 +90,15 @@ int main(int argc, char* argv[])
 	//ret = GetNumLock();
 	//printf("GetNumLock %d\n", ret);
 	//KeyPress("num0", 1);
+	//InitLock("123456", "654321");
+	//WriteString("123456", 1, "1");
+	//WriteString("123456", 2, "abcdefghijklmnopqadfdsfsdfsdgsdf");
+	//printf("data=%s\n", ReadString("654321", 1));
+	//printf("data=%s\n", ReadString("654321", 2));
 
+	InitKey("sdfd");
+	printf("data=%s\n", EncString("abcdefghabcdefgh"));
+	printf("data=%s\n", DecString(EncString("abcdefghabcdefgh")));
 	//ret = GetScrollLock();
 	//printf("GetScrollLock %d\n", ret);
 	//Sleep(1000);
@@ -115,8 +123,8 @@ int main(int argc, char* argv[])
 	//unsigned short *vp = (unsigned short*)&vidpid;
 	//printf("vid=%x\n", vp[0]);
 	//printf("pid=%x\n", vp[1]);
-	printf("product=%s\n", GetProduct());
-	printf("manufacturer=%s\n", GetManufacturer());
+	//printf("product=%s\n", GetProduct());
+	//printf("manufacturer=%s\n", GetManufacturer());
 	CloseDevice();
 
 

@@ -18,7 +18,6 @@
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 ///--------------------------------------
-///--------------------------------------
 #define GHOST_MOUSE_X_MAX 32767
 #define GHOST_MOUSE_X_MIN -32768
 #define GHOST_MOUSE_Y_MAX 32767
@@ -52,6 +51,7 @@ static int  SendAndWaitIgnoreResult(MSG_DATA_T *ppkg)
 {
 	static MSG_DATA_RESULT_T result;
 	int ret = 0;
+	memset(&result, 0, sizeof(result));
 	//send and recv
 	EnterCriticalSection(&g_mutex);
 	ret = hid_write_timeout(g_handle, (unsigned char*)ppkg, sizeof(*ppkg), 3000);
@@ -65,8 +65,16 @@ static int  SendAndWaitIgnoreResult(MSG_DATA_T *ppkg)
 		ret = hid_read_timeout(g_handle, (unsigned char*)&result, sizeof(result), 3000);
 	}
 	LeaveCriticalSection(&g_mutex);
-
-	return (result.cm_error != 0 ? -1 : 0);
+	if (ret <= 0)
+	{
+		log_trace("failed to write,error=%ls,error_code=%hhu,type=%hhu,cmd=%hhu\n", hid_error(g_handle), result.error, ppkg->type[1], ppkg->type[2]);
+	}
+	else
+	{
+		log_trace("sucess to write,type=%hhu,cmd=%hhu\n", ppkg->type[1], ppkg->type[2]);
+	}
+	ret = (ret > 0 && result.error == 0) ? 0 : -1;
+	return ret;
 }
 static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 {
@@ -84,8 +92,17 @@ static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 		ret = hid_read_timeout(g_handle, (unsigned char*)presult, sizeof(*presult), 3000);
 	}
 	LeaveCriticalSection(&g_mutex);
-
-	return (ret <= 0 ? -1 : 0);
+	if (ret < 0)
+	{
+		log_trace("failed to write and read,error=%ls,type=%hhu,cmd=%hhu\n", hid_error(g_handle), ppkg->type[1], ppkg->type[2]);
+	}
+	else
+	{
+		log_trace("sucess to write and read,type=%hhu,cmd=%hhu\n", ppkg->type[1], ppkg->type[2]);
+	}
+	//return
+	ret = ret > 0 ? 0 : -1;
+	return ret;
 }
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
@@ -243,12 +260,10 @@ GHOST_API_EXPORT int GHOST_API_CALL Restart()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -267,12 +282,10 @@ GHOST_API_EXPORT int GHOST_API_CALL Disconnect(int second)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -292,12 +305,10 @@ GHOST_API_EXPORT int GHOST_API_CALL SetDeviceID(int vid, int pid)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -315,12 +326,10 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoreDeviceID()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -340,12 +349,10 @@ GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return *(int*)result.if_vidpid;
 	}
 }
@@ -371,12 +378,10 @@ GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -394,12 +399,10 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoreSN()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -419,12 +422,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetSN()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
 }
@@ -450,12 +451,10 @@ GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -473,12 +472,10 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoretProduct()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -498,12 +495,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProduct()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
 }
@@ -527,12 +522,10 @@ GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -550,12 +543,10 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoretManufacturer()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -576,12 +567,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
 }
@@ -603,12 +592,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetModel()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
 }
@@ -627,12 +614,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetVer()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
 
@@ -652,12 +637,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.if_value;
 	}
 }
@@ -691,12 +674,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(const char *key)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 
@@ -726,12 +707,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(const char *key)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -785,12 +764,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(const char *key, int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 
@@ -832,12 +809,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(const char *key1, const 
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -878,12 +853,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(const char *key1, const ch
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -949,12 +922,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(const char *key1, cons
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -972,12 +943,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUpAll()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1015,12 +984,10 @@ int GHOST_API_CALL  GetCapsLock()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.kb_ret;
 	}
 }
@@ -1038,12 +1005,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetCapsLock()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1063,12 +1028,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetNumLock()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.kb_ret;
 	}
 }
@@ -1087,12 +1050,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetNumLock()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 
@@ -1113,12 +1074,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetScrollLock()
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return 0;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
 		return result.kb_ret;
 	}
 }
@@ -1137,12 +1096,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetScrollLock()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 
@@ -1164,12 +1121,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftDown()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1187,12 +1142,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftUp()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1236,12 +1189,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftClick2(int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1267,12 +1218,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftDoubleClick(int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1290,12 +1239,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightDown()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1313,12 +1260,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightUp()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1365,12 +1310,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightClick2(int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1397,12 +1340,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightDoubleClick(int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1420,12 +1361,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleDown()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1443,12 +1382,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleUp()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1495,12 +1432,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick2(int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1526,12 +1461,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleDoubleClick(int count)
 	}
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1549,12 +1482,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MouseUpAll()
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1640,12 +1571,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveToA(int x, int y)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1669,12 +1598,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveToR(int x, int y)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1695,12 +1622,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  WheelsMove(int y)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1876,12 +1801,49 @@ GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
+		return 0;
+	}
+}
+// 写字符串到存储器
+GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str)
+{
+	//check
+	if (NULL == wpwd || 8 < strlen(wpwd))
+	{
+		return -2;
+	}
+
+	if (1 > index || 16 < index)
+	{
+		return -2;
+	}
+
+	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
+	{
+		return -2;
+	}
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_WRITE_STR;
+	pkg.dt_index = index;
+	strcpy_s(pkg.dt_wpwd, sizeof(pkg.dt_wpwd), wpwd);
+	strcpy_s(pkg.dt_buf, sizeof(pkg.dt_buf), str);
+	//send
+	int ret;
+	ret = SendAndWaitIgnoreResult(&pkg);
+	if (ret < 0)
+	{
+		return -1;
+	}
+	else
+	{
 		return 0;
 	}
 }
@@ -1894,7 +1856,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index)
 		return NULL;
 	}
 
-	if (1 < index || 16 < index)
+	if (1 > index || 16 < index)
 	{
 		return NULL;
 	}
@@ -1912,57 +1874,14 @@ GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index)
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
-		result.dt_buf[result.dt_len] = 0;
 		return result.dt_buf;
 	}
 }
-// 写字符串到存储器
-GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str)
-{
-	//check
-	if (NULL == wpwd || 8 < strlen(wpwd))
-	{
-		return -2;
-	}
 
-	if (1 < index || 16 < index)
-	{
-		return -2;
-	}
-
-	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
-	{
-		return -2;
-	}
-	//package
-	MSG_DATA_T pkg;
-	memset(&pkg, 0, sizeof(pkg));
-	pkg.type[0] = 0x1;
-	pkg.type[1] = MSG_TYPE_DATA;
-	pkg.dt_cmd = MSG_CMD_ENCRYP_WRITE_STR;
-	pkg.dt_index = index;
-	strcpy_s(pkg.dt_wpwd, sizeof(pkg.dt_wpwd), wpwd);
-	strcpy_s(pkg.dt_buf,sizeof(pkg.dt_buf), str);
-	//send
-	int ret;
-	ret = SendAndWaitIgnoreResult(&pkg);
-	if (ret < 0)
-	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
-		return -1;
-	}
-	else
-	{
-		log_trace("sucess to write\n");
-		return 0;
-	}
-}
 // 设置算法密钥
 GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
 {
@@ -1983,12 +1902,10 @@ GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -1996,7 +1913,7 @@ GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
 GHOST_API_EXPORT char* GHOST_API_CALL EncString(const char *str)
 {
 	//check
-	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
+	if (NULL == str || 1 > strlen(str) || 16 < strlen(str))
 	{
 		return NULL;
 	}
@@ -2013,13 +1930,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL EncString(const char *str)
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
-		result.dt_buf[result.dt_len] = 0;
 		return result.dt_buf;
 	}
 }
@@ -2044,13 +1958,10 @@ GHOST_API_EXPORT char* GHOST_API_CALL DecString(const char *str)
 	ret = SendAndWaitResult(&pkg, &result);
 	if (ret < 0)
 	{
-		log_trace("failed to write and read,error: %ls\n", hid_error(g_handle));
 		return NULL;
 	}
 	else
 	{
-		log_trace("sucess to write and read\n");
-		result.dt_buf[result.dt_len] = 0;
 		return result.dt_buf;
 	}
 
@@ -2075,12 +1986,10 @@ GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level)
 	ret = SendAndWaitIgnoreResult(&pkg);
 	if (ret < 0)
 	{
-		log_trace("failed to write,error: %ls\n", hid_error(g_handle));
 		return -1;
 	}
 	else
 	{
-		log_trace("sucess to write\n");
 		return 0;
 	}
 }
@@ -2088,11 +1997,6 @@ GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level)
 GHOST_API_EXPORT int GHOST_API_CALL SetHostLogLevel(int level)
 {
 	log_set_level(constrain(level, 0, 6));
-	return 0;
-}
-// 设置主机日志输出到文件
-GHOST_API_EXPORT int GHOST_API_CALL SetHostLogFile(char *file)
-{
 	return 0;
 }
 
