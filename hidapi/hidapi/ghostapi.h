@@ -176,12 +176,16 @@ extern "C" {
 	//////////////////////////////////////////////
 	////////////     加密管理接口      ///////////
 	//////////////////////////////////////////////	  
+	// 复位加密锁
+	GHOST_API_EXPORT int GHOST_API_CALL ResetLock();
 	// 初始化加密锁
 	GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd);
 	// 写字符串到存储器
 	GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str);
 	// 从存储器读字符串
 	GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index);
+	// 复位算法密钥
+	GHOST_API_EXPORT int GHOST_API_CALL ResetKey();
 	// 设置算法密钥
 	GHOST_API_EXPORT int GHOST_API_CALL InitKey( const char *key);
 	// 加密字符串

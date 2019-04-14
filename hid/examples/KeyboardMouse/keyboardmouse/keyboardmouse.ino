@@ -67,12 +67,14 @@
 #define  MSG_CMD_INFO_MANUFACTURER 6
 #define  MSG_CMD_INFO_DEVICE_ID 7
 //data cmd
-#define  MSG_CMD_ENCRYP_INIT_LOCK 1
-#define  MSG_CMD_ENCRYP_READ_STR 2
-#define  MSG_CMD_ENCRYP_WRITE_STR 3
-#define  MSG_CMD_ENCRYP_INIT_KEY 4
-#define  MSG_CMD_ENCRYP_ENC_STR 5
-#define  MSG_CMD_ENCRYP_DEC_STR 6
+#define  MSG_CMD_ENCRYP_RESET_LOCK 1
+#define  MSG_CMD_ENCRYP_INIT_LOCK 2
+#define  MSG_CMD_ENCRYP_READ_STR 3
+#define  MSG_CMD_ENCRYP_WRITE_STR 4
+#define  MSG_CMD_ENCRYP_RESET_KEY 5
+#define  MSG_CMD_ENCRYP_INIT_KEY 6
+#define  MSG_CMD_ENCRYP_ENC_STR 7
+#define  MSG_CMD_ENCRYP_DEC_STR 8
 
 #pragma pack(push, 1)
 typedef union {
@@ -821,6 +823,41 @@ void DataProcess()
   Log.trace("data command %d\n", rawhidreadData.dt_cmd);
   switch (rawhidreadData.dt_cmd)
   {
+    case MSG_CMD_ENCRYP_RESET_LOCK:
+      {
+        {
+          const u16* ee_addr = DATA_WRITE_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          //write tag
+          val[0] = 0;
+          val[1] = 0;
+          eeprom_write_word(ee_addr, ee_flag);
+        }
+        {
+          const u16* ee_addr = DATA_READ_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          //write tag
+          val[0] = 0;
+          val[1] = 0;
+          eeprom_write_word(ee_addr, ee_flag);
+        }
+        {
+          for (int i = 1; i < 17; i++)
+          {
+            const u16* ee_addr = DATA_DATA_TAG_ADDR(i);
+            unsigned short ee_flag;
+            unsigned char *val = (unsigned char *)&ee_flag;
+            //write tag
+            val[0] = 0;
+            val[1] = 0;
+            eeprom_write_word(ee_addr, ee_flag);
+          }
+        }
+        break;
+      }
+
     case MSG_CMD_ENCRYP_INIT_LOCK:
       {
         {
@@ -846,42 +883,6 @@ void DataProcess()
           //write read pwd
           ee_addr = DATA_READ_PWD_ADDR;
           eeprom_write_block(rawhidreadData.dt_rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
-        }
-        break;
-      }
-    case MSG_CMD_ENCRYP_READ_STR:
-      {
-        {
-          //read tag
-          const u16* ee_addr = DATA_READ_PWD_TAG_ADDR;
-          unsigned short ee_flag;
-          unsigned char *val = (unsigned char *)&ee_flag;
-          ee_flag = eeprom_read_word(ee_addr);
-          // read info
-          unsigned char rpwd[DATA_READ_PWD_LEN_MAX + 1] ;
-          memset(rpwd, 0, sizeof(rpwd));
-          if (val[0] == USB_FLAGS)
-          {
-            ee_addr = DATA_READ_PWD_ADDR;
-            eeprom_read_block(rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
-          }
-          if (0 != strcmp(rpwd, rawhidreadData.dt_rpwd))
-          {
-            rawhidwriteData.error = 1;
-            break;
-          }
-        }
-        {
-          const u16* ee_addr = DATA_DATA_TAG_ADDR(rawhidreadData.dt_index);
-          unsigned short ee_flag;
-          unsigned char *val = (unsigned char *)&ee_flag;
-          ee_flag = eeprom_read_word(ee_addr);
-          // read info
-          if (val[0] == USB_FLAGS)
-          {
-            ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
-            eeprom_read_block(rawhidwriteData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
-          }
         }
         break;
       }
@@ -922,6 +923,54 @@ void DataProcess()
         }
         break;
       }
+    case MSG_CMD_ENCRYP_READ_STR:
+      {
+        {
+          //read tag
+          const u16* ee_addr = DATA_READ_PWD_TAG_ADDR;
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          unsigned char rpwd[DATA_READ_PWD_LEN_MAX + 1] ;
+          memset(rpwd, 0, sizeof(rpwd));
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_READ_PWD_ADDR;
+            eeprom_read_block(rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
+          }
+          if (0 != strcmp(rpwd, rawhidreadData.dt_rpwd))
+          {
+            rawhidwriteData.error = 1;
+            break;
+          }
+        }
+        {
+          const u16* ee_addr = DATA_DATA_TAG_ADDR(rawhidreadData.dt_index);
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
+            eeprom_read_block(rawhidwriteData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+          }
+        }
+        break;
+      }
+    case MSG_CMD_ENCRYP_RESET_KEY:
+      {
+        const u16* ee_addr = DATA_KEY_TAG_ADDR;
+        unsigned short ee_flag;
+        unsigned char *val = (unsigned char *)&ee_flag;
+        //write tag
+        val[0] = 0;
+        val[1] = 0;
+        eeprom_write_word(ee_addr, ee_flag);
+        break;
+      }
+
     case MSG_CMD_ENCRYP_INIT_KEY:
       {
         const u16* ee_addr = DATA_KEY_TAG_ADDR;

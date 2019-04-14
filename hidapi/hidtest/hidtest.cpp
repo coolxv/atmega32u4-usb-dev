@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	//SetDeviceID(0x2342, 0x8037);
 	//RestoreDeviceID();
 	//KeyPress("A", 10);
-	MoveTo(200, 200);
+	//MoveTo(200, 200);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
 	//printf("ver:%s\n", GetVer());
@@ -93,11 +93,12 @@ int main(int argc, char* argv[])
 	//InitLock("123456", "654321");
 	//WriteString("123456", 1, "1");
 	//WriteString("123456", 2, "abcdefghijklmnopqadfdsfsdfsdgsdf");
-	//printf("data=%s\n", ReadString("654321", 1));
-	//printf("data=%s\n", ReadString("654321", 2));
+	ResetLock();
+	printf("data=%s\n", ReadString("654321", 1));
+	printf("data=%s\n", ReadString("654321", 2));
 
-	printf("data=%s\n", EncString("abcdefghabcdefgh"));
-	printf("data=%s\n", DecString(EncString("abcdefghabcdefgh")));
+	//printf("data=%s\n", EncString("abcdefghabcdefgh"));
+	//printf("data=%s\n", DecString(EncString("abcdefghabcdefgh")));
 	//ret = GetScrollLock();
 	//printf("GetScrollLock %d\n", ret);
 	//Sleep(1000);

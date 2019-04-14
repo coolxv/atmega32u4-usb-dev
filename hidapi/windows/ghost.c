@@ -1650,7 +1650,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseMoveSpeed(int speed)
 {
 	int mouseSpeed = constrain(speed, 1, 20);
 	;
-	BOOL bResult = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	BOOL bResult = SystemParametersInfo(SPI_SETMOUSESPEED, 0, (VOID*)(long long)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 	if (bResult)
 	{
 		log_trace("set mouse move speed successful\n");
@@ -1687,7 +1687,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelLines(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 20);
 	;
-	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLLINES, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLLINES, 0, (VOID*)(long long)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 	if (bResult)
 	{
 		log_trace("set mouse wheel lines speed successful\n");
@@ -1723,7 +1723,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelChars(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 20);
 	;
-	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLCHARS, 0, (VOID*)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLCHARS, 0, (VOID*)(long long)mouseSpeed, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 	if (bResult)
 	{
 		log_trace("set mouse wheel chars speed successful\n");
@@ -1774,7 +1774,29 @@ GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseDoubleClickSpeed()
 
 //////////////////////////////////////////////
 ////////////     加密管理接口      ///////////
-//////////////////////////////////////////////	 
+//////////////////////////////////////////////
+
+	// 复位加密锁
+GHOST_API_EXPORT int GHOST_API_CALL ResetLock()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_RESET_LOCK;
+	//send
+	int ret;
+	ret = SendAndWaitIgnoreResult(&pkg);
+	if (ret < 0)
+	{
+		return -1;
+	}
+	else
+	{
+		return 0;
+	}
+}
 // 初始化加密锁
 GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd)
 {
@@ -1881,7 +1903,27 @@ GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index)
 		return result.dt_buf;
 	}
 }
-
+// 复位算法密钥
+GHOST_API_EXPORT int GHOST_API_CALL ResetKey()
+{
+	//package
+	MSG_DATA_T pkg;
+	memset(&pkg, 0, sizeof(pkg));
+	pkg.type[0] = 0x1;
+	pkg.type[1] = MSG_TYPE_DATA;
+	pkg.dt_cmd = MSG_CMD_ENCRYP_RESET_KEY;
+	//send
+	int ret;
+	ret = SendAndWaitIgnoreResult(&pkg);
+	if (ret < 0)
+	{
+		return -1;
+	}
+	else
+	{
+		return 0;
+	}
+}
 // 设置算法密钥
 GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
 {
