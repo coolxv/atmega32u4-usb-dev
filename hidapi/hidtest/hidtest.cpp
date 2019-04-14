@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	//SetDeviceID(0x2342, 0x8037);
 	//RestoreDeviceID();
 	//KeyPress("A", 10);
-	//MoveTo(200, 200);
+	MoveTo(200, 200);
 	//printf("sn:%s\n",GetSN());
 	//printf("ml:%s\n", GetModel());
 	//printf("ver:%s\n", GetVer());
@@ -96,7 +96,6 @@ int main(int argc, char* argv[])
 	//printf("data=%s\n", ReadString("654321", 1));
 	//printf("data=%s\n", ReadString("654321", 2));
 
-	InitKey("sdfd");
 	printf("data=%s\n", EncString("abcdefghabcdefgh"));
 	printf("data=%s\n", DecString(EncString("abcdefghabcdefgh")));
 	//ret = GetScrollLock();

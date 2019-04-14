@@ -80,8 +80,8 @@ typedef union {
   //mouse
   struct {
     unsigned char ms_type;
-    //use
     unsigned char ms_cmd;//right,left...
+    //use
     unsigned char ms_count;
     short ms_x;
     short ms_y;
@@ -90,22 +90,23 @@ typedef union {
   //keyboard
   struct {
     unsigned char kb_type;
-    //use
     unsigned char kb_cmd;//keyboard:down,up,press...
+    //use
     unsigned char kb_count;
     unsigned short kb_key[6];
   };
   //log
   struct {
     unsigned char lg_type;
+    unsigned char lg_cmd;
     //use
     unsigned char lg_level;
   };
   //func
   struct {
     unsigned char fc_type;
-    //use
     unsigned char fc_cmd;
+    //use
     union {
       unsigned char fc_value[4];
       unsigned short fc_vidpid[2];
@@ -117,14 +118,14 @@ typedef union {
   //info
   struct {
     unsigned char if_type;
-    //use
     unsigned char if_cmd;
+    //use
   };
   //data
   struct {
     unsigned char dt_type;
-    //use
     unsigned char dt_cmd;
+    //use
     unsigned char dt_index;
     unsigned char dt_rpwd[9];
     unsigned char dt_wpwd[9];
@@ -136,41 +137,32 @@ typedef union {
 } MSG_DATA_T;
 
 
-typedef union {
+typedef struct {
   unsigned char type;
-  //keyboard
-  struct {
-    unsigned char kb_type;
-    //use
-    unsigned char kb_cmd;
-    unsigned char kb_ret;
-  };
-  //info
-  struct {
-    unsigned char if_type;
-    //use
-    unsigned char if_cmd;
+  unsigned char cmd;
+  unsigned char error;
+  unsigned char pad;
+  union
+  {
+    //keyboard
+    struct {
+      unsigned char kb_ret;
+    };
+    //info
+
     union {
       unsigned char if_value[48];
       unsigned short if_vidpid[2];
     };
+
+    //data
+    struct {
+      unsigned char dt_len;
+      unsigned char dt_buf[33];
+    };
+    unsigned char buf[60];
   };
-  //data
-  struct {
-    unsigned char dt_type;
-    //use
-    unsigned char dt_cmd;
-    unsigned char dt_len;
-    unsigned char dt_buf[33];
-  };
-  //comm
-  struct {
-    unsigned char cm_type;
-    //use
-    unsigned char cm_cmd;
-    unsigned char cm_error;
-  };
-  unsigned char buf[64];
+
 } MSG_DATA_RESULT_T;
 #pragma pack(pop)
 
@@ -404,13 +396,13 @@ void keyboardProcess()
         if (BootKeyboard.getLeds() & LED_CAPS_LOCK)
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
-          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 1;
         }
         else
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
-          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 0;
         }
         break;
@@ -425,13 +417,13 @@ void keyboardProcess()
         if (BootKeyboard.getLeds() & LED_NUM_LOCK)
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
-          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 1;
         }
         else
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
-          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_CAPS_LOCK;
+          rawhidwriteData.cmd = MSG_CMD_KB_GET_CAPS_LOCK;
           rawhidwriteData.kb_ret = 0;
         }
         break;
@@ -446,13 +438,13 @@ void keyboardProcess()
         if (BootKeyboard.getLeds() & LED_SCROLL_LOCK)
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
-          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
+          rawhidwriteData.cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
           rawhidwriteData.kb_ret = 1;
         }
         else
         {
           rawhidwriteData.type = MSG_TYPE_KEYBOARD;
-          rawhidwriteData.kb_cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
+          rawhidwriteData.cmd = MSG_CMD_KB_GET_SCROLL_LOCK;
           rawhidwriteData.kb_ret = 0;
         }
         break;
@@ -719,13 +711,13 @@ void InfoProcess()
           strcpy_P(rawhidwriteData.if_value, sn_info);
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_SN;
+        rawhidwriteData.cmd = MSG_CMD_INFO_SN;
         break;
       }
     case MSG_CMD_INFO_MODEL:
       {
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_MODEL;
+        rawhidwriteData.cmd = MSG_CMD_INFO_MODEL;
         // read info
         strcpy_P(rawhidwriteData.if_value, model_info);
         break;
@@ -733,7 +725,7 @@ void InfoProcess()
     case MSG_CMD_INFO_VERSION:
       {
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_VERSION;
+        rawhidwriteData.cmd = MSG_CMD_INFO_VERSION;
         // read info
         strcpy_P(rawhidwriteData.if_value, version_info);
         break;
@@ -741,7 +733,7 @@ void InfoProcess()
     case MSG_CMD_INFO_PROD_DATE:
       {
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_PROD_DATE;
+        rawhidwriteData.cmd = MSG_CMD_INFO_PROD_DATE;
         // read info
         strcpy_P(rawhidwriteData.if_value, production_date_info);
         break;
@@ -764,7 +756,7 @@ void InfoProcess()
           strcpy_P(rawhidwriteData.if_value, STRING_PRODUCT);
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_PRODUCT;
+        rawhidwriteData.cmd = MSG_CMD_INFO_PRODUCT;
         break;
       }
     case MSG_CMD_INFO_MANUFACTURER:
@@ -785,7 +777,7 @@ void InfoProcess()
           strcpy_P(rawhidwriteData.if_value, STRING_MANUFACTURER);
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_MANUFACTURER;
+        rawhidwriteData.cmd = MSG_CMD_INFO_MANUFACTURER;
         break;
       }
     case MSG_CMD_INFO_DEVICE_ID:
@@ -811,7 +803,7 @@ void InfoProcess()
           rawhidwriteData.if_vidpid[1] =  USB_PID;
         }
         rawhidwriteData.type = MSG_TYPE_INFO;
-        rawhidwriteData.if_cmd = MSG_CMD_INFO_DEVICE_ID;
+        rawhidwriteData.cmd = MSG_CMD_INFO_DEVICE_ID;
         break;
       }
     default:
@@ -860,6 +852,7 @@ void DataProcess()
     case MSG_CMD_ENCRYP_READ_STR:
       {
         {
+          //read tag
           const u16* ee_addr = DATA_READ_PWD_TAG_ADDR;
           unsigned short ee_flag;
           unsigned char *val = (unsigned char *)&ee_flag;
@@ -874,14 +867,21 @@ void DataProcess()
           }
           if (0 != strcmp(rpwd, rawhidreadData.dt_rpwd))
           {
-            rawhidwriteData.cm_error = 1;
+            rawhidwriteData.error = 1;
             break;
           }
         }
         {
-          memset(rawhidwriteData.dt_buf, 0, sizeof(rawhidwriteData.dt_buf));
-          const u16* ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);;
-          eeprom_read_block(rawhidwriteData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+          const u16* ee_addr = DATA_DATA_TAG_ADDR(rawhidreadData.dt_index);
+          unsigned short ee_flag;
+          unsigned char *val = (unsigned char *)&ee_flag;
+          ee_flag = eeprom_read_word(ee_addr);
+          // read info
+          if (val[0] == USB_FLAGS)
+          {
+            ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
+            eeprom_read_block(rawhidwriteData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
+          }
         }
         break;
       }
@@ -894,15 +894,16 @@ void DataProcess()
           ee_flag = eeprom_read_word(ee_addr);
           // read info
           unsigned char wpwd[DATA_WRITE_PWD_LEN_MAX + 1] ;
-          memset(wpwd, 0, sizeof(wpwd));
+          wpwd[0] = 0;
           if (val[0] == USB_FLAGS)
           {
             ee_addr = DATA_WRITE_PWD_ADDR;
             eeprom_read_block(wpwd, ee_addr, DATA_WRITE_PWD_LEN_MAX);
+            wpwd[DATA_WRITE_PWD_LEN_MAX] = 0;
           }
           if (0 != strcmp(wpwd, rawhidreadData.dt_wpwd))
           {
-            rawhidwriteData.cm_error = 1;
+            rawhidwriteData.error = 1;
             break;
           }
         }
@@ -915,7 +916,7 @@ void DataProcess()
           val[0] = USB_FLAGS;
           val[1] = DATA_DATA_LEN_MAX;
           eeprom_write_word(ee_addr, ee_flag);
-          //write product
+          //write data
           ee_addr = DATA_DATA_ADDR(rawhidreadData.dt_index);
           eeprom_write_block(rawhidreadData.dt_buf, ee_addr, DATA_DATA_LEN_MAX);
         }
@@ -932,28 +933,32 @@ void DataProcess()
         eeprom_write_word(ee_addr, ee_flag);
         //write key
         ee_addr = DATA_KEY_ADDR;
-        eeprom_write_block(rawhidreadData.dt_wpwd, ee_addr, DATA_KEY_LEN_MAX);
+        eeprom_write_block(rawhidreadData.dt_kkey, ee_addr, DATA_KEY_LEN_MAX);
         break;
       }
     case MSG_CMD_ENCRYP_ENC_STR:
       {
+        unsigned char key[DATA_KEY_LEN_MAX + 1];
         {
           const u16* ee_addr = DATA_KEY_TAG_ADDR;
           unsigned short ee_flag;
           unsigned char *val = (unsigned char *)&ee_flag;
           ee_flag = eeprom_read_word(ee_addr);
           // read info
-          unsigned char key[DATA_KEY_LEN_MAX + 1] ;
-          memset(key, 0, sizeof(key));
           if (val[0] == USB_FLAGS)
           {
             ee_addr = DATA_KEY_ADDR;
             eeprom_read_block(key, ee_addr, DATA_KEY_LEN_MAX);
+            key[DATA_KEY_LEN_MAX] = 0;
+          }
+          else
+          {
+            key[0] = 0;
           }
         }
 
         {
-          xxtea.setKey(rawhidreadData.dt_kkey);
+          xxtea.setKey(key);
           String result = xxtea.encrypt(rawhidreadData.dt_buf);
           strcpy(rawhidwriteData.dt_buf, result.c_str());
         }
@@ -962,23 +967,27 @@ void DataProcess()
       }
     case MSG_CMD_ENCRYP_DEC_STR:
       {
+        unsigned char key[DATA_KEY_LEN_MAX + 1] ;
         {
           const u16* ee_addr = DATA_KEY_TAG_ADDR;
           unsigned short ee_flag;
           unsigned char *val = (unsigned char *)&ee_flag;
           ee_flag = eeprom_read_word(ee_addr);
           // read info
-          unsigned char key[DATA_KEY_LEN_MAX + 1] ;
-          memset(key, 0, sizeof(key));
           if (val[0] == USB_FLAGS)
           {
             ee_addr = DATA_KEY_ADDR;
             eeprom_read_block(key, ee_addr, DATA_KEY_LEN_MAX);
+            key[DATA_KEY_LEN_MAX] = 0;
+          }
+          else
+          {
+            key[0] = 0;
           }
         }
 
         {
-          xxtea.setKey(rawhidreadData.dt_kkey);
+          xxtea.setKey(key);
           String result = xxtea.decrypt(rawhidreadData.dt_buf);
           strcpy(rawhidwriteData.dt_buf, result.c_str());
         }
@@ -1002,8 +1011,8 @@ void loop()
   if (bytesAvailable && bytesAvailable == sizeof(rawhidreadData))
   {
     //set return result
+    memset(&rawhidwriteData, 0 , sizeof(rawhidwriteData));
     rawhidwriteData.type = MSG_TYPE_DEFAULT;
-    rawhidwriteData.cm_error = 0;
     //execute task by type
     switch (rawhidreadData.type)
     {

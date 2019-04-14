@@ -959,7 +959,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  Say(const char *keys)
 		return -2;
 	}
 	int ret = 0;
-	int len = strlen(keys);
+	int len = (int)strlen(keys);
 	char tmp[2] = { 0 };
 	for (int i = 0; i < len; i++)
 	{
