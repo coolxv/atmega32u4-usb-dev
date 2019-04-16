@@ -884,6 +884,18 @@ void DataProcess()
           ee_addr = DATA_READ_PWD_ADDR;
           eeprom_write_block(rawhidreadData.dt_rpwd, ee_addr, DATA_READ_PWD_LEN_MAX);
         }
+        {
+          for (int i = 1; i < 17; i++)
+          {
+            const u16* ee_addr = DATA_DATA_TAG_ADDR(i);
+            unsigned short ee_flag;
+            unsigned char *val = (unsigned char *)&ee_flag;
+            //write tag
+            val[0] = 0;
+            val[1] = 0;
+            eeprom_write_word(ee_addr, ee_flag);
+          }
+        }
         break;
       }
     case MSG_CMD_ENCRYP_WRITE_STR:
