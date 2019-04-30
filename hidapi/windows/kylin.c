@@ -6,7 +6,7 @@
 #include <windows.h>
 #include "keymap.h"
 #include "hidapi.h"
-#include "ghostapi.h"
+#include "kylinapi.h"
 #include "packdef.h"
 #include "log.h"
 
@@ -18,19 +18,19 @@
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 ///--------------------------------------
-#define GHOST_MOUSE_X_MAX 32767
-#define GHOST_MOUSE_X_MIN -32768
-#define GHOST_MOUSE_Y_MAX 32767
-#define GHOST_MOUSE_Y_MIN -32768
-#define GHOST_MOUSE_R_X_MAX 127
-#define GHOST_MOUSE_R_X_MIN -127
-#define GHOST_MOUSE_R_Y_MAX 127
-#define GHOST_MOUSE_R_Y_MIN -127
-#define GHOST_MOUSE_MOVE_PIXEL 30
+#define KYLIN_MOUSE_X_MAX 32767
+#define KYLIN_MOUSE_X_MIN -32768
+#define KYLIN_MOUSE_Y_MAX 32767
+#define KYLIN_MOUSE_Y_MIN -32768
+#define KYLIN_MOUSE_R_X_MAX 127
+#define KYLIN_MOUSE_R_X_MIN -127
+#define KYLIN_MOUSE_R_Y_MAX 127
+#define KYLIN_MOUSE_R_Y_MIN -127
+#define KYLIN_MOUSE_MOVE_PIXEL 30
 ///--------------------------------------
-#define GHOST_VID 0x2341
-#define GHOST_PID 0x8036
-#define GHOST_SN L"05ea0849576a574681741d45ae174d8a"
+#define KYLIN_VID 0x2341
+#define KYLIN_PID 0x8036
+#define KYLIN_SN "05ea0849576a574681741d45ae174d8a"
 ///--------------------------------------
 static hid_device *g_handle = NULL;
 static int g_initialized = 0;
@@ -107,27 +107,20 @@ static int  SendAndWaitResult(MSG_DATA_T *ppkg, MSG_DATA_RESULT_T *presult)
 //////////////////////////////////////////////
 ////////////     设备管理接口      ///////////
 //////////////////////////////////////////////
-GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceEx(int vid, int pid)
+KYLIN_API_EXPORT int KYLIN_API_CALL OpenDeviceByVidPidEx(int vid, int pid)
 {
+	//check
+	if (0xffff < vid || 0xffff < pid)
+	{
+		return -1;
+	}
+
 	EnterCriticalSection(&g_mutex);
 	if (!g_initialized)
 	{
-		//init key map
-		keymap_init();
-		//init device
-		if (hid_init() < 0)
-		{
-			log_trace("init device failed\n");
-			keymap_fini();
-			LeaveCriticalSection(&g_mutex);
-			return -1;
-		}
-		log_trace("init device successful\n");
 		g_handle = hid_open(vid, pid ,2 ,NULL);
 		if (!g_handle) {
 			log_trace("open device failed\n");
-			keymap_fini();
-			hid_exit();
 			LeaveCriticalSection(&g_mutex);
 			return -2;
 		}
@@ -138,48 +131,17 @@ GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceEx(int vid, int pid)
 	return 0;
 }
 
-GHOST_API_EXPORT int GHOST_API_CALL OpenDevice()
+KYLIN_API_EXPORT int KYLIN_API_CALL OpenDeviceByVidPid()
 {
-	return OpenDeviceEx(GHOST_VID, GHOST_PID);
+	return OpenDeviceByVidPidEx(KYLIN_VID, KYLIN_PID);
 }
 
-GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerial()
-{
-	EnterCriticalSection(&g_mutex);
-	if (!g_initialized)
-	{
-		//init key map
-		keymap_init();
-		//init device
-		if (hid_init() < 0)
-		{
-			log_trace("init device failed\n");
-			keymap_fini();
-			LeaveCriticalSection(&g_mutex);
-			return -1;
-		}
-		log_trace("init device successful\n");
-		g_handle = hid_open_serial_no(2, GHOST_SN);
-		if (!g_handle) {
-			log_trace("open device failed\n");
-			keymap_fini();
-			hid_exit();
-			LeaveCriticalSection(&g_mutex);
-			return -2;
-		}
-		log_trace("open device successful\n");
-		g_initialized = 1;
-	}
-	LeaveCriticalSection(&g_mutex);
-	return 0;
-}
-
-GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial)
+KYLIN_API_EXPORT int KYLIN_API_CALL OpenDeviceBySerialEx(const char *serial)
 {
 	//check
 	if (NULL == serial || 1 > strlen(serial) || 32 < strlen(serial))
 	{
-		return -3;
+		return -1;
 	}
 	wchar_t wserial[128];
 	MultiByteToWideChar(CP_ACP, 0, serial, -1, wserial, sizeof(wserial));
@@ -187,22 +149,9 @@ GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial)
 	EnterCriticalSection(&g_mutex);
 	if (!g_initialized)
 	{
-		//init key map
-		keymap_init();
-		//init device
-		if (hid_init() < 0)
-		{
-			log_trace("init device failed\n");
-			keymap_fini();
-			LeaveCriticalSection(&g_mutex);
-			return -1;
-		}
-		log_trace("init device successful\n");
 		g_handle = hid_open_serial_no(2, wserial);
 		if (!g_handle) {
 			log_trace("open device failed\n");
-			keymap_fini();
-			hid_exit();
 			LeaveCriticalSection(&g_mutex);
 			return -2;
 		}
@@ -212,8 +161,11 @@ GHOST_API_EXPORT int GHOST_API_CALL OpenDeviceBySerialEx(const char *serial)
 	LeaveCriticalSection(&g_mutex);
 	return 0;
 }
-
-GHOST_API_EXPORT int HID_API_EXPORT CloseDevice()
+KYLIN_API_EXPORT int KYLIN_API_CALL OpenDeviceBySerial()
+{
+	return OpenDeviceBySerialEx(KYLIN_SN);
+}
+KYLIN_API_EXPORT int HID_API_EXPORT CloseDevice()
 {
 	EnterCriticalSection(&g_mutex);
 	if (g_initialized)
@@ -224,11 +176,6 @@ GHOST_API_EXPORT int HID_API_EXPORT CloseDevice()
 			hid_close(g_handle);
 			log_trace("close device successful\n");
 		}
-		hid_exit();
-		log_trace("fini device successful\n");
-		//fini key map
-		keymap_fini();
-
 		//reset 
 		g_handle = NULL;
 		g_initialized = 0;
@@ -238,7 +185,7 @@ GHOST_API_EXPORT int HID_API_EXPORT CloseDevice()
 }
 
 // 检查设备是否有效
-GHOST_API_EXPORT int GHOST_API_CALL CheckDevice()
+KYLIN_API_EXPORT int KYLIN_API_CALL CheckDevice()
 {
 	if (g_initialized)
 	{
@@ -247,7 +194,7 @@ GHOST_API_EXPORT int GHOST_API_CALL CheckDevice()
 	return 0;
 }
 // 检查设备是否有效
-GHOST_API_EXPORT int GHOST_API_CALL Restart()
+KYLIN_API_EXPORT int KYLIN_API_CALL Restart()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -268,7 +215,7 @@ GHOST_API_EXPORT int GHOST_API_CALL Restart()
 	}
 }
 // 断开设备连接
-GHOST_API_EXPORT int GHOST_API_CALL Disconnect(int second)
+KYLIN_API_EXPORT int KYLIN_API_CALL Disconnect(int second)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -290,7 +237,7 @@ GHOST_API_EXPORT int GHOST_API_CALL Disconnect(int second)
 	}
 }
 // 设置自定义设备ID（厂商ID+产品ID）
-GHOST_API_EXPORT int GHOST_API_CALL SetDeviceID(int vid, int pid)
+KYLIN_API_EXPORT int KYLIN_API_CALL SetDeviceID(int vid, int pid)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -313,7 +260,7 @@ GHOST_API_EXPORT int GHOST_API_CALL SetDeviceID(int vid, int pid)
 	}
 }
 // 恢复设备默认ID
-GHOST_API_EXPORT int GHOST_API_CALL RestoreDeviceID()
+KYLIN_API_EXPORT int KYLIN_API_CALL RestoreDeviceID()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -335,7 +282,7 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoreDeviceID()
 }
 
 // 获取ID
-GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID()
+KYLIN_API_EXPORT int KYLIN_API_CALL GetDeviceID()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -359,7 +306,7 @@ GHOST_API_EXPORT int GHOST_API_CALL GetDeviceID()
 
 
 // 设置自定义设备serial number
-GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial)
+KYLIN_API_EXPORT int KYLIN_API_CALL SetSN(const char *serial)
 {
 	//check
 	if (NULL == serial || 1 > strlen(serial) || 32 < strlen(serial))
@@ -386,7 +333,7 @@ GHOST_API_EXPORT int GHOST_API_CALL SetSN(const char *serial)
 	}
 }
 // 恢复设备默认serial number
-GHOST_API_EXPORT int GHOST_API_CALL RestoreSN()
+KYLIN_API_EXPORT int KYLIN_API_CALL RestoreSN()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -408,7 +355,7 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoreSN()
 }
 
 // 获取序列号
-GHOST_API_EXPORT char* GHOST_API_CALL GetSN()
+KYLIN_API_EXPORT char* KYLIN_API_CALL GetSN()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -432,7 +379,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetSN()
 
 
 // 设置自定义设备product
-GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product)
+KYLIN_API_EXPORT int KYLIN_API_CALL SetProduct(const char *product)
 {
 	//check
 	if (NULL == product || 1 > strlen(product) || 16 < strlen(product))
@@ -459,7 +406,7 @@ GHOST_API_EXPORT int GHOST_API_CALL SetProduct(const char *product)
 	}
 }
 // 恢复设备默认product
-GHOST_API_EXPORT int GHOST_API_CALL RestoretProduct()
+KYLIN_API_EXPORT int KYLIN_API_CALL RestoretProduct()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -481,7 +428,7 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoretProduct()
 }
 
 // 获取product
-GHOST_API_EXPORT char* GHOST_API_CALL GetProduct()
+KYLIN_API_EXPORT char* KYLIN_API_CALL GetProduct()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -503,7 +450,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProduct()
 	}
 }
 // 设置自定义设备product
-GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer)
+KYLIN_API_EXPORT int KYLIN_API_CALL SetManufacturer(const char *manufacturer)
 {
 	//check
 	if (NULL == manufacturer || 1 > strlen(manufacturer) || 16 < strlen(manufacturer))
@@ -530,7 +477,7 @@ GHOST_API_EXPORT int GHOST_API_CALL SetManufacturer(const char *manufacturer)
 	}
 }
 // 恢复设备默认product
-GHOST_API_EXPORT int GHOST_API_CALL RestoretManufacturer()
+KYLIN_API_EXPORT int KYLIN_API_CALL RestoretManufacturer()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -553,7 +500,7 @@ GHOST_API_EXPORT int GHOST_API_CALL RestoretManufacturer()
 
 
 // 获取manufacturer
-GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer()
+KYLIN_API_EXPORT char* KYLIN_API_CALL GetManufacturer()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -578,7 +525,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetManufacturer()
 
 
 // 获取设备型号
-GHOST_API_EXPORT char* GHOST_API_CALL GetModel()
+KYLIN_API_EXPORT char* KYLIN_API_CALL GetModel()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -600,7 +547,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetModel()
 	}
 }
 // 获取固件版本号
-GHOST_API_EXPORT char* GHOST_API_CALL GetVer()
+KYLIN_API_EXPORT char* KYLIN_API_CALL GetVer()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -623,7 +570,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetVer()
 
 }
 // 获取生产日期
-GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate()
+KYLIN_API_EXPORT char* KYLIN_API_CALL GetProductionDate()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -649,7 +596,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL GetProductionDate()
 ////////////     键盘管理接口      ///////////
 //////////////////////////////////////////////
 // 键按下
-GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(const char *key)
+KYLIN_API_EXPORT int KYLIN_API_CALL  KeyDown(const char *key)
 {
 	//check
 	if (NULL == key || 0 == strlen(key))
@@ -683,7 +630,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyDown(const char *key)
 
 }
 // 键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(const char *key)
+KYLIN_API_EXPORT int KYLIN_API_CALL  KeyUp(const char *key)
 {
 	//check
 	if (NULL == key || 0 == strlen(key))
@@ -715,7 +662,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUp(const char *key)
 	}
 }
 // 一次按键
-GHOST_API_EXPORT int GHOST_API_CALL  KeyPress(const char *key, int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  KeyPress(const char *key, int count)
 {
 	//send
 	int ret = 0;
@@ -736,7 +683,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyPress(const char *key, int count)
 	}
 	return ret;
 }
-GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(const char *key, int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  KeyPressEX(const char *key, int count)
 {
 	//check
 	if (NULL == key || 0 == strlen(key))
@@ -773,7 +720,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyPress2(const char *key, int count)
 
 }
 // 组合键按下
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6)
+KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyDown(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6)
 {
 	unsigned count = 0;
 	unsigned short keycode = 0;
@@ -817,7 +764,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyDown(const char *key1, const 
 	}
 }
 // 组合键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6)
+KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyUp(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6)
 {
 	unsigned count = 0;
 	unsigned short keycode = 0;
@@ -861,7 +808,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyUp(const char *key1, const ch
 	}
 }
 // 组合按键
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyPress(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count)
 {
 	//send
 	int ret = 0;
@@ -882,7 +829,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress(const char *key1, const
 	}
 	return ret;
 }
-GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyPressEx(const char *key1, const char *key2, const char *key3, const char *key4, const char *key5, const char *key6, int count)
 {
 	unsigned int cnt = 0;
 	unsigned short keycode = 0;
@@ -930,7 +877,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  CombinationKeyPress2(const char *key1, cons
 	}
 }
 // 释放所有按键
-GHOST_API_EXPORT int GHOST_API_CALL  KeyUpAll()
+KYLIN_API_EXPORT int KYLIN_API_CALL  KeyUpAll()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -951,7 +898,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  KeyUpAll()
 	}
 }
 // 模拟按键输入
-GHOST_API_EXPORT int GHOST_API_CALL  Say(const char *keys)
+KYLIN_API_EXPORT int KYLIN_API_CALL  Say(const char *keys)
 {
 	//check
 	if (NULL == keys || 0 == strlen(keys))
@@ -970,7 +917,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  Say(const char *keys)
 }
 
 // 获取大写灯状态
-int GHOST_API_CALL  GetCapsLock()
+int KYLIN_API_CALL  GetCapsLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -992,7 +939,7 @@ int GHOST_API_CALL  GetCapsLock()
 	}
 }
 // 获取大写灯状态
-GHOST_API_EXPORT int GHOST_API_CALL  SetCapsLock()
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetCapsLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1014,7 +961,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetCapsLock()
 }
 
 // 获取NumLock灯状态
-GHOST_API_EXPORT int GHOST_API_CALL  GetNumLock()
+KYLIN_API_EXPORT int KYLIN_API_CALL  GetNumLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1037,7 +984,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetNumLock()
 }
 
 // 获取NumLock灯状态
-GHOST_API_EXPORT int GHOST_API_CALL  SetNumLock()
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetNumLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1060,7 +1007,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetNumLock()
 }
 
 // 获取ScrollLock灯状态
-GHOST_API_EXPORT int GHOST_API_CALL  GetScrollLock()
+KYLIN_API_EXPORT int KYLIN_API_CALL  GetScrollLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1083,7 +1030,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetScrollLock()
 }
 
 // 获取ScrollLock灯状态
-GHOST_API_EXPORT int GHOST_API_CALL  SetScrollLock()
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetScrollLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1108,7 +1055,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetScrollLock()
 ////////////     鼠标管理接口      ///////////
 //////////////////////////////////////////////
 // 鼠标左键按下
-GHOST_API_EXPORT int GHOST_API_CALL  LeftDown()
+KYLIN_API_EXPORT int KYLIN_API_CALL  LeftDown()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1129,7 +1076,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftDown()
 	}
 }
 // 鼠标左键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  LeftUp()
+KYLIN_API_EXPORT int KYLIN_API_CALL  LeftUp()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1150,7 +1097,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftUp()
 	}
 }
 // 鼠标左键单击
-GHOST_API_EXPORT int GHOST_API_CALL  LeftClick(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  LeftClick(int count)
 {
 	//send
 	int ret = 0;
@@ -1172,7 +1119,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftClick(int count)
 	return ret;
 
 }
-GHOST_API_EXPORT int GHOST_API_CALL  LeftClick2(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  LeftClick2(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1197,7 +1144,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftClick2(int count)
 	}
 }
 // 鼠标左键双击
-GHOST_API_EXPORT int GHOST_API_CALL  LeftDoubleClick(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  LeftDoubleClick(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1226,7 +1173,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  LeftDoubleClick(int count)
 	}
 }
 // 鼠标右键按下
-GHOST_API_EXPORT int GHOST_API_CALL  RightDown()
+KYLIN_API_EXPORT int KYLIN_API_CALL  RightDown()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1247,7 +1194,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightDown()
 	}
 }
 // 鼠标右键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  RightUp()
+KYLIN_API_EXPORT int KYLIN_API_CALL  RightUp()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1268,7 +1215,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightUp()
 	}
 }
 // 鼠标右键单击
-GHOST_API_EXPORT int GHOST_API_CALL  RightClick(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  RightClick(int count)
 {
 	//send
 	int ret = 0;
@@ -1289,7 +1236,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightClick(int count)
 	}
 	return ret;
 }
-GHOST_API_EXPORT int GHOST_API_CALL  RightClick2(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  RightClick2(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1319,7 +1266,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightClick2(int count)
 }
 
 // 鼠标右键双击
-GHOST_API_EXPORT int GHOST_API_CALL  RightDoubleClick(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  RightDoubleClick(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1348,7 +1295,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  RightDoubleClick(int count)
 	}
 }
 // 鼠标中键按下
-GHOST_API_EXPORT int GHOST_API_CALL  MiddleDown()
+KYLIN_API_EXPORT int KYLIN_API_CALL  MiddleDown()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1369,7 +1316,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleDown()
 	}
 }
 // 鼠标中键弹起
-GHOST_API_EXPORT int GHOST_API_CALL  MiddleUp()
+KYLIN_API_EXPORT int KYLIN_API_CALL  MiddleUp()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1390,7 +1337,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleUp()
 	}
 }
 // 鼠标中键单击
-GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  MiddleClick(int count)
 {
 	//send
 	int ret = 0;
@@ -1411,7 +1358,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick(int count)
 	}
 	return ret;
 }
-GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick2(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  MiddleClick2(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1440,7 +1387,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleClick2(int count)
 	}
 }
 // 鼠标中键双击
-GHOST_API_EXPORT int GHOST_API_CALL  MiddleDoubleClick(int count)
+KYLIN_API_EXPORT int KYLIN_API_CALL  MiddleDoubleClick(int count)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1469,7 +1416,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MiddleDoubleClick(int count)
 	}
 }
 // 释放所有鼠标按键
-GHOST_API_EXPORT int GHOST_API_CALL  MouseUpAll()
+KYLIN_API_EXPORT int KYLIN_API_CALL  MouseUpAll()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1490,7 +1437,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MouseUpAll()
 	}
 }
 // 模拟鼠标移动
-GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
+KYLIN_API_EXPORT int KYLIN_API_CALL  MoveTo(int x, int y)
 {
 	int ret = 0;
 	int ccount = 0;
@@ -1512,7 +1459,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 		{
 			return ret;
 		}
-		else if (xt >= 0 && xt <= GHOST_MOUSE_MOVE_PIXEL && yt >= 0 && yt <= GHOST_MOUSE_MOVE_PIXEL)
+		else if (xt >= 0 && xt <= KYLIN_MOUSE_MOVE_PIXEL && yt >= 0 && yt <= KYLIN_MOUSE_MOVE_PIXEL)
 		{
 			ret = MoveToR(xo, yo);
 			continue;
@@ -1524,14 +1471,14 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 			int yc = 0;
 			if (xt > yt)
 			{
-				count = xt / GHOST_MOUSE_MOVE_PIXEL;
-				xc = GHOST_MOUSE_MOVE_PIXEL;
+				count = xt / KYLIN_MOUSE_MOVE_PIXEL;
+				xc = KYLIN_MOUSE_MOVE_PIXEL;
 				yc = yt / count;
 			}
 			else
 			{
-				count = yt / GHOST_MOUSE_MOVE_PIXEL;
-				yc = GHOST_MOUSE_MOVE_PIXEL;
+				count = yt / KYLIN_MOUSE_MOVE_PIXEL;
+				yc = KYLIN_MOUSE_MOVE_PIXEL;
 				xc = xt / count;
 			}
 			int i = 0;
@@ -1549,14 +1496,14 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveTo(int x, int y)
 	return ret;
 }
 // 鼠标绝对移动
-GHOST_API_EXPORT int GHOST_API_CALL  MoveToA(int x, int y)
+KYLIN_API_EXPORT int KYLIN_API_CALL  MoveToA(int x, int y)
 {
 	double ex = GetSystemMetrics(SM_CXSCREEN);
 	double ey = GetSystemMetrics(SM_CYSCREEN);
-	double rx = ((double)GHOST_MOUSE_X_MAX / ex)*x + 1;
-	double ry = ((double)GHOST_MOUSE_Y_MAX / ey)*y + 2;
-	short ix = constrain((short)rx, 0, GHOST_MOUSE_X_MAX);
-	short iy = constrain((short)ry, 0, GHOST_MOUSE_Y_MAX);
+	double rx = ((double)KYLIN_MOUSE_X_MAX / ex)*x + 1;
+	double ry = ((double)KYLIN_MOUSE_Y_MAX / ey)*y + 2;
+	short ix = constrain((short)rx, 0, KYLIN_MOUSE_X_MAX);
+	short iy = constrain((short)ry, 0, KYLIN_MOUSE_Y_MAX);
 
 	//package
 	MSG_DATA_T pkg;
@@ -1580,10 +1527,10 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveToA(int x, int y)
 }
 
 // 相对移动鼠标
-GHOST_API_EXPORT int GHOST_API_CALL  MoveToR(int x, int y)
+KYLIN_API_EXPORT int KYLIN_API_CALL  MoveToR(int x, int y)
 {
-	short ix = constrain(x, GHOST_MOUSE_R_X_MIN, GHOST_MOUSE_R_X_MAX);
-	short iy = constrain(y, GHOST_MOUSE_R_Y_MIN, GHOST_MOUSE_R_Y_MAX);
+	short ix = constrain(x, KYLIN_MOUSE_R_X_MIN, KYLIN_MOUSE_R_X_MAX);
+	short iy = constrain(y, KYLIN_MOUSE_R_Y_MIN, KYLIN_MOUSE_R_Y_MAX);
 
 	//package
 	MSG_DATA_T pkg;
@@ -1606,9 +1553,9 @@ GHOST_API_EXPORT int GHOST_API_CALL  MoveToR(int x, int y)
 	}
 }
 // 鼠标滚轮滚动
-GHOST_API_EXPORT int GHOST_API_CALL  WheelsMove(int y)
+KYLIN_API_EXPORT int KYLIN_API_CALL  WheelsMove(int y)
 {
-	char iy = constrain(y, GHOST_MOUSE_R_Y_MIN, GHOST_MOUSE_R_Y_MAX);
+	char iy = constrain(y, KYLIN_MOUSE_R_Y_MIN, KYLIN_MOUSE_R_Y_MAX);
 
 	//package
 	MSG_DATA_T pkg;
@@ -1632,7 +1579,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  WheelsMove(int y)
 
 
 // 设置鼠标移动速度
-GHOST_API_EXPORT int GHOST_API_CALL  GetMouseMoveSpeed()
+KYLIN_API_EXPORT int KYLIN_API_CALL  GetMouseMoveSpeed()
 {
 	int mouseSpeed = -1;
 	BOOL bResult = SystemParametersInfo(SPI_GETMOUSESPEED, 0, &mouseSpeed, 0);
@@ -1646,7 +1593,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetMouseMoveSpeed()
 }
 
 // 设置鼠标移动速度
-GHOST_API_EXPORT int GHOST_API_CALL  SetMouseMoveSpeed(int speed)
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetMouseMoveSpeed(int speed)
 {
 	int mouseSpeed = constrain(speed, 1, 20);
 	;
@@ -1660,7 +1607,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseMoveSpeed(int speed)
 	return -1;
 }
 // 重置鼠标移动速度
-GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseMoveSpeed()
+KYLIN_API_EXPORT int KYLIN_API_CALL  ResetMouseMoveSpeed()
 {
 	//Sets the current mouse speed. The pvParam parameter is an integer between 1 (slowest) and 20 (fastest).
 	//A value of 10 is the default. 
@@ -1669,7 +1616,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseMoveSpeed()
 }
 
 // 设置鼠标滚轮速度
-GHOST_API_EXPORT int GHOST_API_CALL  GetMouseWheelLines()
+KYLIN_API_EXPORT int KYLIN_API_CALL  GetMouseWheelLines()
 {
 	int mouseSpeed = -1;
 	BOOL bResult = SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &mouseSpeed, 0);
@@ -1683,7 +1630,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetMouseWheelLines()
 }
 
 // 设置鼠标滚轮速度
-GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelLines(int speed)
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetMouseWheelLines(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 20);
 	;
@@ -1697,7 +1644,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelLines(int speed)
 	return -1;
 }
 // 重置鼠标滚轮速度
-GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseWheelLines()
+KYLIN_API_EXPORT int KYLIN_API_CALL  ResetMouseWheelLines()
 {
 	//Retrieves the number of lines to scroll when the vertical mouse wheel is moved.
 	//The pvParam parameter must point to a UINT variable that receives the number of lines.
@@ -1705,7 +1652,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseWheelLines()
 	return SetMouseMoveSpeed(3);
 }
 // 设置鼠标滚轮速度
-GHOST_API_EXPORT int GHOST_API_CALL  GetMouseWheelChars()
+KYLIN_API_EXPORT int KYLIN_API_CALL  GetMouseWheelChars()
 {
 	int mouseSpeed = -1;
 	BOOL bResult = SystemParametersInfo(SPI_SETWHEELSCROLLCHARS, 0, &mouseSpeed, 0);
@@ -1719,7 +1666,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetMouseWheelChars()
 }
 
 // 设置鼠标滚轮速度
-GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelChars(int speed)
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetMouseWheelChars(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 20);
 	;
@@ -1733,7 +1680,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseWheelChars(int speed)
 	return -1;
 }
 // 重置鼠标滚轮速度
-GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseWheelChars()
+KYLIN_API_EXPORT int KYLIN_API_CALL  ResetMouseWheelChars()
 {
 	//Retrieves the number of characters to scroll when the horizontal mouse wheel is moved. 
 	//The pvParam parameter must point to a UINT variable that receives the number of lines.
@@ -1742,7 +1689,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseWheelChars()
 }
 
 // 设置鼠标双击速度
-GHOST_API_EXPORT int GHOST_API_CALL  GetMouseDoubleClickSpeed()
+KYLIN_API_EXPORT int KYLIN_API_CALL  GetMouseDoubleClickSpeed()
 {
 	unsigned int mouseSpeed = -1;
 	mouseSpeed = GetDoubleClickTime();
@@ -1751,7 +1698,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  GetMouseDoubleClickSpeed()
 }
 
 // 设置鼠标双击速度
-GHOST_API_EXPORT int GHOST_API_CALL  SetMouseDoubleClickSpeed(int speed)
+KYLIN_API_EXPORT int KYLIN_API_CALL  SetMouseDoubleClickSpeed(int speed)
 {
 	unsigned int mouseSpeed = constrain(speed, 1, 5000);
 	BOOL bResult =  SetDoubleClickTime(mouseSpeed);
@@ -1764,7 +1711,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  SetMouseDoubleClickSpeed(int speed)
 	return -1;
 }
 // 重置鼠标双击速度
-GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseDoubleClickSpeed()
+KYLIN_API_EXPORT int KYLIN_API_CALL  ResetMouseDoubleClickSpeed()
 {
 	//The number of milliseconds that may occur between the first and second clicks of a double-click.
 	//If this parameter is set to 0, the system uses the default double-click time of 500 milliseconds.
@@ -1777,7 +1724,7 @@ GHOST_API_EXPORT int GHOST_API_CALL  ResetMouseDoubleClickSpeed()
 //////////////////////////////////////////////
 
 	// 复位加密锁
-GHOST_API_EXPORT int GHOST_API_CALL ResetLock()
+KYLIN_API_EXPORT int KYLIN_API_CALL ResetLock()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1798,7 +1745,7 @@ GHOST_API_EXPORT int GHOST_API_CALL ResetLock()
 	}
 }
 // 初始化加密锁
-GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd)
+KYLIN_API_EXPORT int KYLIN_API_CALL InitLock(const char *wpwd, const char *rpwd)
 {
 	//check
 	if (NULL == wpwd || 8 < strlen(wpwd))
@@ -1831,7 +1778,7 @@ GHOST_API_EXPORT int GHOST_API_CALL InitLock(const char *wpwd, const char *rpwd)
 	}
 }
 // 写字符串到存储器
-GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, const char *str)
+KYLIN_API_EXPORT int KYLIN_API_CALL WriteString(const char *wpwd, int index, const char *str)
 {
 	//check
 	if (NULL == wpwd || 8 < strlen(wpwd))
@@ -1870,7 +1817,7 @@ GHOST_API_EXPORT int GHOST_API_CALL WriteString(const char *wpwd, int index, con
 	}
 }
 // 从存储器读字符串
-GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index)
+KYLIN_API_EXPORT char* KYLIN_API_CALL ReadString(const char *rpwd, int index)
 {
 	//check
 	if (NULL == rpwd || 8 < strlen(rpwd))
@@ -1904,7 +1851,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL ReadString(const char *rpwd, int index)
 	}
 }
 // 复位算法密钥
-GHOST_API_EXPORT int GHOST_API_CALL ResetKey()
+KYLIN_API_EXPORT int KYLIN_API_CALL ResetKey()
 {
 	//package
 	MSG_DATA_T pkg;
@@ -1925,7 +1872,7 @@ GHOST_API_EXPORT int GHOST_API_CALL ResetKey()
 	}
 }
 // 设置算法密钥
-GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
+KYLIN_API_EXPORT int KYLIN_API_CALL InitKey(const char *key)
 {
 	//check
 	if (NULL == key || 8 < strlen(key))
@@ -1952,7 +1899,7 @@ GHOST_API_EXPORT int GHOST_API_CALL InitKey(const char *key)
 	}
 }
 // 加密字符串
-GHOST_API_EXPORT char* GHOST_API_CALL EncString(const char *str)
+KYLIN_API_EXPORT char* KYLIN_API_CALL EncString(const char *str)
 {
 	//check
 	if (NULL == str || 1 > strlen(str) || 16 < strlen(str))
@@ -1980,7 +1927,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL EncString(const char *str)
 	}
 }
 // 解密字符串
-GHOST_API_EXPORT char* GHOST_API_CALL DecString(const char *str)
+KYLIN_API_EXPORT char* KYLIN_API_CALL DecString(const char *str)
 {
 	//check
 	if (NULL == str || 1 > strlen(str) || 32 < strlen(str))
@@ -2015,7 +1962,7 @@ GHOST_API_EXPORT char* GHOST_API_CALL DecString(const char *str)
 //////////////////////////////////////////////
 
 // 设置日志级别
-GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level)
+KYLIN_API_EXPORT int KYLIN_API_CALL SetDevLogLevel(int level)
 {
 	//package
 	MSG_DATA_T pkg;
@@ -2036,7 +1983,7 @@ GHOST_API_EXPORT int GHOST_API_CALL SetDevLogLevel(int level)
 	}
 }
 // 设置主机日志级别
-GHOST_API_EXPORT int GHOST_API_CALL SetHostLogLevel(int level)
+KYLIN_API_EXPORT int KYLIN_API_CALL SetHostLogLevel(int level)
 {
 	log_set_level(constrain(level, 0, 6));
 	return 0;

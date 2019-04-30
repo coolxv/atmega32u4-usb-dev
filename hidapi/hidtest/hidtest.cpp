@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include "hidapi.h"
 #include "packdef.h"
-#include "ghostapi.h"
+#include "kylinapi.h"
 // Headers needed for sleeping.
 #ifdef _WIN32
 	#include <windows.h>
@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 
 	SetHostLogLevel(6);
 
-	OpenDevice();
-	//OpenDeviceEx(0x2341, 0x8036);
+	OpenDeviceByVidPid();
+	//OpenDeviceByVidPidEx(0x2341, 0x8036);
 	//OpenDeviceBySerial();
 	//OpenDeviceBySerialEx("05ea0849576a574681741d45ae174d8a");
 	//Sleep(5000);

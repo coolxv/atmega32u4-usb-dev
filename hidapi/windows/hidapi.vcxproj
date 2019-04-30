@@ -172,13 +172,13 @@
     <ClCompile Include="..\common\log.c" />
     <ClCompile Include="..\common\map.c" />
     <ClCompile Include="dllmain.c" />
-    <ClCompile Include="ghost.c" />
     <ClCompile Include="hid.c" />
+    <ClCompile Include="kylin.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\hidapi\ghostapi.h" />
     <ClInclude Include="..\hidapi\hidapi.h" />
     <ClInclude Include="..\hidapi\keymap.h" />
+    <ClInclude Include="..\hidapi\kylinapi.h" />
     <ClInclude Include="..\hidapi\log.h" />
     <ClInclude Include="..\hidapi\map.h" />
     <ClInclude Include="..\hidapi\packdef.h" />

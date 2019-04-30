@@ -18,9 +18,6 @@
     <ClCompile Include="hid.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ghost.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dllmain.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,15 +30,15 @@
     <ClCompile Include="..\common\map.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="kylin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\hidapi\hidapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\hidapi\packdef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hidapi\ghostapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -54,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\hidapi\map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hidapi\kylinapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
