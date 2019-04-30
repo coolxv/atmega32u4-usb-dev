@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Sleep(3000);
-	//MoveToR(-255, -255);
+	MoveToR(-255, -255);
 	//GetCursorPos(&pt); //获取鼠标指针位置到pt
 	//printf("x=%ld,y=%ld\n", pt.x, pt.y);
 	//Say("HEllo world adfdsfsdf");
@@ -93,12 +93,12 @@ int main(int argc, char* argv[])
 	//InitLock("123456", "654321");
 	//WriteString("123456", 1, "1");
 	//WriteString("123456", 2, "abcdefghijklmnopqadfdsfsdfsdgsdf");
-	ResetLock();
-	printf("data=%s\n", ReadString("654321", 1));
-	printf("data=%s\n", ReadString("654321", 2));
+	//ResetLock();
+	//printf("data=%s\n", ReadString("654321", 1));
+	//printf("data=%s\n", ReadString("654321", 2));
 
-	//printf("data=%s\n", EncString("abcdefghabcdefgh"));
-	//printf("data=%s\n", DecString(EncString("abcdefghabcdefgh")));
+	printf("data=%s\n", EncString("abcdefghabcdefgh"));
+	printf("data=%s\n", DecString(EncString("abcdefghabcdefgh")));
 	//ret = GetScrollLock();
 	//printf("GetScrollLock %d\n", ret);
 	//Sleep(1000);

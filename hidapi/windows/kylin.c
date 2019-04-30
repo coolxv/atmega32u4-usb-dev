@@ -603,8 +603,10 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  KeyDown(const char *key)
 	{
 		return -2;
 	}
-
+	//find key
+	EnterCriticalSection(&g_mutex);
 	unsigned short keycode = keymap_map(key);
+	LeaveCriticalSection(&g_mutex);
 	if (!keycode)
 	{
 		return -3;
@@ -637,7 +639,10 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  KeyUp(const char *key)
 	{
 		return -2;
 	}
+	//find key
+	EnterCriticalSection(&g_mutex);
 	unsigned short keycode = keymap_map(key);
+	LeaveCriticalSection(&g_mutex);
 	if (!keycode)
 	{
 		return -3;
@@ -690,7 +695,10 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  KeyPressEX(const char *key, int count)
 	{
 		return -2;
 	}
+	//find key
+	EnterCriticalSection(&g_mutex);
 	unsigned short keycode = keymap_map(key);
+	LeaveCriticalSection(&g_mutex);
 	if (!keycode)
 	{
 		return -3;
@@ -728,7 +736,8 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyDown(const char *key1, const 
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
-
+	//find key
+	EnterCriticalSection(&g_mutex);
 	for (int i = 0; i < 6; i++)
 	{
 		if (NULL != key[i] && 0 != strlen(key[i]))
@@ -741,6 +750,7 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyDown(const char *key1, const 
 			}
 		}
 	}
+	LeaveCriticalSection(&g_mutex);
 	//check
 	if (0 == count)
 	{
@@ -772,7 +782,8 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyUp(const char *key1, const ch
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
-
+	//find key
+	EnterCriticalSection(&g_mutex);
 	for (int i = 0; i < 6; i++)
 	{
 		if (NULL != key[i] && 0 != strlen(key[i]))
@@ -785,6 +796,7 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyUp(const char *key1, const ch
 			}
 		}
 	}
+	LeaveCriticalSection(&g_mutex);
 	//check
 	if (0 == count)
 	{
@@ -837,7 +849,8 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyPressEx(const char *key1, con
 	//package
 	MSG_DATA_T pkg;
 	memset(&pkg, 0, sizeof(pkg));
-
+	//find key
+	EnterCriticalSection(&g_mutex);
 	for (int i = 0; i < 6; i++)
 	{
 		if (NULL != key[i] && 0 != strlen(key[i]))
@@ -850,6 +863,7 @@ KYLIN_API_EXPORT int KYLIN_API_CALL  CombinationKeyPressEx(const char *key1, con
 			}
 		}
 	}
+	LeaveCriticalSection(&g_mutex);
 	//check
 	if (0 == cnt)
 	{
